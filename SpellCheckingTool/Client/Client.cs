@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SpellCheckingTool
 {
-    internal class Client
+    public class Client
     {
         public static void StartClient(int port)
         {

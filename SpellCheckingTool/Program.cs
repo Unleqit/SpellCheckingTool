@@ -11,8 +11,7 @@ namespace SpellCheckingTool
             bool startHeadless = false;
 
             //start REST server backend
-            Server server = new Server();
-            server.Start(serverPort);
+            Server server = new Server(serverPort);
             
             //start CLI 'frontend' and connect it to the backend, if desired
             if (!startHeadless)

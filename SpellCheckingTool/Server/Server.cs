@@ -2,18 +2,19 @@
 
 namespace SpellCheckingTool
 {
-    internal class Server
+    public class Server
     {
+        HttpListener listener;
+
         //list of all endpoints of the server API and which method is invoked upon calling them
         readonly Dictionary<string, Action<HttpListenerContext>> routes = new Dictionary<string, Action<HttpListenerContext>>
         {
-            { "/api/v1/endpointa", (context) => HandleEndpointA(context) },
-            { "/api/v1/endpointb", (context) => HandleEndpointB(context) }
+            { "/api/v1/healthcheck", (context) => HandleHealthcheck(context) },
         };
 
-        public void Start(int port)
+        public Server(int port)
         {
-            HttpListener listener = new HttpListener();
+            listener = new HttpListener();
             listener.Prefixes.Add("http://localhost:" + port + "/");
             listener.Start();
             Console.WriteLine("Listening on http://localhost:" + port);
@@ -41,15 +42,16 @@ namespace SpellCheckingTool
             }
         }
 
-        //TODO: move these handlers somewhere else
-        public static void HandleEndpointA(HttpListenerContext context)
+        public void Stop()
         {
-            Console.WriteLine("/api/v1/endpointa called!");
+            listener.Stop();
+            listener.Close();
         }
 
-        public static void HandleEndpointB(HttpListenerContext context)
+        //TODO: move these handlers somewhere else
+        static void HandleHealthcheck(HttpListenerContext context)
         {
-            Console.WriteLine("/api/v1/endpointb called!");
+            //nothing to do here, status code 200 is returned already in the above method
         }
     }
 }
