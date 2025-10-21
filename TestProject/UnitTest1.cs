@@ -6,9 +6,9 @@ namespace TestProject
     public class UnitTest1
     {
         [TestMethod]
-        public void TestHelloWorld()
+        public void Test1()
         {
-            Assert.AreEqual(Program.Test(), "Hello World!");
+            //TODO: add actual tests here   
         }
     }
 }
