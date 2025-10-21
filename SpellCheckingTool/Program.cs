@@ -6,14 +6,16 @@ namespace SpellCheckingTool
     {
         static void Main(string[] args)
         {
-            string s = Test();
-            Console.WriteLine(s);
-            Console.Read();
-        }
+            //TODO: make these passable as command line arguments
+            int serverPort = 12345;
+            bool startHeadless = false;
 
-        public static string Test()
-        {
-            return "Hello World!";
+            //start REST server backend
+            Server server = new Server(serverPort);
+            
+            //start CLI 'frontend' and connect it to the backend, if desired
+            if (!startHeadless)
+                Client.StartClient(serverPort);
         }
     }
 }
