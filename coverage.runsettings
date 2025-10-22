@@ -2,6 +2,8 @@
 <RunSettings>
   <RunConfiguration>
     <ResultsDirectory>TestResults/</ResultsDirectory>
+    <CoverletOutput>TestResults/</CoverletOutput>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
   </RunConfiguration>
   <DataCollectionRunSettings>
     <DataCollectors>

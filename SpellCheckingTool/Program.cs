@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿
 
 namespace SpellCheckingTool
 {
@@ -16,6 +16,7 @@ namespace SpellCheckingTool
             //start CLI 'frontend' and connect it to the backend, if desired
             if (!startHeadless)
                 Client.StartClient(serverPort);
+
         }
     }
 }
