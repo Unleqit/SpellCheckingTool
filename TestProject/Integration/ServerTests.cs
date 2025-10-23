@@ -1,3 +1,5 @@
+#pragma warning disable SYSLIB0014
+
 using SpellCheckingTool;
 using System.Net;
 

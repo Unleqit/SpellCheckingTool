@@ -1,4 +1,5 @@
 ﻿#pragma warning disable CS8625
+#pragma warning disable CS8602
 
 namespace SpellCheckingTool
 {
@@ -7,11 +8,13 @@ namespace SpellCheckingTool
         //nested class to prevent exposure of internal WordTreeNode structure
         class WordTreeNode
         {
+            public WordTreeNode parentNode;
             public WordTreeNode[] Nodes { get; private set; }
             public bool IsWord { get; set; }
 
-            public WordTreeNode(int length, bool isWord)
+            public WordTreeNode(WordTreeNode parent, int length, bool isWord)
             {
+                this.parentNode = parent;
                 this.Nodes = new WordTreeNode[length];
                 this.IsWord = isWord;
             }
@@ -25,7 +28,7 @@ namespace SpellCheckingTool
         {
             this.alphabet = alphabet;
             this.alphabetLength = this.alphabet.GetLength();
-            this.rootNode = new WordTreeNode(this.alphabetLength, false);
+            this.rootNode = new WordTreeNode(null, this.alphabetLength, false);
         }
 
         public int Add(Word word)
@@ -36,18 +39,20 @@ namespace SpellCheckingTool
         public int Add(Word[] words)
         {
             int successCount = 0;
-            WordTreeNode current = this.rootNode;
+            WordTreeNode current;
             int posInWord = 0;
             int posInAlphabet = 0;
 
             foreach (Word word in words)
             {
+                current = this.rootNode;
+
                 //handle all chars of a word except the last one
                 for (posInWord = 0; posInWord < word.Length - 1; ++posInWord)
                 {
                     posInAlphabet = alphabet.GetCharPositionInArray(word[posInWord]);
                     if (current.Nodes[posInAlphabet] == null)
-                        current.Nodes[posInAlphabet] = new WordTreeNode(this.alphabetLength, false);
+                        current.Nodes[posInAlphabet] = new WordTreeNode(current, this.alphabetLength, false);
                     current = current.Nodes[posInAlphabet];
                 }
 
@@ -55,7 +60,7 @@ namespace SpellCheckingTool
                 posInAlphabet = alphabet.GetCharPositionInArray(word[posInWord]);
                 if (current.Nodes[posInAlphabet] == null)
                 {
-                    current.Nodes[posInAlphabet] = new WordTreeNode(this.alphabetLength, true);
+                    current.Nodes[posInAlphabet] = new WordTreeNode(current, this.alphabetLength, true);
                     successCount++;
                     continue;
                 }
@@ -124,12 +129,21 @@ namespace SpellCheckingTool
                 {
                     current.Nodes[posInAlphabet].IsWord = false;
 
-                    //check if node is empty and remove it
-                    if (current.Nodes[posInAlphabet].Nodes.All(c => c == null))
+                    //check if node is empty - if so, rmeove it and check the parent node (TODO: clean this up)
+                    check:
+                    if (current != null && current.Nodes[posInAlphabet].Nodes.All(c => c == null) && current.IsWord == false)
+                    {
                         current.Nodes[posInAlphabet] = null;
+                        //get position of next node in alphabet tree of this word
+                        if (posInWord > 0)
+                            posInAlphabet = alphabet.GetCharPositionInArray(word[--posInWord]);
+                        //check parent node whether it is empty as well
+                        current = current.parentNode;
+                        goto check;
+                    }
                 }
 
-
+                successCount++;
             fin:;
             }
 
