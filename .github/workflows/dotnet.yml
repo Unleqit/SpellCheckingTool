@@ -26,7 +26,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: |
-        dotnet test --no-build --verbosity normal --settings coverage.runsettings
+        dotnet test --no-build --verbosity normal --settings coverage.runsettings --collect:"XPlat Code Coverage"
         cd TestResults
         cd $(ls -t | head -n 1)
         grep '<coverage line-rate="' coverage.cobertura.xml | awk -F'line-rate="' '{print $2}' | awk -F'"' '{printf "coverage: %.2f %%\n", $1 * 100}'
