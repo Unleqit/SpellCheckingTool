@@ -23,6 +23,7 @@ namespace SpellCheckingTool
         private WordTreeNode rootNode;
         private IAlphabet alphabet;
         private int alphabetLength;
+        public long Count { get; private set; }
 
         public WordTree(IAlphabet alphabet)
         {
@@ -78,6 +79,7 @@ namespace SpellCheckingTool
 
             }
 
+            this.Count += successCount;
             return successCount;
         }
 
@@ -147,7 +149,7 @@ namespace SpellCheckingTool
             fin:;
             }
 
-            //required, as wordlist may contain words like 'lollipop', but not 'lol', therefore checks for 'lol' must fail
+            this.Count -= successCount;
             return successCount;
         }
     }

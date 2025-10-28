@@ -59,6 +59,7 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(alphabet);
             int successCount = tree.Add(new Word(alphabet, "test"));
             Assert.AreEqual(successCount, 1);
+            Assert.AreEqual(tree.Count, 1);
         }
 
         [TestMethod]
@@ -68,8 +69,10 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(alphabet);
             int successCount = tree.Add(new Word(alphabet, "test"));
             Assert.AreEqual(successCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             int successCount2 = tree.Add(new Word(alphabet, "test"));
             Assert.AreEqual(successCount2, 0);
+            Assert.AreEqual(tree.Count, 1);
         }
 
         [TestMethod]
@@ -80,6 +83,7 @@ namespace TestProject.Unit
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             bool result = tree.Contains(w);
             Assert.AreEqual(result, true);
         }
@@ -104,8 +108,10 @@ namespace TestProject.Unit
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             int removeSuccessCount = tree.Remove(w);
             Assert.AreEqual(removeSuccessCount, 1);
+            Assert.AreEqual(tree.Count, 0);
         }
 
         [TestMethod]
@@ -116,8 +122,10 @@ namespace TestProject.Unit
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             int removeSuccessCount = tree.Remove(new Word(alphabet, "someOtherWord"));
             Assert.AreEqual(removeSuccessCount, 0);
+            Assert.AreEqual(tree.Count, 1);
         }
 
         [TestMethod]
@@ -129,8 +137,10 @@ namespace TestProject.Unit
             Word w2 = new Word(alphabet, "lollipop");
             int successCount = tree.Add(new Word[] { w, w2 });
             Assert.AreEqual(successCount, 2);
+            Assert.AreEqual(tree.Count, 2);
             int removeSuccessCount = tree.Remove(w);
             Assert.AreEqual(removeSuccessCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             bool containsRemovedWord = tree.Contains(w);
             Assert.AreEqual(containsRemovedWord, false);
             bool containsLongerWord = tree.Contains(w2);
@@ -146,8 +156,10 @@ namespace TestProject.Unit
             Word w2 = new Word(alphabet, "lollipop");
             int successCount = tree.Add(new Word[] { w, w2 });
             Assert.AreEqual(successCount, 2);
+            Assert.AreEqual(tree.Count, 2);
             int removeSuccessCount = tree.Remove(w2);
             Assert.AreEqual(removeSuccessCount, 1);
+            Assert.AreEqual(tree.Count, 1);
             bool containsRemovedWord = tree.Contains(w2);
             Assert.AreEqual(containsRemovedWord, false);
             bool containsShorterWord = tree.Contains(w);
