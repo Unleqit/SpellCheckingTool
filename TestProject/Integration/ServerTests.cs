@@ -3,10 +3,10 @@
 using SpellCheckingTool;
 using System.Net;
 
-namespace TestProject
+namespace TestProject.Integration
 {
     [TestClass]
-    public class UnitTest1
+    public class ServerIntegrationTests
     {
         [TestMethod]
         public void CheckIfServerIsResponding_ShouldReturn200()
