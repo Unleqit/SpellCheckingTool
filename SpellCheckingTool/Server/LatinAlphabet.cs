@@ -1,20 +1,17 @@
 ﻿namespace SpellCheckingTool
 {
-    public class LatinAlphabet : IAlphabet
+    public class LatinAlphabet : BaseAlphabet
     {
-        public char[] GetChars() 
+        public LatinAlphabet() : base(new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' })
         {
-            return new char[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+            //nothing to do here, everything gets handled by the base class
         }
 
-        public int GetLength() 
-        {
-            return 26; 
-        }
-
-        public int GetCharPositionInArray(char c)
+        //subtract the offsets of two chars in the ASCII table to get their location in the char array - only works for Latin alphabet, but significantly faster than mapping
+        public override int GetCharPositionInArray(char c)
         {
             return (c - 'a');
         }
+
     }
 }
