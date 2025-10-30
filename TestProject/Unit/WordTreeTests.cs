@@ -1,7 +1,6 @@
 ﻿//required in order to be able to reference data types (e.g. WordTree) from the main project
 using SpellCheckingTool;
 using System.Diagnostics;
-using TestProject.Properties;
 
 namespace TestProject.Unit
 {
@@ -171,7 +170,10 @@ namespace TestProject.Unit
         [TestMethod]
         public void ParseProductionSizedWordTreeFromStringArray_ShouldTakeLessThanTwoSecondsToComplete()
         {
-            string[] rawWords = Resources.plainTextWordfile.Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
+            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
+            resourceDirectory += @"/../../../Resources/";
+
+            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
             Assert.IsTrue(rawWords.Length > 0);
 
             Stopwatch sw = Stopwatch.StartNew();
@@ -189,34 +191,29 @@ namespace TestProject.Unit
         [TestMethod]
         public void DeserializeProductionSizedWordTreeFromWDBFile_ShouldTakeLessThanTwoSecondsToComplete()
         {
-            byte[] wdbFileFromResources = Resources.wordfile;
-            string[] rawWords = Resources.plainTextWordfile.Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
-
-            Assert.IsTrue(wdbFileFromResources.Length > 0);
-
-            //emulate file read
-            File.WriteAllBytes(Directory.GetCurrentDirectory() + @"/tmp.wdb", wdbFileFromResources);
-            Assert.IsTrue(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
+            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
+            resourceDirectory += @"/../../../Resources/";
+            
+            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
 
             Stopwatch sw = Stopwatch.StartNew();
 
             IAlphabet alphabet = new LatinAlphabet();
             WordTree tree = new WordTree(alphabet, new FilePersistenceService());
-            tree = tree.Deserialize(new FilePath(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
+            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordfile.wdb"));
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
 
             sw.Stop();
             Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
-
-            //clean up temporary files
-            File.Delete(Directory.GetCurrentDirectory() + @"/tmp.wdb");
-            Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
         }
 
         [TestMethod]
         public void SerializeProductionSizedWordTree_ShouldTakeLessThanTwoSecondsToComplete()
         {
-            string[] rawWords = Resources.plainTextWordfile.Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
+            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
+            resourceDirectory += @"/../../../Resources/";
+
+            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
             Assert.IsTrue(rawWords.Length > 0);
 
             IAlphabet alphabet = new LatinAlphabet();
@@ -237,6 +234,5 @@ namespace TestProject.Unit
             File.Delete(Directory.GetCurrentDirectory() + @"/tmp.wdb");
             Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
         }
-
     }
 }
