@@ -200,7 +200,7 @@ namespace TestProject.Unit
 
             IAlphabet alphabet = new LatinAlphabet();
             WordTree tree = new WordTree(alphabet, new FilePersistenceService());
-            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordfile.wdb"));
+            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordFile.wdb"));
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
 
             sw.Stop();
