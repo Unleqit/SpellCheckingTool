@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Xml.Linq;
 
 namespace SpellCheckingTool
 {
@@ -12,9 +11,9 @@ namespace SpellCheckingTool
         //[9-12]                                                                                            length of the alphabet used to build the tree
         //[13-16]                                                                                           amount of padding bytes at the end of the alphabet content
         //[17-20]                                                                                           length of all words in the tree joined together by a separator ('\n') => totalWordLength
-        //[17 + serializedAlphabetLength]                                                                   content of the alphabet used to build the tree
-        //[17 + serializedAlphabetLength + alphabetPadding]                                                 content of the word indices buffer, which holds the starting position of each word serialized into the file
-        //[17 + serializedAlphabetLength + alphabetPadding + (tree.metaData.wordCount + 1) * sizeof(int)]   content of the tree
+        //[21 + serializedAlphabetLength]                                                                   content of the alphabet used to build the tree
+        //[21 + serializedAlphabetLength + alphabetPadding]                                                 content of the word indices buffer, which holds the starting position of each word serialized into the file
+        //[21 + serializedAlphabetLength + alphabetPadding + (tree.metaData.wordCount + 1) * sizeof(int)]   content of the tree
         /// <summary>
         /// Serializes a WordTree into a .wdb file
         /// </summary>
@@ -101,7 +100,7 @@ namespace SpellCheckingTool
                 while (current.reserved < alphabetLength)
                 {
                     //find smallest child of node which is yet to be serialized and save its index in the reserved property of the node
-                    for (int characterIndex = current.reserved; characterIndex < alphabetLength + 0; ++characterIndex)
+                    for (int characterIndex = current.reserved; characterIndex < alphabetLength; ++characterIndex)
                         if (current.Nodes[characterIndex] != null)
                         {
                             //the leftmost non-zero child pointer is traversed in order to find its children and pushed on the stack for backtracing
@@ -147,11 +146,6 @@ namespace SpellCheckingTool
             int result = API._saveFile(path, (byte*)fileContent, fileLength * sizeof(char));
             if (result != 0)
                 throw new Exception("Native file save failed");
-       /* */
-
-            //free unmanaged resources
-        //    Marshal.FreeHGlobal((IntPtr)fileContent);
-        //    Marshal.FreeHGlobal((IntPtr)wordBuffer);
 
             //zero pointers
             fileContent = null;

@@ -1,57 +1,122 @@
-﻿using System.Net;
+﻿using System.IO;
+using System.Net;
+using System.Reflection;
 
 namespace SpellCheckingTool
 {
     public class Server
     {
         HttpListener listener;
+        MiddlewarePipeline middlewares;
+        Router router;
+        Thread requestThread;
+        bool isRequestLoopRunning;
+        public bool IsStarted { get; private set; }
 
-        //list of all endpoints of the server API and which method is invoked upon calling them
-        readonly Dictionary<string, Action<HttpListenerContext>> routes = new Dictionary<string, Action<HttpListenerContext>>
-        {
-            { "/api/v1/healthcheck", (context) => HandleHealthcheck(context) },
-        };
-
-        public Server(int port)
+        /// <summary>
+        /// Initializes the server
+        /// </summary>
+        public Server()
         {
             listener = new HttpListener();
+            middlewares = new MiddlewarePipeline();
+
+//We load the assembly of *this* code, so it should always exist
+#pragma warning disable CS8604
+            router = new Router(Assembly.GetAssembly(typeof(Server)));
+#pragma warning restore CS8604 
+
+            requestThread = new Thread(HandleRequests);
+        }
+
+        /// <summary>
+        /// Starts the server
+        /// </summary>
+        public void Start(int port)
+        {
             listener.Prefixes.Add("http://localhost:" + port + "/");
             listener.Start();
             Console.WriteLine("Listening on http://localhost:" + port);
+            isRequestLoopRunning = true;
+            requestThread.Start();
+        }
 
-            //await incoming requests inside this loop
-            while (true)
+        /// <summary>
+        /// Stops the server
+        /// </summary>
+        public void Stop()
+        {
+            IsStarted = false;
+            isRequestLoopRunning = false;
+            listener.Stop();
+            listener.Close();
+            //join the requestThread to ensure its completion
+            requestThread.Join();
+        }
+
+        /// <summary>
+        /// Registers middleware in order, like Express.js
+        /// </summary>
+        /// <param name="middleware">The middleware to use</param>
+        public void Use(Middleware middleware)
+        {
+            middlewares.Use(middleware);
+        }
+
+        /// <summary>
+        /// Handles incoming requests, runs middleware, and calls route handlers.
+        /// </summary>
+        private void HandleRequests()
+        {
+            string path;
+            string method;
+            HttpListenerContext context;
+            IsStarted = true;
+
+            while (isRequestLoopRunning)
             {
-                var context = listener.GetContext();
+                try
+                {
+                    context = listener.GetContext();
+                }
+                catch (Exception)
+                {
+                    //acquiring request context failed (TODO: logging?)
+                    break;
+                }
 
-                //drop empty requests (shouldn't happen)
+                //drop empty requests
                 if (context.Request.Url == null)
                     continue;
 
-                //select which method to invoke for this request
-                if (routes.TryGetValue(context.Request.Url.AbsolutePath.ToLower(), out var handler))
+                //get path and method of the request
+                path = context.Request.Url.AbsolutePath.ToLower();
+                method = context.Request.HttpMethod;
+
+                //determine the C# method to call for this request
+                var handler = router.TryGetRoute(method, path);
+
+                if (handler != null)
                 {
                     context.Response.StatusCode = 200;
-                    handler(context);
+                    middlewares.Execute(context, () => handler(context));
                 }
                 else
+                {
+                    //requested endpoint doesn't exist (TODO: add logging?)
+                    middlewares.Execute(context, () => { });
                     context.Response.StatusCode = 404;
+                }
 
                 //send the response back to the client
                 context.Response.Close();
             }
         }
 
-        public void Stop()
+        [HttpGet("/api/v1/healthcheck")]
+        public static void HandleHealthcheck(HttpListenerContext context)
         {
-            listener.Stop();
-            listener.Close();
-        }
-
-        //TODO: move these handlers somewhere else
-        static void HandleHealthcheck(HttpListenerContext context)
-        {
-            //nothing to do here, status code 200 is returned already in the above method
+            //nothing to do here, status 200 returned by default
         }
     }
 }
