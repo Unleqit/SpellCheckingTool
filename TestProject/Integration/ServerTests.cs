@@ -11,11 +11,12 @@ namespace TestProject.Integration
         [TestMethod]
         public void CheckIfServerIsResponding_ShouldReturn200()
         {
-            Thread serverThread = new Thread(() =>
-            {
-                Server server = new Server(12345);
-            });
+            Server server = new Server();
+            Thread serverThread = new Thread(() => server.Start(12345));
             serverThread.Start();
+
+            //await startup of the server
+            while (!server.IsStarted) ;
 
             try
             {
