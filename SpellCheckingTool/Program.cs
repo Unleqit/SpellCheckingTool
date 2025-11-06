@@ -14,7 +14,7 @@ namespace SpellCheckingTool
             Server server = new Server();
 
             //define logging middleware for server (like in Express.js)
-            server.Use((context, next) => 
+            server.Use((context, next) =>
             {
                 Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
                 next();
