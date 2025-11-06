@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using SpellCheckingTool.Common.Routing.Attributes;
+using System.IO;
 using System.Net;
 using System.Reflection;
 
@@ -117,6 +118,13 @@ namespace SpellCheckingTool
         public static void HandleHealthcheck(HttpListenerContext context)
         {
             //nothing to do here, status 200 returned by default
+        }
+
+        //To test this, make a POST request at this endpoint and put this in the request body:   {"testString":"Hello from POST request"}
+        [HttpPost("/api/v1/jsonexample")]
+        public static void TestFromBodyJsonAttribute([FromBody] string testString)
+        {
+            Console.WriteLine(testString);
         }
     }
 }
