@@ -6,6 +6,7 @@ namespace SpellCheckingTool
     {
         static void Main(string[] args)
         {
+            Client.StartClient(0);
             //TODO: make these passable as command line arguments
             int serverPort = 12345;
             bool startHeadless = false;

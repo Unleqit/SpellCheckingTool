@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CS8625
 #pragma warning disable CS8602
 
+
 namespace SpellCheckingTool
 {
     public class WordTree
@@ -190,5 +191,13 @@ namespace SpellCheckingTool
         {
             return this.persistenceService.Load(filepath);
         }
+
+        internal bool Contains(string word)
+        {
+            // Create a Word object using the same alphabet as the tree
+            Word wordObj = new Word(this.alphabet, word);
+            return Contains(wordObj);
+        }
+
     }
 }
