@@ -9,13 +9,33 @@ namespace SpellCheckingTool
         public IAlphabet alphabet { get; private set; }
         public WordTreeMetaInfo metaData { get; private set; }
         private IPersistenceService persistenceService;
+        public event WordTreeWordBufferLengthChangedEventHandler? wordTreeWordBufferLengthChangedEventHandler;
+        public IDistanceAlgorithm DistanceAlgorithm { get; private set; }
+        private ISuggestionService SuggestionService { get; set; }
+
+        public WordTree(IAlphabet alphabet)
+        {
+            Initialize(alphabet, new FilePersistenceService(), null);
+        }
 
         public WordTree(IAlphabet alphabet, IPersistenceService persistenceService)
+        {
+            Initialize(alphabet, persistenceService, null);
+        }
+
+        public WordTree(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm distanceAlgorithm)
+        {
+            Initialize(alphabet, persistenceService, distanceAlgorithm);
+        }
+
+        private void Initialize(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm? algorithm)
         {
             this.alphabet = alphabet;
             this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
             this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
             this.persistenceService = persistenceService;
+            this.DistanceAlgorithm = algorithm ?? new LevenshteinDistanceAlgorithm(this); //init needs to happen after tree.metaData is assigned
+            this.SuggestionService = new SuggestionService(this);
         }
 
         public int Add(Word word)
@@ -81,7 +101,12 @@ namespace SpellCheckingTool
             this.metaData.wordCount = _wordCount;
             this.metaData.nodeCount = _nodeCount;
             this.metaData.serializationLength = _serializationLength;
+            int oldLength = this.metaData.wordBufferLength;
             this.metaData.wordBufferLength = _wordBufferLength;
+
+            //trigger event if the word buffer size has been expanded
+            if (oldLength < _wordBufferLength)
+                this.wordTreeWordBufferLengthChangedEventHandler?.Invoke(this, _wordBufferLength);
 
             //return the amount of words that were successfully added to the tree structure
             return successCount;
@@ -189,6 +214,11 @@ namespace SpellCheckingTool
         public WordTree Deserialize(FilePath filepath)
         {
             return this.persistenceService.Load(filepath);
+        }
+
+        public SuggestionResult GetSuggestions(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
+        {
+            return this.SuggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
         }
     }
 }

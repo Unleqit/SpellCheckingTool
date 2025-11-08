@@ -9,6 +9,9 @@ namespace SpellCheckingTool
         [DllImport("msvcrt.dll", SetLastError = false, EntryPoint = "malloc")]
         public static extern void* windows_malloc(long size);
 
+        [DllImport("msvcrt.dll", SetLastError = false, EntryPoint = "realloc")]
+        public static extern void* windows_realloc(void* ptr, long size);
+
         [DllImport("msvcrt.dll", SetLastError = false, EntryPoint = "free")]
         public static extern void windows_free(void* ptr);
 
@@ -58,6 +61,9 @@ namespace SpellCheckingTool
 
         [DllImport("libc", EntryPoint = "malloc", SetLastError = false, CallingConvention = CallingConvention.Cdecl)]
         public static extern void* linux_malloc(long size);
+
+        [DllImport("libc", EntryPoint = "realloc", SetLastError = false, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void* linux_realloc(void* ptr, long size);
 
         [DllImport("libc", EntryPoint = "free", SetLastError = false, CallingConvention = CallingConvention.Cdecl)]
         public static extern void linux_free(void* ptr);
