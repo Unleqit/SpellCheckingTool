@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CS8625
 #pragma warning disable CS8602
 
+
 namespace SpellCheckingTool
 {
     public class WordTree
@@ -112,6 +113,21 @@ namespace SpellCheckingTool
 
             //return the amount of words that were successfully added to the tree structure
             return successCount;
+        }
+
+        public bool Contains(string word)
+        {
+            // Create a Word object using the same alphabet as the tree
+            try
+            {
+                Word wordObj = new Word(this.alphabet, word);
+                return Contains(wordObj);
+            }
+            catch (Exception) 
+            {
+                //The provided word string could not be parsed into a Word object with the alphabet of the tree, therefore it cannot be contained in the tree
+                return false;
+            }
         }
 
         public bool Contains(Word word)
