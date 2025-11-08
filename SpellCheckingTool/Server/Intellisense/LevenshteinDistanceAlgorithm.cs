@@ -14,7 +14,9 @@ namespace SpellCheckingTool
         /// <summary>
         /// Provides an implementation of the levenshtein distance matching algorithm (see https://en.wikipedia.org/wiki/Levenshtein_distance)
         /// </summary>
+#pragma warning disable CS8618 //_prev, _current and tmpBuffer are uninitialized after the constructor has been called, but that's okay, as the GetDistance algorithm sets these before accessing them
         public LevenshteinDistanceAlgorithm(WordTree tree)
+#pragma warning restore CS8618
         {
             this.maxWordLengthInTree = tree.metaData.wordBufferLength + 1;
             prev = new int[this.maxWordLengthInTree * sizeof(int)];

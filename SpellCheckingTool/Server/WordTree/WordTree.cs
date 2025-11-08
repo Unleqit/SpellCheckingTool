@@ -13,6 +13,7 @@ namespace SpellCheckingTool
         public IDistanceAlgorithm DistanceAlgorithm { get; private set; }
         private ISuggestionService SuggestionService { get; set; }
 
+#pragma warning disable CS8618 // all class members are set in the initialize method, hence the warnings about uninitialized variables can be ignored here
         public WordTree(IAlphabet alphabet)
         {
             Initialize(alphabet, new FilePersistenceService(), null);
@@ -27,6 +28,7 @@ namespace SpellCheckingTool
         {
             Initialize(alphabet, persistenceService, distanceAlgorithm);
         }
+#pragma warning restore CS8618
 
         private void Initialize(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm? algorithm)
         {
