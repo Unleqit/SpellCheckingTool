@@ -25,13 +25,13 @@ namespace SpellCheckingTool
         }
 #pragma warning restore CS8618
 
-        private void Initialize(IAlphabet? alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? algorithm)
+        private void Initialize(IAlphabet? alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? distanceAlgorithm)
         {
             this.alphabet = alphabet ?? new LatinAlphabet();
             this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
             this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
             this.persistenceService = persistenceService ?? new FilePersistenceService(this);
-            this.SuggestionService = new SuggestionService(this, new WalkWordTreeLeftToRightService(this));
+            this.SuggestionService = new SuggestionService(this, distanceAlgorithm ?? new LevenshteinDistanceAlgorithm(this), new WalkWordTreeLeftToRightService(this));
         }
 
         public int Add(Word word)

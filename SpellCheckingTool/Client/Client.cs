@@ -18,7 +18,7 @@ namespace SpellCheckingTool
             string path = Path.Combine(projectRoot, @"TestProject\Resources\wordFile.wdb");
 
             FilePath filePath = new FilePath(path);
-            WordTree tree = new WordTree(new LatinAlphabet());
+            WordTree tree = new WordTree();
             tree = new FilePersistenceService(tree).Load(filePath);
 
             //starting CMD process

@@ -8,11 +8,11 @@ namespace SpellCheckingTool
         IDistanceAlgorithm distanceAlgorithm;
         WalkWordTreeService walkWordTreeService;
 
-        public SuggestionService(WordTree tree, WalkWordTreeService walkWordTreeService)
+        public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm, WalkWordTreeService walkWordTreeService)
         {
             this.tree = tree;
             //get the distance algorithm to use for the creation of this suggestion
-            this.distanceAlgorithm = tree.DistanceAlgorithm;
+            this.distanceAlgorithm = distanceAlgorithm;
             this.walkWordTreeService = walkWordTreeService;
         }
 

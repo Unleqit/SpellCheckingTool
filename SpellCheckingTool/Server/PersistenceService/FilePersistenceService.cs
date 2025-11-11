@@ -177,7 +177,7 @@ namespace SpellCheckingTool
             //remove any empty words
             words = words.Where((w) => w != null).ToArray();
 
-            WordTree tree = new WordTree(deserializedAlphabet);
+            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = deserializedAlphabet });
             Word[] parsedWords = Word.ParseWords(deserializedAlphabet, words);
             tree.Add(parsedWords);
             return tree;
