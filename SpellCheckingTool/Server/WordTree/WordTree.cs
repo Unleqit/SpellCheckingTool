@@ -11,40 +11,27 @@ namespace SpellCheckingTool
         public WordTreeMetaInfo metaData { get; private set; }
         private IPersistenceService persistenceService;
         public event WordTreeWordBufferLengthChangedEventHandler? wordTreeWordBufferLengthChangedEventHandler;
-        public IDistanceAlgorithm DistanceAlgorithm { get; private set; }
         private ISuggestionService SuggestionService { get; set; }
         
 #pragma warning disable CS8618 // all class members are set in the initialize method, hence the warnings about uninitialized variables can be ignored here
-        public WordTree(IAlphabet alphabet)
+        public WordTree()
         {
-            Initialize(alphabet, null, null);
+            Initialize(null, null, null);
         }
 
-        public WordTree(IAlphabet alphabet, IPersistenceService persistenceService)
+        public WordTree(WordTreeParameters parameters)
         {
-            Initialize(alphabet, persistenceService, null);
-        }
-
-        public WordTree(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm distanceAlgorithm)
-        {
-            Initialize(alphabet, persistenceService, distanceAlgorithm);
+            Initialize(parameters.alphabet, parameters.persistenceService, parameters.distanceAlgorithm);
         }
 #pragma warning restore CS8618
 
-        private void Initialize(IAlphabet alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? algorithm)
+        private void Initialize(IAlphabet? alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? algorithm)
         {
-            this.alphabet = alphabet;
+            this.alphabet = alphabet ?? new LatinAlphabet();
             this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
             this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
             this.persistenceService = persistenceService ?? new FilePersistenceService(this);
-            this.DistanceAlgorithm = algorithm ?? new LevenshteinDistanceAlgorithm(this); //init needs to happen after tree.metaData is assigned
-            //TODO: could use a dynamic WalkWordTreeService instead of hard coded in order (left to right) walk
             this.SuggestionService = new SuggestionService(this, new WalkWordTreeLeftToRightService(this));
-        }
-
-        ~WordTree()
-        {
-            this.Dispose();
         }
 
         public int Add(Word word)
