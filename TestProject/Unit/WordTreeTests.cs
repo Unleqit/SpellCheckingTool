@@ -12,7 +12,7 @@ namespace TestProject.Unit
         {
             IAlphabet alphabet = new LatinAlphabet();
             Assert.IsTrue(alphabet != null);
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Assert.IsTrue(tree != null);
         }
 
@@ -57,7 +57,7 @@ namespace TestProject.Unit
         public void AddWordToTree_ShouldReturnSuccessCount()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             int successCount = tree.Add(new Word(alphabet, "test"));
             Assert.AreEqual(successCount, 1);
             Assert.AreEqual(tree.metaData.wordCount, 1);
@@ -67,7 +67,7 @@ namespace TestProject.Unit
         public void AddWordAlreadyContainedInTree_ShouldNotAddWord()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             int successCount = tree.Add(new Word(alphabet, "test"));
             Assert.AreEqual(successCount, 1);
             Assert.AreEqual(tree.metaData.wordCount, 1);
@@ -80,7 +80,7 @@ namespace TestProject.Unit
         public void SearchWordContainedInTree_ShouldReturnTrue()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
@@ -93,7 +93,7 @@ namespace TestProject.Unit
         public void SearchWordNotContainedInTree_ShouldReturnFalse()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
@@ -105,7 +105,7 @@ namespace TestProject.Unit
         public void RemoveWordContainedInTree_ShouldRemoveWordAndReturnSuccess()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
@@ -119,7 +119,7 @@ namespace TestProject.Unit
         public void RemoveWordNotContainedInTree_ShouldReturnZero()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "test");
             int successCount = tree.Add(w);
             Assert.AreEqual(successCount, 1);
@@ -133,7 +133,7 @@ namespace TestProject.Unit
         public void RemoveShorterWord_ShouldKeepLongerWordAndOnlyRemoveShorterOne()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "lol");
             Word w2 = new Word(alphabet, "lollipop");
             int successCount = tree.Add(new Word[] { w, w2 });
@@ -152,7 +152,7 @@ namespace TestProject.Unit
         public void RemoveLongerWord_ShouldKeepShorterWordAndOnlyRemoveLongerOne()
         {
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             Word w = new Word(alphabet, "lol");
             Word w2 = new Word(alphabet, "lollipop");
             int successCount = tree.Add(new Word[] { w, w2 });
@@ -180,7 +180,7 @@ namespace TestProject.Unit
 
             IAlphabet alphabet = new LatinAlphabet();
             Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             tree.Add(parsedWords);
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
 
@@ -199,7 +199,7 @@ namespace TestProject.Unit
             Stopwatch sw = Stopwatch.StartNew();
 
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordFile.wdb"));
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
 
@@ -218,7 +218,7 @@ namespace TestProject.Unit
 
             IAlphabet alphabet = new LatinAlphabet();
             Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
-            WordTree tree = new WordTree(alphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(alphabet);
             tree.Add(parsedWords);
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
             

@@ -4,6 +4,18 @@ namespace SpellCheckingTool
 {
     public unsafe class FilePersistenceService : IPersistenceService
     {
+        private WalkWordTreeService walkWordTreeService;
+
+        public FilePersistenceService(WordTree tree)
+        {
+            this.walkWordTreeService = new WalkWordTreeLeftToRightService(tree);
+        }
+
+        public FilePersistenceService(WalkWordTreeService walkWordTreeService)
+        {
+            this.walkWordTreeService = walkWordTreeService;
+        }
+
         //FILE LAYOUT:
         //Bytes                                                                                             Data
         //[0-4]                                                                                             word count of the tree
@@ -31,11 +43,6 @@ namespace SpellCheckingTool
             if (!path.EndsWith(".wdb"))
                 throw new Exception("File not supported");
 
-            //the two hardest things in computer science are cache invalidation, naming things, and off-by-one errors
-            //we need the one extra space, as the root node of the tree gets passed as well
-            WordTreeNode[] stack = new WordTreeNode[tree.metaData.wordBufferLength + 1];
-            int stackIndex = 0;
-
             //serialize alphabet
             byte[] serializedAlphabet = BaseAlphabet.Serialize(tree.alphabet);
             int serializedAlphabetLength = serializedAlphabet.Length;
@@ -53,18 +60,11 @@ namespace SpellCheckingTool
             //'fileContent' is a char pointer with an element width of sizeof(char), while 'metaOffset' interprets it as byte pointer
             //with the element width sizeof(byte), hence we need to align it
             char* fileContent = (char*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(char) * serializationLength + metaOffset) : API.linux_malloc(sizeof(char) * serializationLength + metaOffset));
-
             int fileLength = metaOffset / sizeof(char);
-
-            //this is a native string used to extract each word from the tree and write it to the serialization file
-            char* wordBuffer = (char*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(char) * tree.metaData.wordBufferLength) : API.linux_malloc(sizeof(char) * tree.metaData.wordBufferLength));
-            int wordBufferIndex = 0;
 
             //this is the meta index buffer and the index in said buffer
             int* wordIndicesBuffer = (int*)(fileContent) + 5 + (serializedAlphabetLength / sizeof(int));
             int wordIndicesBufferIndex = 0;
-
-            char[] alphabetChars = tree.alphabet.GetChars();
 
             //write all required metainfo to the file buffer
             *((int*)(fileContent) + 0) = tree.metaData.wordCount;
@@ -77,67 +77,18 @@ namespace SpellCheckingTool
             for (int i = 0; i < serializedAlphabetLength; ++i)
                 *(((byte*)fileContent) + 5 * sizeof(int) + i) = serializedAlphabet[i];
 
-            //we can't use recursion, as deep trees may cause a StackOverflowException, hence we walk the tree in an iterative manner.
-            //in order for this to work efficiently, without having to manage a deep stack, we leverage the 'WordBufferLength' property of the tree
-            stack[stackIndex++] = tree.rootNode;
-            WordTreeNode current = tree.rootNode;
 
-            //cache alphabetLength
-            int alphabetLength = tree.alphabet.GetLength();
-
-            //traverse the tree as long as the stack contains elements
-            while (stackIndex > 0)
+            //walk the wordTree using the provided WalkWordTreeService, appending each word (contained in the native char* wordBuffer) in the tree to the file
+            this.walkWordTreeService.WalkTree((long wordBuffer, int wordBufferLength) =>
             {
-                //all childs of this node were visited already, hence it can be popped
-                if (current.reserved == alphabetLength)
-                {
-                    current = stack[stackIndex - 1];
-                    --wordBufferIndex;
-                }
-
-                //traverse to bottom of tree to get first whole word
-                //used is the bitwise property indicating which childs are in use, hence the value of the used property will be zero for leaf nodes without children 
-                while (current.reserved < alphabetLength)
-                {
-                    //find smallest child of node which is yet to be serialized and save its index in the reserved property of the node
-                    for (int characterIndex = current.reserved; characterIndex < alphabetLength; ++characterIndex)
-                        if (current.Nodes[characterIndex] != null)
-                        {
-                            //the leftmost non-zero child pointer is traversed in order to find its children and pushed on the stack for backtracing
-                            stack[stackIndex++] = current.Nodes[characterIndex];
-                            wordBuffer[wordBufferIndex++] = alphabetChars[characterIndex];
-
-                            //examine the next child on future visits, as this one is non-null
-                            current.reserved = characterIndex + 1;
-
-                            //take a look at the leftmost child of this node and interrupt the traversal for this one
-                            //the index of the first child node after this one that has yet to be checked is stored in the 'reserved' property (may be null))
-                            current = current.Nodes[characterIndex];
-                            break;
-                        }
-                        else
-                            //mark note as 'traversed', as it is null and contains no children
-                            current.reserved = characterIndex + 1;
-                }
-
-                //check if nodes where all child nodes have been traversed represent a word themselves; if not, pop it from the stack and resume with the next node
-                if (current.reserved == alphabetLength && current.IsWord != true)
-                {
-                    stackIndex--;
-                    continue;
-                }
-
                 //save beginning of current word to index partition of file
                 *(wordIndicesBuffer + wordIndicesBufferIndex++) = fileLength;
 
                 //the current node represents the last character of a word stored in the tree - save it by copying it to the file buffer and appending a unix-style line separator after it
-                for (int copyIndex = 0; copyIndex < wordBufferIndex; ++copyIndex)
-                    *(fileContent + fileLength++) = *(wordBuffer + copyIndex);
+                for (int copyIndex = 0; copyIndex < wordBufferLength; ++copyIndex)
+                    *(fileContent + fileLength++) = *(((char*)wordBuffer) + copyIndex);
                 *(fileContent + fileLength++) = '\n';
-
-                //the current node and its children have been fullt examined and saved - pop it from the stack and resume with the next node
-                stackIndex--;
-            }
+            });
 
             //write final word info
             *(wordIndicesBuffer + wordIndicesBufferIndex) = fileLength;
@@ -149,7 +100,6 @@ namespace SpellCheckingTool
 
             //zero pointers
             fileContent = null;
-            wordBuffer = null;
 
             return result == 0;
         }
@@ -227,7 +177,7 @@ namespace SpellCheckingTool
             //remove any empty words
             words = words.Where((w) => w != null).ToArray();
 
-            WordTree tree = new WordTree(deserializedAlphabet, new FilePersistenceService());
+            WordTree tree = new WordTree(deserializedAlphabet);
             Word[] parsedWords = Word.ParseWords(deserializedAlphabet, words);
             tree.Add(parsedWords);
             return tree;

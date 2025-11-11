@@ -4,7 +4,7 @@
 
 namespace SpellCheckingTool
 {
-    public class WordTree
+    public class WordTree : IDisposable
     {
         public WordTreeNode rootNode { get; private set; }
         public IAlphabet alphabet { get; private set; }
@@ -13,11 +13,11 @@ namespace SpellCheckingTool
         public event WordTreeWordBufferLengthChangedEventHandler? wordTreeWordBufferLengthChangedEventHandler;
         public IDistanceAlgorithm DistanceAlgorithm { get; private set; }
         private ISuggestionService SuggestionService { get; set; }
-
+        
 #pragma warning disable CS8618 // all class members are set in the initialize method, hence the warnings about uninitialized variables can be ignored here
         public WordTree(IAlphabet alphabet)
         {
-            Initialize(alphabet, new FilePersistenceService(), null);
+            Initialize(alphabet, null, null);
         }
 
         public WordTree(IAlphabet alphabet, IPersistenceService persistenceService)
@@ -31,14 +31,20 @@ namespace SpellCheckingTool
         }
 #pragma warning restore CS8618
 
-        private void Initialize(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm? algorithm)
+        private void Initialize(IAlphabet alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? algorithm)
         {
             this.alphabet = alphabet;
             this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
             this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
-            this.persistenceService = persistenceService;
+            this.persistenceService = persistenceService ?? new FilePersistenceService(this);
             this.DistanceAlgorithm = algorithm ?? new LevenshteinDistanceAlgorithm(this); //init needs to happen after tree.metaData is assigned
-            this.SuggestionService = new SuggestionService(this);
+            //TODO: could use a dynamic WalkWordTreeService instead of hard coded in order (left to right) walk
+            this.SuggestionService = new SuggestionService(this, new WalkWordTreeLeftToRightService(this));
+        }
+
+        ~WordTree()
+        {
+            this.Dispose();
         }
 
         public int Add(Word word)
@@ -237,6 +243,11 @@ namespace SpellCheckingTool
         public SuggestionResult GetSuggestions(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
         {
             return this.SuggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
+        }
+
+        public void Dispose()
+        {
+            this.SuggestionService.Dispose();
         }
     }
 }
