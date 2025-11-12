@@ -28,7 +28,7 @@ jobs:
     - name: Test
       run: |
         dotnet test --no-build --verbosity normal --settings coverage.runsettings --collect:"XPlat Code Coverage"
-        apt install cloc --no-install-suggests --no-install-recommends -y
+        sudo apt install cloc --no-install-suggests --no-install-recommends -y
         echo "Lines of Code: "$(cloc --include-lang=C# . | awk '/SUM:/ {print $5}')
         cd TestResults
         cd $(ls -t | head -n 1)
