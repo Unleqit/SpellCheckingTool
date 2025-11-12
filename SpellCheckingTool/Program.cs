@@ -1,4 +1,4 @@
-﻿
+﻿using ClientApp = SpellCheckingTool.Client.Client;
 
 namespace SpellCheckingTool
 {
@@ -25,7 +25,7 @@ namespace SpellCheckingTool
             
             //start CLI 'frontend' and connect it to the backend, if desired
             if (!startHeadless)
-                new Thread(() => Client.StartClient(serverPort)).Start();
+                new Thread(() => ClientApp.StartClient(serverPort)).Start();
 
         }
     }
