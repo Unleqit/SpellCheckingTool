@@ -29,8 +29,9 @@ jobs:
       run: |
         dotnet test --no-build --verbosity normal --settings coverage.runsettings --collect:"XPlat Code Coverage"
         sudo apt install cloc --no-install-suggests --no-install-recommends -y
+        cd SpellCheckingTool
         echo "Lines of Code: "$(cloc --include-lang=C# . | awk '/SUM:/ {print $5}')
-        cd TestResults
+        cd ../TestResults
         cd $(ls -t | head -n 1)
         cloc --include-lang=C# .
         grep '<coverage line-rate="' coverage.cobertura.xml | awk -F'line-rate="' '{print $2}' | awk -F'"' '{printf "Test Coverage: %.2f %%\n", $1 * 100}'
