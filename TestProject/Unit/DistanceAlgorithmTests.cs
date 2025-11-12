@@ -11,12 +11,12 @@ namespace TestProject.Unit
             string word = "example";
             string word2 = "longerExample";
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet);
-
+            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word.Length + 1);
+            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word2.Length + 1);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
         }
 
         [TestMethod]
@@ -25,12 +25,13 @@ namespace TestProject.Unit
             string word = "test";
             string word2 = "test";
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet); //TODO: mock this tree stuff away, as its not really needed for this
+            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word.Length + 1);
+            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word2.Length + 1);
-            int distance = tree.DistanceAlgorithm.GetDistance(word, word2);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 0);
         }
 
@@ -40,12 +41,13 @@ namespace TestProject.Unit
             string word = "test";
             string word2 = "text";
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet); //TODO: mock this tree stuff away, as its not really needed for this
+            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word.Length + 1);
+            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word2.Length + 1);
-            int distance = tree.DistanceAlgorithm.GetDistance(word, word2);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 1);
         }
 
@@ -55,12 +57,13 @@ namespace TestProject.Unit
             string word = "interesting";
             string word2 = "implementation";
             IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(alphabet); //TODO: mock this tree stuff away, as its not really needed for this
+            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word.Length + 1);
+            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(((LevenshteinDistanceAlgorithm)tree.DistanceAlgorithm).BufferSize, word2.Length + 1);
-            int distance = tree.DistanceAlgorithm.GetDistance(word, word2);
+            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 9);
         }
     }

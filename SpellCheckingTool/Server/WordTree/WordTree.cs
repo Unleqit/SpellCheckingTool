@@ -4,41 +4,34 @@
 
 namespace SpellCheckingTool
 {
-    public class WordTree
+    public class WordTree : IDisposable
     {
         public WordTreeNode rootNode { get; private set; }
         public IAlphabet alphabet { get; private set; }
         public WordTreeMetaInfo metaData { get; private set; }
         private IPersistenceService persistenceService;
         public event WordTreeWordBufferLengthChangedEventHandler? wordTreeWordBufferLengthChangedEventHandler;
-        public IDistanceAlgorithm DistanceAlgorithm { get; private set; }
         private ISuggestionService SuggestionService { get; set; }
-
+        
 #pragma warning disable CS8618 // all class members are set in the initialize method, hence the warnings about uninitialized variables can be ignored here
-        public WordTree(IAlphabet alphabet)
+        public WordTree()
         {
-            Initialize(alphabet, new FilePersistenceService(), null);
+            Initialize(null, null, null);
         }
 
-        public WordTree(IAlphabet alphabet, IPersistenceService persistenceService)
+        public WordTree(WordTreeParameters parameters)
         {
-            Initialize(alphabet, persistenceService, null);
-        }
-
-        public WordTree(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm distanceAlgorithm)
-        {
-            Initialize(alphabet, persistenceService, distanceAlgorithm);
+            Initialize(parameters.alphabet, parameters.persistenceService, parameters.distanceAlgorithm);
         }
 #pragma warning restore CS8618
 
-        private void Initialize(IAlphabet alphabet, IPersistenceService persistenceService, IDistanceAlgorithm? algorithm)
+        private void Initialize(IAlphabet? alphabet, IPersistenceService? persistenceService, IDistanceAlgorithm? distanceAlgorithm)
         {
-            this.alphabet = alphabet;
+            this.alphabet = alphabet ?? new LatinAlphabet();
             this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
             this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
-            this.persistenceService = persistenceService;
-            this.DistanceAlgorithm = algorithm ?? new LevenshteinDistanceAlgorithm(this); //init needs to happen after tree.metaData is assigned
-            this.SuggestionService = new SuggestionService(this);
+            this.persistenceService = persistenceService ?? new FilePersistenceService(this);
+            this.SuggestionService = new SuggestionService(this, distanceAlgorithm ?? new LevenshteinDistanceAlgorithm(this), new WalkWordTreeLeftToRightService(this));
         }
 
         public int Add(Word word)
@@ -237,6 +230,11 @@ namespace SpellCheckingTool
         public SuggestionResult GetSuggestions(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
         {
             return this.SuggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
+        }
+
+        public void Dispose()
+        {
+            this.SuggestionService.Dispose();
         }
     }
 }
