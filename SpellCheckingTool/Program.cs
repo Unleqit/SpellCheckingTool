@@ -6,7 +6,6 @@ namespace SpellCheckingTool
     {
         static void Main(string[] args)
         {
-            Client.StartClient(0);
             //TODO: make these passable as command line arguments
             int serverPort = 12345;
             bool startHeadless = false;
@@ -26,7 +25,7 @@ namespace SpellCheckingTool
             
             //start CLI 'frontend' and connect it to the backend, if desired
             if (!startHeadless)
-                Client.StartClient(serverPort);
+                new Thread(() => Client.StartClient(serverPort)).Start();
 
         }
     }

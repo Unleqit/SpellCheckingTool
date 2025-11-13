@@ -20,9 +20,10 @@ namespace SpellCheckingTool
             listener = new HttpListener();
             middlewares = new MiddlewarePipeline();
 
-//We load the assembly of *this* code, so it should always exist
+            //Find the assembly of this current project from its name
+            var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => (assembly.FullName ?? "").Contains("SpellCheckingTool")).ToArray()[0];
 #pragma warning disable CS8604
-            router = new Router(Assembly.GetAssembly(typeof(Server)));
+            router = new Router(assembly);
 #pragma warning restore CS8604 
 
             requestThread = new Thread(HandleRequests);
