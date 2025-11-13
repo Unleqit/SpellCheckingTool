@@ -9,6 +9,8 @@ namespace SpellCheckingTool.Client
         private readonly WordTree _tree;
         private readonly ProcessManager _processManager;
 
+        private const string WelcomeMessage = "Type text and press space to check words.";
+
         public ConsoleSpellChecker(WordTree tree, ProcessManager processManager)
         {
             _tree = tree;
@@ -17,7 +19,7 @@ namespace SpellCheckingTool.Client
 
         public void Run()
         {
-            Console.WriteLine("Type text and press space to check words.");
+            Console.WriteLine(WelcomeMessage);
 
             StringBuilder currentWord = new StringBuilder();
             string input = "";
@@ -29,10 +31,7 @@ namespace SpellCheckingTool.Client
 
                 if (keyInfo.Key == ConsoleKey.Enter)
                 {
-                    Console.WriteLine();
-                    _processManager.SendInput(input);
-                    input = "";
-                    currentWord.Clear();
+                    HandleEnter(ref input, currentWord);
                     continue;
                 }
 
@@ -47,31 +46,24 @@ namespace SpellCheckingTool.Client
             }
         }
 
+        private void HandleEnter(ref string input, StringBuilder currentWord)
+        {
+            if (currentWord.Length > 0)
+            {
+                PrintColoredWord(currentWord, addSpace: false);
+                currentWord.Clear();
+            }
+            Console.WriteLine();
+            _processManager.SendInput(input);
+            input = "";
+        }
+
+
         private void HandleCharacter(char c, StringBuilder currentWord)
         {
             if (c == ' ')
             {
-                if (currentWord.Length == 0)
-                {
-                    Console.Write(' ');
-                    return;
-                }
-
-                string originalWord = currentWord.ToString();
-                bool exists = _tree.Contains(originalWord.ToLower());
-
-                // Move the cursor back to the beginning of the current word
-                Console.SetCursorPosition(Console.CursorLeft - currentWord.Length, Console.CursorTop);
-
-                if (exists)
-                    Console.ForegroundColor = ConsoleColor.Green;
-                else
-                    Console.ForegroundColor = ConsoleColor.Red;
-
-                Console.Write(originalWord);
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write(' ');
-
+                PrintColoredWord(currentWord);
                 currentWord.Clear();
                 
             }
@@ -83,13 +75,37 @@ namespace SpellCheckingTool.Client
 
         }
 
+        private void PrintColoredWord(StringBuilder currentWord, bool addSpace = true)
+        {
+            if (currentWord.Length == 0)
+            {
+                if (addSpace) 
+                   Console.Write(' ');
+                return;
+            }
+
+            string originalWord = currentWord.ToString();
+            bool exists = _tree.Contains(originalWord.ToLower());
+
+            // Move the cursor back to the beginning of the current word
+            Console.SetCursorPosition(Console.CursorLeft - currentWord.Length, Console.CursorTop);
+
+            if (exists)
+                Console.ForegroundColor = ConsoleColor.Green;
+            else
+                Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.Write(originalWord);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(' ');
+        }
+
         private void HandleBackspace(ref string input, StringBuilder currentWord)
         {
             if (input.Length > 0)
             {
 
                 input = input.Substring(0, input.Length - 1);
-                // move cursor one step back, overwrite char with space, move back again
                 Console.Write("\b \b");
 
                 if (currentWord.Length > 0)
