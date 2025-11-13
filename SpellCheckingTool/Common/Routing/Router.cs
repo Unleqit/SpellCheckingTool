@@ -21,7 +21,7 @@ namespace SpellCheckingTool
         {
             foreach (var type in asm.GetTypes())
             {
-                foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
                     foreach (var attr in method.GetCustomAttributes<HttpAttribute>())
                     {
