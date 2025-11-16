@@ -10,21 +10,34 @@ namespace SpellCheckingTool.Client
     {
         public static void StartClient(int port)
         {
+            var wordTree = LoadWordTree();
+            var processManager = StartProcessManager();
+            StartSpellChecker(wordTree, processManager);
+        }
+        private static WordTree LoadWordTree()
+        {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\.."));
             string path = Path.Combine(projectRoot, @"TestProject\Resources\wordFile.wdb");
 
-            FilePath filePath = new FilePath(path);
-            WordTree tree = new WordTree();
-            tree = new FilePersistenceService(tree).Load(filePath);
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Wörterbuchdatei nicht gefunden: {path}");
 
-            // start cmd process
+            var filePath = new FilePath(path);
+            var tree = new WordTree();
+            return new FilePersistenceService(tree).Load(filePath);
+        }
+        private static ProcessManager StartProcessManager()
+        {
             var processManager = new ProcessManager();
             processManager.Start();
+            return processManager;
+        }
 
-            // start spell checking
+        private static void StartSpellChecker(WordTree tree, ProcessManager processManager)
+        {
             var consoleSpellChecker = new ConsoleSpellChecker(tree, processManager);
             consoleSpellChecker.Run();
         }
     }
-}      
+}
