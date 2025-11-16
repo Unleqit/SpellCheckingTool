@@ -72,5 +72,79 @@ namespace SpellCheckingTool
                 username = result.Value.Username
             });
         }
+
+        //Adding words
+        [HttpPost("/api/v1/users/words/add")]
+        public static void AddWord(
+            HttpListenerContext context,
+            [FromBody] Guid userId,
+            [FromBody] string word)
+        {
+            var result = _service.AddWord(userId, word);
+            if (!result.Success)
+            {
+                WriteError(context, 404, result.ErrorMessage ?? "Could not add word.");
+                return;
+            }
+
+            WriteJson(context, 200, new { success = true });
+        }
+
+        //Show words file (raw view)
+        [HttpPost("/api/v1/users/words/file")]
+        public static void GetWordsFile(
+            HttpListenerContext context,
+            [FromBody] Guid userId)
+        {
+            var all = _store.GetAllWordStatsRaw();
+
+            if (!all.TryGetValue(userId, out var wordsForUser))
+            {
+                WriteError(context, 404, "No words found for this user.");
+                return;
+            }
+
+            WriteJson(context, 200, new
+            {
+                userId,
+                words = wordsForUser.Values.Select(w => new
+                {
+                    w.Word,
+                    w.UsageCount,
+                    w.LastUsedAt
+                })
+            });
+        }
+
+        //Show statistics (sorted view)
+        [HttpPost("/api/v1/users/words/stats")]
+        public static void GetStats(
+            HttpListenerContext context,
+            [FromBody] Guid userId)
+        {
+            var result = _service.GetStats(userId);
+            if (!result.Success || result.Value == null)
+            {
+                WriteError(context, 404, result.ErrorMessage ?? "Could not get stats.");
+                return;
+            }
+
+            var ordered = result.Value
+                                .OrderByDescending(s => s.UsageCount)
+                                .ThenBy(s => s.Word);
+
+            WriteJson(context, 200, new
+            {
+                userId,
+                stats = ordered.Select(s => new
+                {
+                    s.Word,
+                    s.UsageCount,
+                    s.LastUsedAt
+                })
+            });
+        }
+
+
     }
 }
