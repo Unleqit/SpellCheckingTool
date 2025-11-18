@@ -8,17 +8,23 @@ namespace SpellCheckingTool
 {
     public class WordStatistic
     {
-        public string Word { get; private set; } = "";
+        public Word Word { get; private set; }   
         public int UsageCount { get; private set; }
         public DateTime LastUsedAt { get; private set; }
 
         private WordStatistic() { }
 
-        public WordStatistic(string word)
+        public WordStatistic(Word word)
         {
             Word = word;
             UsageCount = 0;
             LastUsedAt = DateTime.UtcNow;
+        }
+        public WordStatistic(Word word, int usageCount, DateTime lastUsedAt)
+        {
+            Word = word;
+            UsageCount = usageCount;
+            LastUsedAt = lastUsedAt;
         }
 
         public void Increment()

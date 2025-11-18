@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SpellCheckingTool;
 
 namespace SpellCheckingTool
 {
@@ -12,12 +13,15 @@ namespace SpellCheckingTool
         private readonly string _usersFilePath;
         private readonly string _wordStatsFilePath;
         private readonly object _lock = new();
+        private readonly IAlphabet _alphabet;
 
         private Dictionary<Guid, User> _users = new();
         private Dictionary<Guid, Dictionary<string, WordStatistic>> _userWordStats = new();
 
-        public FileUserStore(string baseDirectory)
+        public FileUserStore(string baseDirectory, IAlphabet alphabet)
         {
+            _alphabet = alphabet;
+
             Directory.CreateDirectory(baseDirectory);
 
             _usersFilePath = Path.Combine(baseDirectory, "users.json");
@@ -51,10 +55,39 @@ namespace SpellCheckingTool
             }
 
             var json = File.ReadAllText(_wordStatsFilePath);
-            _userWordStats =
-                JsonConvert.DeserializeObject<Dictionary<Guid, Dictionary<string, WordStatistic>>>(json)
-                ?? new Dictionary<Guid, Dictionary<string, WordStatistic>>();
+
+            var storage =
+                JsonConvert.DeserializeObject<Dictionary<Guid, Dictionary<string, WordStatisticStorage>>>(json)
+                ?? new Dictionary<Guid, Dictionary<string, WordStatisticStorage>>();
+
+            var result = new Dictionary<Guid, Dictionary<string, WordStatistic>>();
+
+            foreach (var userEntry in storage)
+            {
+                var inner = new Dictionary<string, WordStatistic>();
+
+                foreach (var wordEntry in userEntry.Value)
+                {
+                    var storageStat = wordEntry.Value;
+
+                    // recreate Word using the alphabet
+                    var wordObj = new Word(_alphabet, storageStat.Word);
+
+                    var stat = new WordStatistic(
+                        wordObj,
+                        storageStat.UsageCount,
+                        storageStat.LastUsedAt
+                    );
+
+                    inner[wordEntry.Key] = stat;
+                }
+
+                result[userEntry.Key] = inner;
+            }
+
+            _userWordStats = result;
         }
+
 
         private void SaveUsers()
         {
@@ -64,9 +97,23 @@ namespace SpellCheckingTool
 
         private void SaveWordStats()
         {
-            var json = JsonConvert.SerializeObject(_userWordStats, Formatting.Indented);
+            // convert domain model -> storage DTO
+            var storage = _userWordStats.ToDictionary(
+                userEntry => userEntry.Key,
+                userEntry => userEntry.Value.ToDictionary(
+                    wordEntry => wordEntry.Key,
+                    wordEntry => new WordStatisticStorage
+                    {
+                        Word = wordEntry.Value.Word.ToString(),   // stringify Word
+                        UsageCount = wordEntry.Value.UsageCount,
+                        LastUsedAt = wordEntry.Value.LastUsedAt
+                    })
+            );
+
+            var json = JsonConvert.SerializeObject(storage, Formatting.Indented);
             File.WriteAllText(_wordStatsFilePath, json);
         }
+
 
         #endregion
 
@@ -132,12 +179,12 @@ namespace SpellCheckingTool
 
                 if (!words.TryGetValue(normalized, out var stat))
                 {
-                    stat = new WordStatistic(normalized);
+                    var wordObj = new Word(_alphabet, normalized);
+                    stat = new WordStatistic(wordObj);
                     words[normalized] = stat;
                 }
 
                 stat.Increment();
-
                 SaveWordStats();
             }
         }
@@ -151,12 +198,7 @@ namespace SpellCheckingTool
 
                 // return a copy so callers can't mess it up
                 return dict.Values
-                           .Select(ws => new WordStatistic
-                           {
-                               Word = ws.Word,
-                               UsageCount = ws.UsageCount,
-                               LastUsedAt = ws.LastUsedAt
-                           })
+                           .Select(ws => new WordStatistic(ws.Word, ws.UsageCount, ws.LastUsedAt))
                            .ToList()
                            .AsReadOnly();
             }
@@ -175,12 +217,11 @@ namespace SpellCheckingTool
                         kv => kv.Key,
                         kv => kv.Value.ToDictionary(
                             inner => inner.Key,
-                            inner => new WordStatistic
-                            {
-                                Word = inner.Value.Word,
-                                UsageCount = inner.Value.UsageCount,
-                                LastUsedAt = inner.Value.LastUsedAt
-                            }));
+                            inner => new WordStatistic(
+                                inner.Value.Word,
+                                inner.Value.UsageCount,
+                                inner.Value.LastUsedAt
+                            )));
             }
         }
 

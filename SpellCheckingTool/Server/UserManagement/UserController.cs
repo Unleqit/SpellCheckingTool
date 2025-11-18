@@ -5,13 +5,17 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using SpellCheckingTool;
 
 namespace SpellCheckingTool
 {
     public static class UserController
     {
+        // TODO: replace `LatinAlphabet` with the one we actually use
+        private static readonly IAlphabet _alphabet = new LatinAlphabet();
+
         private static readonly FileUserStore _store =
-            new(Path.Combine(AppContext.BaseDirectory, "data"));
+            new(Path.Combine(AppContext.BaseDirectory, "data"), _alphabet);
 
         private static readonly UserService _service = new(_store, _store);
 
@@ -109,9 +113,9 @@ namespace SpellCheckingTool
                 userId,
                 words = wordsForUser.Values.Select(w => new
                 {
-                    w.Word,
-                    w.UsageCount,
-                    w.LastUsedAt
+                    word = w.Word.ToString(),
+                    usageCount = w.UsageCount,
+                    lastUsedAt = w.LastUsedAt
                 })
             });
         }
@@ -138,10 +142,11 @@ namespace SpellCheckingTool
                 userId,
                 stats = ordered.Select(s => new
                 {
-                    s.Word,
-                    s.UsageCount,
-                    s.LastUsedAt
+                    word = s.Word.ToString(),
+                    usageCount = s.UsageCount,
+                    lastUsedAt = s.LastUsedAt
                 })
+
             });
         }
 

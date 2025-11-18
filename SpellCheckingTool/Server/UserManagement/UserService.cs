@@ -27,13 +27,13 @@ namespace SpellCheckingTool
             if (_userRepo.GetByUsername(username) != null)
                 return OperationResult<User>.Fail("Username already exists.");
 
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = username.Trim(),
-                PasswordHash = HashPassword(password),
-                CreatedAt = DateTime.UtcNow
-            };
+            var user = new User(
+            Guid.NewGuid(),
+            username.Trim(),
+            HashPassword(password),
+            DateTime.UtcNow
+            );
+
 
             _userRepo.Add(user);
             return OperationResult<User>.Ok(user);
