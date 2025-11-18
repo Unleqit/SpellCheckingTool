@@ -10,13 +10,14 @@ namespace SpellCheckingTool
 {
     public class FileUserStore : IUserRepository, IUserWordStatsRepository
     {
+#pragma warning disable IL2026, IL3050
         private readonly string _usersFilePath;
         private readonly string _wordStatsFilePath;
         private readonly object _lock = new();
         private readonly IAlphabet _alphabet;
 
         private Dictionary<Guid, User> _users = new();
-        private Dictionary<Guid, Dictionary<string, WordStatistic>> _userWordStats = new();
+        private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats = new();
 
         public FileUserStore(string baseDirectory, IAlphabet alphabet)
         {
@@ -50,7 +51,7 @@ namespace SpellCheckingTool
         {
             if (!File.Exists(_wordStatsFilePath))
             {
-                _userWordStats = new Dictionary<Guid, Dictionary<string, WordStatistic>>();
+                _userWordStats = new Dictionary<Guid, Dictionary<string, WordInfo>>();
                 return;
             }
 
@@ -60,11 +61,11 @@ namespace SpellCheckingTool
                 JsonConvert.DeserializeObject<Dictionary<Guid, Dictionary<string, WordStatisticStorage>>>(json)
                 ?? new Dictionary<Guid, Dictionary<string, WordStatisticStorage>>();
 
-            var result = new Dictionary<Guid, Dictionary<string, WordStatistic>>();
+            var result = new Dictionary<Guid, Dictionary<string, WordInfo>>();
 
             foreach (var userEntry in storage)
             {
-                var inner = new Dictionary<string, WordStatistic>();
+                var inner = new Dictionary<string, WordInfo>();
 
                 foreach (var wordEntry in userEntry.Value)
                 {
@@ -79,7 +80,7 @@ namespace SpellCheckingTool
                         storageStat.LastUsedAt
                     );
 
-                    inner[wordEntry.Key] = stat;
+                    inner[wordEntry.Key] = new WordInfo(wordEntry.Key, stat);
                 }
 
                 result[userEntry.Key] = inner;
@@ -97,16 +98,15 @@ namespace SpellCheckingTool
 
         private void SaveWordStats()
         {
-            // convert domain model -> storage DTO
             var storage = _userWordStats.ToDictionary(
                 userEntry => userEntry.Key,
                 userEntry => userEntry.Value.ToDictionary(
                     wordEntry => wordEntry.Key,
                     wordEntry => new WordStatisticStorage
                     {
-                        Word = wordEntry.Value.Word.ToString(),   // stringify Word
-                        UsageCount = wordEntry.Value.UsageCount,
-                        LastUsedAt = wordEntry.Value.LastUsedAt
+                        Word = wordEntry.Value.Statistic.Word.ToString(),   // stringify Word
+                        UsageCount = wordEntry.Value.Statistic.UsageCount,
+                        LastUsedAt = wordEntry.Value.Statistic.LastUsedAt
                     })
             );
 
@@ -149,7 +149,7 @@ namespace SpellCheckingTool
                 _users[user.Id] = user;
 
                 if (!_userWordStats.ContainsKey(user.Id))
-                    _userWordStats[user.Id] = new Dictionary<string, WordStatistic>();
+                    _userWordStats[user.Id] = new Dictionary<string, WordInfo>();
 
                 SaveUsers();
                 SaveWordStats();
@@ -169,7 +169,7 @@ namespace SpellCheckingTool
 
                 if (!_userWordStats.TryGetValue(userId, out var words))
                 {
-                    words = new Dictionary<string, WordStatistic>();
+                    words = new Dictionary<string, WordInfo>();
                     _userWordStats[userId] = words;
                 }
 
@@ -177,14 +177,15 @@ namespace SpellCheckingTool
                 if (string.IsNullOrWhiteSpace(normalized))
                     return;
 
-                if (!words.TryGetValue(normalized, out var stat))
+                if (!words.TryGetValue(normalized, out var info))
                 {
                     var wordObj = new Word(_alphabet, normalized);
-                    stat = new WordStatistic(wordObj);
-                    words[normalized] = stat;
+                    var stat = new WordStatistic(wordObj);
+                    info = new WordInfo(normalized, stat);
+                    words[normalized] = info;
                 }
 
-                stat.Increment();
+                info.Statistic.Increment();
                 SaveWordStats();
             }
         }
@@ -196,9 +197,8 @@ namespace SpellCheckingTool
                 if (!_userWordStats.TryGetValue(userId, out var dict))
                     return Array.Empty<WordStatistic>();
 
-                // return a copy so callers can't mess it up
                 return dict.Values
-                           .Select(ws => new WordStatistic(ws.Word, ws.UsageCount, ws.LastUsedAt))
+                           .Select(info => info.Statistic)
                            .ToList()
                            .AsReadOnly();
             }
@@ -217,15 +217,11 @@ namespace SpellCheckingTool
                         kv => kv.Key,
                         kv => kv.Value.ToDictionary(
                             inner => inner.Key,
-                            inner => new WordStatistic(
-                                inner.Value.Word,
-                                inner.Value.UsageCount,
-                                inner.Value.LastUsedAt
-                            )));
+                            inner => inner.Value.Statistic));
             }
         }
 
         #endregion
-
+#pragma warning restore IL2026, IL3050
     }
 }

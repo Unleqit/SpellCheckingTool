@@ -39,9 +39,9 @@ namespace SpellCheckingTool
         public static void Register(
            HttpListenerContext context,
            [FromBody] string username,
-           [FromBody] string password)
+           [FromBody] string hashedPassword)
         {
-            var result = _service.Register(username, password);
+            var result = _service.Register(username, hashedPassword);
             if (!result.Success || result.Value == null)
             {
                 WriteError(context, 400, result.ErrorMessage ?? "Registration failed.");

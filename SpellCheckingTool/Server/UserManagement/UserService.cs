@@ -18,11 +18,11 @@ namespace SpellCheckingTool
             _wordRepo = wordRepo;
         }
 
-        public OperationResult<User> Register(string username, string password)
+        public OperationResult<User> Register(string username, string hashedPassword)
         {
             if (string.IsNullOrWhiteSpace(username))
                 return OperationResult<User>.Fail("Username is required.");
-            if (string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(hashedPassword))
                 return OperationResult<User>.Fail("Password is required.");
             if (_userRepo.GetByUsername(username) != null)
                 return OperationResult<User>.Fail("Username already exists.");
@@ -30,7 +30,7 @@ namespace SpellCheckingTool
             var user = new User(
             Guid.NewGuid(),
             username.Trim(),
-            HashPassword(password),
+            hashedPassword,
             DateTime.UtcNow
             );
 
@@ -39,14 +39,13 @@ namespace SpellCheckingTool
             return OperationResult<User>.Ok(user);
         }
 
-        public OperationResult<User> Login(string username, string password)
+        public OperationResult<User> Login(string username, string hashedPassword)
         {
             var user = _userRepo.GetByUsername(username);
             if (user == null)
                 return OperationResult<User>.Fail("User not found.");
 
-            var hash = HashPassword(password);
-            if (!string.Equals(user.PasswordHash, hash, StringComparison.Ordinal))
+            if (!string.Equals(user.PasswordHash, hashedPassword, StringComparison.Ordinal))
                 return OperationResult<User>.Fail("Invalid password.");
 
             return OperationResult<User>.Ok(user);
@@ -70,12 +69,13 @@ namespace SpellCheckingTool
             return OperationResult<IReadOnlyCollection<WordStatistic>>.Ok(stats);
         }
 
-        private static string HashPassword(string password)
+        //TO DO: Relocate this to Client
+        /*private static string HashPassword(string password)
         {
             using var sha = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(password);
             var hash = sha.ComputeHash(bytes);
             return Convert.ToHexString(hash);
-        }
+        }*/
     }
 }
