@@ -8,11 +8,11 @@ namespace SpellCheckingTool
 {
     public class WordStatistic
     {
-        public string Word { get; set; } = "";
-        public int UsageCount { get; set; }
-        public DateTime LastUsedAt { get; set; }
+        public string Word { get; private set; } = "";
+        public int UsageCount { get; private set; }
+        public DateTime LastUsedAt { get; private set; }
 
-        public WordStatistic() { }
+        private WordStatistic() { }
 
         public WordStatistic(string word)
         {
