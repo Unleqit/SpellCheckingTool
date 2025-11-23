@@ -13,8 +13,8 @@ namespace TestProject.Unit
         public void SetupTests()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\.."));
-            string path = Path.Combine(projectRoot, @"TestProject\Resources\wordFile.wdb");
+            string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
+            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.wdb");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException($"Wörterbuchdatei nicht gefunden: {path}");
