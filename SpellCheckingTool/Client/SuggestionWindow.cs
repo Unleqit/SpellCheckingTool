@@ -47,7 +47,7 @@ namespace SpellCheckingTool.Client
         bool suggestionsShown = true;
         WordTree tree;
         bool cycle;
-        bool previousWordAutoCompleted;
+        
 
         public SuggestionWindow(WordTree tree)
         {
@@ -85,7 +85,10 @@ namespace SpellCheckingTool.Client
                     break;
                 case '\b':
                     if (input.Length == 1)
+                    {
+                        input = "";
                         break;
+                    }
 
                     //rewrite previous word in normal color
                     removeLastCharacterFromWord(ref input);
@@ -125,18 +128,7 @@ namespace SpellCheckingTool.Client
 
             //set alreadyEnteredCharacterCount
             alreadyEnteredCharacterCount = input.Length - (input.LastIndexOf(' ') + 1);
-
-            //rewrite last word without match highlighting
-        //    int startIndexOfLastWord = input.LastIndexOf(' ') + 1;
             checkAndColorLastWord(input.Substring(input.LastIndexOf(' ') + 1));
-
-
-        /*    Console.CursorLeft = startIndexOfLastWord;
-            Console.ForegroundColor = originalForeColor;
-            Console.BackgroundColor = originalBackColor;
-
-            //write only last word, not the entire sequence stored in input
-            Console.Write(input.Substring(input.LastIndexOf(' ') + 1)); */
         }
 
         string[] getSuggestions(string input)
@@ -153,6 +145,7 @@ namespace SpellCheckingTool.Client
 
         void showSuggestions(string[] suggestions)
         {
+            suggestionsShown = true;
             int suggestionWindowWidth = longestWord + 2 * HorizontalPaddingSz;
             int suggestionWindowHeight = CurrentSuggestionCount;
 
@@ -187,6 +180,7 @@ namespace SpellCheckingTool.Client
 
         public void hideSuggestions()
         {
+            suggestionsShown = false;
             int suggestionWindowWidth = longestWord + 2 * HorizontalPaddingSz;
             int suggestionWindowHeight = CurrentSuggestionCount;
             int oldCursorLeft = Console.CursorLeft;
@@ -240,13 +234,13 @@ namespace SpellCheckingTool.Client
             currentlySelectedLine = 0;
             alreadyEnteredCharacterCount = 0;
             input = input.Substring(0, input.LastIndexOf(' ') + 1) + selectedSuggestion;
-            previousWordAutoCompleted = true;
         }
 
         public void selectNextSuggestion()
         {
             if (!suggestionsShown)
                 return;
+
             hideSuggestions();
             currentlySelectedLine = (currentlySelectedLine + 1) % currentSuggestionCount;
             showSuggestions(currentSuggestions);

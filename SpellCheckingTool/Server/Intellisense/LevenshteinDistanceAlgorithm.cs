@@ -5,11 +5,11 @@ namespace SpellCheckingTool
     public unsafe class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
     {
         int maxWordLengthInTree;
-        int[] prev;
-        int[] current;
-        int[] _prev;
-        int[] _current;
-        int[] tmpBuffer;
+        int* prev;
+        int* current;
+        int* _prev;
+        int* _current;
+        int* tmpBuffer;
 
         /// <summary>
         /// Provides an implementation of the levenshtein distance matching algorithm (see https://en.wikipedia.org/wiki/Levenshtein_distance)
@@ -19,15 +19,19 @@ namespace SpellCheckingTool
 #pragma warning restore CS8618
         {
             this.maxWordLengthInTree = tree.metaData.wordBufferLength + 1;
-            prev = new int[this.maxWordLengthInTree * sizeof(int)];
-            current = new int[this.maxWordLengthInTree * sizeof(int)];
-           
+            int length = this.maxWordLengthInTree * sizeof(int);
+
+            prev = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(length) : API.linux_malloc(length));
+            current = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(length) : API.linux_malloc(length));
+
             //subscribe to the WordTreeWordBufferLengthChangedEventHandler in order to resize the native prev, next buffers when the word buffer length of the tree changes
             tree.wordTreeWordBufferLengthChangedEventHandler += ((object sender, int newWordLengthBufferSize) =>
             {
                 this.maxWordLengthInTree = newWordLengthBufferSize + 1;
-                prev = new int[this.maxWordLengthInTree * sizeof(int)];
-                current = new int[this.maxWordLengthInTree * sizeof(int)];
+                int length = this.maxWordLengthInTree * sizeof(int);
+
+                prev = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_realloc(prev, length) : API.linux_realloc(prev, length));
+                current = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_realloc(current, length) : API.linux_realloc(current, length));
             });
         }
 
