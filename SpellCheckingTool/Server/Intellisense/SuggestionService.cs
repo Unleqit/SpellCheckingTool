@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool
 {
@@ -19,9 +20,16 @@ namespace SpellCheckingTool
         public SuggestionResult GetSuggestionResult(string input, int maxAmountOfSuggestionsToBeReturned = 3, int maxAllowedDistance = 4)
         {
             //create a new list to hold the results
-            string[] matches = new string[maxAmountOfSuggestionsToBeReturned];
+            char** matches = (char**)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(char*) * maxAmountOfSuggestionsToBeReturned) : API.linux_malloc(sizeof(char*) * maxAmountOfSuggestionsToBeReturned));
+            int* matchLengths = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(int) * maxAmountOfSuggestionsToBeReturned) : API.linux_malloc(sizeof(int) * maxAmountOfSuggestionsToBeReturned));
+
+            //initialize subpointers of matches buffer
+            int maxWordLength = tree.metaData.wordBufferLength + 1;
+            for (int i = 0; i < maxAmountOfSuggestionsToBeReturned; ++i)
+                *(matches + i) = (char*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(char) * maxWordLength) : API.linux_malloc(sizeof(char) * maxWordLength));
+
             int distanceOfCurrentWordToInput = 0;
-            int[] distanceOfMatchesToInput = new int[maxAmountOfSuggestionsToBeReturned];
+            int* distanceOfMatchesToInput = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(int) * maxAmountOfSuggestionsToBeReturned) : API.linux_malloc(sizeof(int) * maxAmountOfSuggestionsToBeReturned));
             int discoveredMatchesCount = 0;
             int indexOfMatchToBeReplacedNext = 0;
 
@@ -40,9 +48,9 @@ namespace SpellCheckingTool
                 if (distanceOfCurrentWordToInput < worstDistanceValueInResults)
                 {
                     //write current word to matchResult buffer (override the "least close" word there)
-                    matches[indexOfMatchToBeReplacedNext] = "";
+                    matchLengths[indexOfMatchToBeReplacedNext] = wordBufferLength;
                     for (int cpi = 0; cpi < wordBufferLength; ++cpi)
-                        matches[indexOfMatchToBeReplacedNext] += *(((char*)wordBuffer) + cpi);
+                        matches[indexOfMatchToBeReplacedNext][cpi] = *(((char*)wordBuffer) + cpi);
 
                     //update matchResultLD buffer to set the LD of this match
                     distanceOfMatchesToInput[indexOfMatchToBeReplacedNext] = distanceOfCurrentWordToInput;
@@ -71,7 +79,8 @@ namespace SpellCheckingTool
 
             //clamp the discovered matches count to the amount of matches we actually stored
             discoveredMatchesCount = discoveredMatchesCount < maxAmountOfSuggestionsToBeReturned ? discoveredMatchesCount : maxAmountOfSuggestionsToBeReturned;
-            string matchToBeSwapped;
+            char* matchToBeSwapped;
+            int matchLengthToBeSwapped;
             int matchDistanceToBeSwapped;
 
             //bubble sort the matches array, as it will only run once per request and the matchResultCount is probably < 5 anyway...
@@ -83,6 +92,9 @@ namespace SpellCheckingTool
                         matchToBeSwapped = matches[j];
                         matches[j] = matches[j + 1];
                         matches[j + 1] = matchToBeSwapped;
+                        matchLengthToBeSwapped = matchLengths[j];
+                        matchLengths[j] = matchLengths[j + 1];
+                        matchLengths[j + 1] = matchLengthToBeSwapped;
 
                         //swap match result in distance array
                         matchDistanceToBeSwapped = distanceOfMatchesToInput[j];
@@ -91,7 +103,7 @@ namespace SpellCheckingTool
                     }
 
             //finally, we obtained an array of matches in the tree for the given input, so we wrap it in a class and return it
-            SuggestionResult result = new SuggestionResult(matches, discoveredMatchesCount);
+            SuggestionResult result = new SuggestionResult(matches, matchLengths, discoveredMatchesCount);
             return result;
         }
 

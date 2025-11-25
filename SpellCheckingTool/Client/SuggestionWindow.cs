@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SpellCheckingTool.Client
 {
-    public class SuggestionWindow : ISuggestionDisplay
+    public unsafe class SuggestionWindow : ISuggestionDisplay
     {
+        //-------public properties--------
         public int MaxSuggestionsToBeDisplayed { get; set; }
         public int HorizontalPaddingSz { get; set; }
         public ConsoleColor ValidWordForeColor { get; set; }
@@ -20,25 +22,44 @@ namespace SpellCheckingTool.Client
         public ConsoleColor SuggestionBackColor { get; set; }
         public ConsoleColor CurrentlySelectedSuggestionForeColor { get; set; }
         public ConsoleColor CurrentlySelectedSuggestionBackColor { get; set; }
+        
+        int currentSuggestionCount;
         public int CurrentSuggestionCount { get => currentSuggestionCount; }
+        
+        int suggestionAlgorithmMaxAllowedDistance;
         public int SuggestionAlgorithmMaxAllowedDistance
         {
             get => suggestionAlgorithmMaxAllowedDistance;
-            //the provided distance should not be negative
             set => suggestionAlgorithmMaxAllowedDistance = value < 0 ? 0 : value;
         }
+
+        int currentlySelectedLine;
         public int CurrentlySelectedLine 
         {
             get => currentlySelectedLine;
-            //the currently selected line should not exceed the bounds of the suggestion window
             set => currentlySelectedLine = value < 0 ? 0 : value > currentSuggestionCount ? currentSuggestionCount : value;
         }
-        public string CurrentlySelectedSuggestion { get => currentlySelectedLine < currentSuggestions.Length ? currentSuggestions[currentlySelectedLine] : ""; }
+        public string CurrentlySelectedSuggestion
+        {
+            get
+            {
+                if (currentlySelectedLine >= currentSuggestions->GetSuggestionCount() || currentlySelectedLine < 0)
+                    return "";
 
-        int suggestionAlgorithmMaxAllowedDistance;
-        int currentlySelectedLine;
-        int currentSuggestionCount;
-        string[] currentSuggestions;
+                string tmp = "";
+                char** suggestions = currentSuggestions->GetSuggestionArray();
+                int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
+
+                for (int i = 0; i < suggestionLengths[currentlySelectedLine]; ++i)
+                    tmp += suggestions[currentlySelectedLine][i];
+
+                return tmp;
+            }
+        }
+
+
+        //-------private properties--------
+        
         int longestWord;
         ConsoleColor originalForeColor;
         ConsoleColor originalBackColor;
@@ -47,7 +68,8 @@ namespace SpellCheckingTool.Client
         bool suggestionsShown = true;
         WordTree tree;
         bool cycle;
-        
+        SuggestionResult* currentSuggestions;
+
 
         public SuggestionWindow(WordTree tree)
         {
@@ -55,7 +77,7 @@ namespace SpellCheckingTool.Client
             this.longestWord = tree.metaData.wordBufferLength;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
-            
+            this.currentSuggestions = (SuggestionResult*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(SuggestionResult)) : API.linux_malloc(sizeof(SuggestionResult)));
 
             //subscribe to handler to dynamically update longestWord property
             tree.wordTreeWordBufferLengthChangedEventHandler += ((object sender, int newLongestWord) => longestWord = newLongestWord);
@@ -74,8 +96,8 @@ namespace SpellCheckingTool.Client
                     //check if input is contained in the tree and color the last word accordingly
                     checkAndColorLastWord(lastWord);
                     hideSuggestions();
-                    suggestions = getSuggestions(lastWord);
-                    showSuggestions(suggestions);
+                    getSuggestions(lastWord);
+                    showSuggestions();
                     oldCursorLeft++;
                     break;
                 case ' ':
@@ -95,8 +117,8 @@ namespace SpellCheckingTool.Client
 
                     //show suggestions again for last word
                     lastWord = input.Substring(input.LastIndexOf(' ') + 1);
-                    suggestions = getSuggestions(lastWord);
-                    showSuggestions(suggestions);
+                    getSuggestions(lastWord);
+                    showSuggestions();
                     break;
             }
         }
@@ -131,28 +153,26 @@ namespace SpellCheckingTool.Client
             checkAndColorLastWord(input.Substring(input.LastIndexOf(' ') + 1));
         }
 
-        string[] getSuggestions(string input)
+        void getSuggestions(string input)
         {
-            var sw = Stopwatch.StartNew();
-            string[] result = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance).GetSuggestionArray();
-            currentSuggestions = result;
-            currentSuggestionCount = result.Length < MaxSuggestionsToBeDisplayed ? result.Length : result.Length > MaxSuggestionsToBeDisplayed ? MaxSuggestionsToBeDisplayed : result.Length;
-            sw.Stop();
-            long l = sw.ElapsedMilliseconds;
-            
-            return result;
+            *currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
+            int _currentSuggestionCount = currentSuggestions->GetSuggestionCount();
+            currentSuggestionCount = _currentSuggestionCount < MaxSuggestionsToBeDisplayed ? _currentSuggestionCount : currentSuggestionCount > MaxSuggestionsToBeDisplayed ? MaxSuggestionsToBeDisplayed : _currentSuggestionCount;
         }
 
-        void showSuggestions(string[] suggestions)
+        void showSuggestions()
         {
             suggestionsShown = true;
             int suggestionWindowWidth = longestWord + 2 * HorizontalPaddingSz;
-            int suggestionWindowHeight = CurrentSuggestionCount;
+            int suggestionWindowHeight = currentSuggestionCount;
 
             //save the initial state of where the word is in the x direction of the console window and draw suggestion window at the start of the last character of said word
             //TODO: clean this up
-            int wordLeftInConsole = Console.CursorLeft - (cycle ? 1 : 0);
+            int wordLeftInConsole = Console.CursorLeft;
             int wordTopInConsole = Console.CursorTop;
+
+            char** suggestions = currentSuggestions->GetSuggestionArray();
+            int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
 
             //check if console is high enough to display suggestion window
             if (Console.WindowHeight - Console.CursorTop >= suggestionWindowHeight + 1) //+1 because suggestion floating window gets shown below current line
@@ -163,8 +183,11 @@ namespace SpellCheckingTool.Client
                     Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
                     Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
                     Console.Write(new string(' ', HorizontalPaddingSz));
-                    Console.Write(suggestions[j]);
-                   Console.Write(new string(' ', suggestionWindowWidth - (HorizontalPaddingSz + suggestions[j].Length)));
+
+                    for (int i = 0; i < suggestionLengths[j]; ++i)
+                        Console.Write(suggestions[j][i]);
+
+                   Console.Write(new string(' ', suggestionWindowWidth - (HorizontalPaddingSz + suggestionLengths[j])));
                 }
             }
             else
@@ -243,7 +266,7 @@ namespace SpellCheckingTool.Client
 
             hideSuggestions();
             currentlySelectedLine = (currentlySelectedLine + 1) % currentSuggestionCount;
-            showSuggestions(currentSuggestions);
+            showSuggestions();
 
         }
 
@@ -259,7 +282,7 @@ namespace SpellCheckingTool.Client
             else
                 currentlySelectedLine = currentSuggestionCount - 1;
             
-            showSuggestions(currentSuggestions);
+            showSuggestions();
         }
     }
 }
