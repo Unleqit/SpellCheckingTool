@@ -36,7 +36,21 @@ namespace SpellCheckingTool.Client
 
         private static void StartSpellChecker(WordTree tree, ProcessManager processManager)
         {
-            var consoleSpellChecker = new ConsoleSpellChecker(tree, processManager);
+            var consoleSpellChecker = new ConsoleSpellChecker(tree, processManager, new SuggestionWindow(tree)
+            {
+                SuggestionBackColor = ConsoleColor.Red,
+                SuggestionForeColor = ConsoleColor.White,
+                CurrentlySelectedSuggestionBackColor = ConsoleColor.Yellow,
+                CurrentlySelectedSuggestionForeColor = ConsoleColor.Cyan,
+                ValidWordBackColor = Console.BackgroundColor,
+                ValidWordForeColor = ConsoleColor.Green,
+                InvalidWordBackColor = Console.BackgroundColor,
+                InvalidWordForeColor = ConsoleColor.Red,
+                CurrentlySelectedLine = 0,
+                HorizontalPaddingSz = 3,
+                SuggestionAlgorithmMaxAllowedDistance = 3,
+                MaxSuggestionsToBeDisplayed = 7
+            });
             consoleSpellChecker.Run();
         }
     }

@@ -9,6 +9,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <PublishTrimmed>False</PublishTrimmed>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,11 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Server\Intellisense\DistanceAlgorithms\" />
+    <Folder Include="Server\Intellisense\Suggestions\" />
   </ItemGroup>
 
 </Project>
