@@ -26,7 +26,8 @@ namespace SpellCheckingTool
             int indexOfMatchToBeReplacedNext = 0;
 
             //keep track of the worst distance value in result list
-            int worstDistanceValueInResults = maxAllowedDistance < tree.metaData.wordBufferLength ? maxAllowedDistance : tree.metaData.wordBufferLength;
+            //add offset one in order to get exact matches (when "contain" is searched with maxDistance=0, we need to return "contain", but it would make so sense to replace with equally distanced matches in the if condition below
+            int worstDistanceValueInResults = maxAllowedDistance < (tree.metaData.wordBufferLength - 1) ? (maxAllowedDistance + 1) : tree.metaData.wordBufferLength;
 
             //walk the tree using the provided WalkWordTreeService and execute the following lambda method for each word in the te
             this.walkWordTreeService.WalkTree((long wordBuffer, int wordBufferLength) =>
@@ -38,10 +39,10 @@ namespace SpellCheckingTool
                 //check if this word is to be considered as a possible suggestion
                 if (distanceOfCurrentWordToInput < worstDistanceValueInResults)
                 {
-                    //write current word to matchResult buffer (override the "least close" word there
+                    //write current word to matchResult buffer (override the "least close" word there)
+                    matches[indexOfMatchToBeReplacedNext] = "";
                     for (int cpi = 0; cpi < wordBufferLength; ++cpi)
                         matches[indexOfMatchToBeReplacedNext] += *(((char*)wordBuffer) + cpi);
-                    matches[indexOfMatchToBeReplacedNext] += '\n';
 
                     //update matchResultLD buffer to set the LD of this match
                     distanceOfMatchesToInput[indexOfMatchToBeReplacedNext] = distanceOfCurrentWordToInput;
