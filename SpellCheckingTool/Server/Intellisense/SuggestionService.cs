@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool
 {
@@ -25,11 +26,13 @@ namespace SpellCheckingTool
             int discoveredMatchesCount = 0;
             int indexOfMatchToBeReplacedNext = 0;
 
+            var sw = Stopwatch.StartNew();
+
             //keep track of the worst distance value in result list
             //add offset one in order to get exact matches (when "contain" is searched with maxDistance=0, we need to return "contain", but it would make so sense to replace with equally distanced matches in the if condition below
             int worstDistanceValueInResults = maxAllowedDistance < (tree.metaData.wordBufferLength - 1) ? (maxAllowedDistance + 1) : tree.metaData.wordBufferLength;
 
-            //walk the tree using the provided WalkWordTreeService and execute the following lambda method for each word in the te
+            //walk the tree using the provided WalkWordTreeService and execute the following lambda method for each word in the t
             this.walkWordTreeService.WalkTree((long wordBuffer, int wordBufferLength) =>
             {
                 //get the distance of the current word in the tree from the provided input
@@ -68,6 +71,9 @@ namespace SpellCheckingTool
                     }
                 }
             });
+
+            sw.Stop();
+            long l0 = sw.ElapsedMilliseconds;
 
             //clamp the discovered matches count to the amount of matches we actually stored
             discoveredMatchesCount = discoveredMatchesCount < maxAmountOfSuggestionsToBeReturned ? discoveredMatchesCount : maxAmountOfSuggestionsToBeReturned;
