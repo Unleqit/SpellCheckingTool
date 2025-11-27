@@ -1,13 +1,15 @@
 ﻿namespace SpellCheckingTool
 {
-    public class SuggestionResult
+    public unsafe struct SuggestionResult
     {
-        string[] suggestions;
+        char** suggestions;
+        int* suggestionLengths;
         int length;
 
-        public SuggestionResult(string[] suggestions, int length)
+        public SuggestionResult(char** suggestions, int* suggestionLengths, int length)
         {
             this.suggestions = suggestions;
+            this.suggestionLengths = suggestionLengths;
             this.length = length;
         }
 
@@ -16,14 +18,28 @@
             return length;
         }
 
-        public string[] GetSuggestionArray()
+        public int* GetSuggestionLengths()
+        {
+            return suggestionLengths;
+        }
+
+        public char** GetSuggestionArray()
         {
             return suggestions;
         }
 
-        public List<string> GetSuggestionList()
+        /// <summary>
+        /// Convenience method. Use GetSuggestionArray() and GetSuggestionLengths() in performance-critical scenarios instead.
+        /// </summary>
+        public string[] GetSuggestionArrayManaged()
         {
-            return suggestions.ToList();
+            string[] tmp = new string[length];
+
+            for (int i = 0; i < length; ++i)
+                for (int j = 0; j < *(suggestionLengths + i); ++j)
+                    tmp[i] += suggestions[i][j];
+
+            return tmp;
         }
     }
 }

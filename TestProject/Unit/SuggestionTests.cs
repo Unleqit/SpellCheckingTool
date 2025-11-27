@@ -3,7 +3,7 @@
 namespace TestProject.Unit
 {
     [TestClass]
-    public class SuggestionTests
+    public unsafe class SuggestionTests
     {
 #pragma warning disable CS8618 // tree is assigned in SetupTests() before the tests of this class get executed
         WordTree tree;
@@ -25,41 +25,49 @@ namespace TestProject.Unit
         }
 
         [TestMethod]
-        public void GetHundredSuggestionsOfAllDistancesForTreeWithTenElements_ShouldReturnTenSuggestions()
+        public void GetTwentySuggestionsOfAllDistancesForTreeWithTenElements_ShouldReturnTenSuggestions()
         {
             IAlphabet alphabet = new LatinAlphabet();
             Word[] words = Word.ParseWords(alphabet, new string[] { "these", "are", "some", "random", "english", "words", "containing", "only", "latin", "characters" });
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(words);
-            SuggestionResult result = tree.GetSuggestions("containing", 100, 999);
+            SuggestionResult result = tree.GetSuggestions("containing", 20, 999);
             Assert.AreEqual(result.GetSuggestionCount(), tree.metaData.wordCount);
             tree.Dispose();
         }
 
         [TestMethod]
-        public void GetFiveSuggestionsInLargeTreeForContain_ShouldReturnContainContains()
+        public void GetFiveSuggestionsInLargeTreeForContain_ShouldReturnContainContainsCongaingConinConjoin()
         {
             SuggestionResult result = tree.GetSuggestions("contain", 5, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 5);
-            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
+            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
+        }
+
+        [TestMethod]
+        public void GetHundredSuggestionsInLargeTreeForContain_ShouldReturnTwentySuggestions()
+        {
+            SuggestionResult result = tree.GetSuggestions("contain", 100, 999);
+            Assert.AreEqual(result.GetSuggestionCount(), 20);
+            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
         }
 
         [TestMethod]
         public void GetSuggestionsTwice_ShouldYieldSameResult()
         {
-            SuggestionResult result = tree.GetSuggestions("aba", 50, 999);
-            Assert.AreEqual(result.GetSuggestionCount(), 50);
-            SuggestionResult result2 = tree.GetSuggestions("aba", 50, 999);
-            Assert.AreEqual(result2.GetSuggestionCount(), 50);
-            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(result2.GetSuggestionArray()));
+            SuggestionResult result = tree.GetSuggestions("aba", 20, 999);
+            Assert.AreEqual(result.GetSuggestionCount(), 20);
+            SuggestionResult result2 = tree.GetSuggestions("aba", 20, 999);
+            Assert.AreEqual(result2.GetSuggestionCount(), 20);
+            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(result2.GetSuggestionArrayManaged()));
         }
 
         [TestMethod]
         public void GetSuggestionsOfWordNotContainedInTreeWithMaxDistanceParameterZero_ShouldReturnArrayContainingOnlyNullValues()
         {
-            SuggestionResult result = tree.GetSuggestions("contai", 50, 0);
+            SuggestionResult result = tree.GetSuggestions("contai", 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 0);
-            Assert.IsTrue(result.GetSuggestionArray().All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArrayManaged().All(element => element == null));
         }
 
         [TestMethod]
@@ -67,16 +75,16 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("تزنيت", 5, 999);
             Assert.IsTrue(result.GetSuggestionCount() == 5);
-            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
+            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
         }
 
         [TestMethod]
         public void GetSuggestionsOfWordContainedInTreeWithMaxDistanceParameterZero_ShouldReturnArrayContainingOnlyExactMatchAndNullValues()
         {
-            SuggestionResult result = tree.GetSuggestions("contain", 50, 0);
+            SuggestionResult result = tree.GetSuggestions("contain", 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 1);
-            Assert.IsTrue(result.GetSuggestionArray()[0] == "contain");
-            Assert.IsTrue(result.GetSuggestionArray().Take(new Range(1, 50)).All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
+            Assert.IsTrue(result.GetSuggestionArrayManaged().Take(new Range(1, 50)).All(element => element == null));
         }
     }
 }

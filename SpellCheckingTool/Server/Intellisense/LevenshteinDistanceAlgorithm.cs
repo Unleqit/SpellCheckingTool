@@ -1,15 +1,25 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool
 {
     public unsafe class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
     {
         int maxWordLengthInTree;
-        int[] prev;
-        int[] current;
-        int[] _prev;
-        int[] _current;
-        int[] tmpBuffer;
+        int* prev;
+        int* current;
+        int* _prev;
+        int* _current;
+        int* tmpBuffer;
+        int minimalCost;
+        char* tmp;
+        int tmpLen;
+        int i, j;
+        int deletionCost;
+        int insertionCost;
+        int substitutionCost;
+
+
 
         /// <summary>
         /// Provides an implementation of the levenshtein distance matching algorithm (see https://en.wikipedia.org/wiki/Levenshtein_distance)
@@ -19,15 +29,19 @@ namespace SpellCheckingTool
 #pragma warning restore CS8618
         {
             this.maxWordLengthInTree = tree.metaData.wordBufferLength + 1;
-            prev = new int[this.maxWordLengthInTree * sizeof(int)];
-            current = new int[this.maxWordLengthInTree * sizeof(int)];
-           
+            int length = this.maxWordLengthInTree * sizeof(int);
+
+            prev = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(length) : API.linux_malloc(length));
+            current = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(length) : API.linux_malloc(length));
+
             //subscribe to the WordTreeWordBufferLengthChangedEventHandler in order to resize the native prev, next buffers when the word buffer length of the tree changes
             tree.wordTreeWordBufferLengthChangedEventHandler += ((object sender, int newWordLengthBufferSize) =>
             {
                 this.maxWordLengthInTree = newWordLengthBufferSize + 1;
-                prev = new int[this.maxWordLengthInTree * sizeof(int)];
-                current = new int[this.maxWordLengthInTree * sizeof(int)];
+                int length = this.maxWordLengthInTree * sizeof(int);
+
+                prev = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_realloc(prev, length) : API.linux_realloc(prev, length));
+                current = (int*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_realloc(current, length) : API.linux_realloc(current, length));
             });
         }
 
@@ -48,11 +62,12 @@ namespace SpellCheckingTool
         /// <summary>
         /// Returns the Levenshtein distance between the two provided words.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public int GetDistance(char* wordA, char* wordB, int wordALength, int wordBLength)
         {
-            int minimalCost;
-            char* tmp;
-            int tmpLen;
+            minimalCost = 0;
+            tmp = null;
+            tmpLen = 0;
 
             //make sure s1 is the longer string
             if (wordBLength > wordALength)
@@ -66,7 +81,7 @@ namespace SpellCheckingTool
             }
 
             //populate the prev array with the cost of deletions
-            for (int i = 0; i <= wordBLength; i++)
+            for (i = 0; i <= wordBLength; i++)
                 prev[i] = i;
 
             //cahce references for prev and current
@@ -74,15 +89,15 @@ namespace SpellCheckingTool
             _current = current;
 
             //fill current array acording to levenshtein rules
-            int deletionCost;
-            int insertionCost;
-            int substitutionCost;
+            deletionCost = 0;
+            insertionCost = 0;
+            substitutionCost = 0;
 
-            for (int i = 1; i <= wordALength; i++)
+            for (i = 1; i <= wordALength; i++)
             {
                 _current[0] = i;
 
-                for (int j = 1; j <= wordBLength; j++)
+                for (j = 1; j <= wordBLength; j++)
                 {
                     deletionCost = _prev[j] + 1;
                     insertionCost = _current[j - 1] + 1;
