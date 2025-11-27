@@ -17,11 +17,11 @@ namespace SpellCheckingTool.Client
         private static WordTree LoadWordTree()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\.."));
-            string path = Path.Combine(projectRoot, @"TestProject\Resources\wordFile.wdb");
+            string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
+            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.wdb");
 
             if (!File.Exists(path))
-                throw new FileNotFoundException($"Wörterbuchdatei nicht gefunden: {path}");
+                throw new FileNotFoundException($"word file not found: {path}");
 
             var filePath = new FilePath(path);
             var tree = new WordTree();

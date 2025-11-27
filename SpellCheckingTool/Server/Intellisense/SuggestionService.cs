@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-namespace SpellCheckingTool
+﻿namespace SpellCheckingTool
 {
     unsafe class SuggestionService : ISuggestionService, IDisposable
     {
@@ -52,6 +49,7 @@ namespace SpellCheckingTool
             //keep track of the worst distance value in result list
             int worstDistanceValueInResults = maxAllowedDistance < (tree.metaData.wordBufferLength - 1) ? (maxAllowedDistance + 1) : tree.metaData.wordBufferLength;
 
+            //for each word in tree, update the matches buffer to maintain a collection of best matches for the current input as the tree gets traversed
             this.walkWordTreeService.WalkTree((long wordBuffer, int wordBufferLength) =>
             {
                 fixed (char* pInput = input)
@@ -84,7 +82,6 @@ namespace SpellCheckingTool
                 }
             });
 
-            //clamp the maximum amount of matches to return to the amount of matches we actually discovered
             discoveredMatchesCount = discoveredMatchesCount < maxSuggestions ? discoveredMatchesCount : maxSuggestions;
             sortMatches(discoveredMatchesCount);
 

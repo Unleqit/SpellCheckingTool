@@ -26,7 +26,7 @@ namespace SpellCheckingTool.Client
             while (true)
             {
                 int cursorLeft = Console.CursorLeft;
-                ConsoleKeyInfo keyInfo = Console.ReadKey();
+                ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                 char c = keyInfo.KeyChar;
                 
 
@@ -34,6 +34,7 @@ namespace SpellCheckingTool.Client
                 {
                     default:
                         input += c;
+                        Console.Write(c);
                         _suggestionDisplay.ShowSuggestionsForString(ref input);
                         enterCommand = false;
                         break;
@@ -45,7 +46,6 @@ namespace SpellCheckingTool.Client
                             _processManager.SendInput(input);
                             input = "";
                         }
-
                         _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
                         enterCommand = true;
                         break;
@@ -57,12 +57,6 @@ namespace SpellCheckingTool.Client
 
                     case ConsoleKey.DownArrow:
                         _suggestionDisplay.selectNextSuggestion();
-                        enterCommand = false;
-                        break;
-
-                    case ConsoleKey.Backspace:
-                        input += '\b';
-                        _suggestionDisplay.ShowSuggestionsForString(ref input);
                         enterCommand = false;
                         break;
 
