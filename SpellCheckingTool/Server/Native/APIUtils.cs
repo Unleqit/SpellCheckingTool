@@ -6,6 +6,22 @@ namespace SpellCheckingTool
     public unsafe partial class API
     {
         /// <summary>
+        /// Convenience method handling platform-specific malloc()-calls.
+        /// </summary>
+        public static void* malloc(long length)
+        {
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(length) : API.linux_malloc(length);
+        }
+
+        /// <summary>
+        /// Convenience method handling platform-specific realloc()-calls.
+        /// </summary>
+        public static void* realloc(void* ptr, long length)
+        {
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_realloc(ptr, length) : API.linux_realloc(ptr, length);
+        }
+
+        /// <summary>
         /// Returns zero if the file was saved successfully.
         /// </summary>
         [MethodImpl(256)]

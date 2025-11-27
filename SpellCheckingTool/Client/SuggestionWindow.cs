@@ -77,7 +77,7 @@ namespace SpellCheckingTool.Client
             this.longestWord = tree.metaData.wordBufferLength;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
-            this.currentSuggestions = (SuggestionResult*)(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? API.windows_malloc(sizeof(SuggestionResult)) : API.linux_malloc(sizeof(SuggestionResult)));
+            this.currentSuggestions = (SuggestionResult*)API.malloc(sizeof(SuggestionResult));
 
             //subscribe to handler to dynamically update longestWord property
             tree.wordTreeWordBufferLengthChangedEventHandler += ((object sender, int newLongestWord) => longestWord = newLongestWord);
@@ -86,7 +86,6 @@ namespace SpellCheckingTool.Client
         public void ShowSuggestionsForString(ref string input)
         {
             string lastWord = input.Substring(input.LastIndexOf(' ') + 1);
-            string[] suggestions;
 
             switch (input[input.Length - 1])
             {
