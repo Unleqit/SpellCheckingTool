@@ -27,7 +27,6 @@ namespace SpellCheckingTool.Client
                 int cursorLeft = Console.CursorLeft;
                 ConsoleKeyInfo keyInfo = Console.ReadKey(true);
                 char c = keyInfo.KeyChar;
-                
 
                 switch (keyInfo.Key)
                 {

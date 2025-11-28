@@ -10,10 +10,31 @@ namespace SpellCheckingTool.Client
     {
         public static void StartClient(int port)
         {
+            string backendUrl = $"http://localhost:{port}";
+
+            var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), new LatinAlphabet());
+            var userService = new UserService(store, store);
+
+            var authService = new ClientAuthService(userService);
+
+            Console.Write("Do you want to log in? (y/n): ");
+            string input = Console.ReadLine()?.Trim().ToLower() ?? "";
+
+            if (input.Contains('y'))
+            {
+                authService.RunAuthenticationFlow();
+                Console.WriteLine();
+            }
+            else
+            {
+                Console.WriteLine("Skipping authentication...\n");
+            }
+
             var wordTree = LoadWordTree();
             var processManager = StartProcessManager();
             StartSpellChecker(wordTree, processManager);
         }
+
         private static WordTree LoadWordTree()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
