@@ -15,7 +15,7 @@ namespace SpellCheckingTool.Client
             var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), new LatinAlphabet());
             var userService = new UserService(store, store);
 
-            var authService = new ClientAuthService(userService);
+            var authService = new ClientAuthService(backendUrl);
 
             Console.Write("Do you want to log in? (y/n): ");
             string input = Console.ReadLine()?.Trim().ToLower() ?? "";
