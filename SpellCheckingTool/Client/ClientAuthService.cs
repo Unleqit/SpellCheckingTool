@@ -11,11 +11,13 @@ namespace SpellCheckingTool.Client
 {
     public class ClientAuthService
     {
-        private readonly UserService _service;
+        private readonly HttpClient _httpClient;
+        private readonly string _backendUrl;
 
-        public ClientAuthService(UserService service)
+        public ClientAuthService(string backendUrl)
         {
-            _service = service;
+            _backendUrl = backendUrl.TrimEnd('/');
+            _httpClient = new HttpClient();
         }
 
         public void RunAuthenticationFlow()
@@ -25,8 +27,8 @@ namespace SpellCheckingTool.Client
 
             bool isRegister = input.Contains("--register");
             string username = input.Replace("--register", "").Trim();
-            
-            HandleAuth(username, isRegister);  
+
+            HandleAuth(username, isRegister);
         }
 
         private void HandleAuth(string username, bool isRegister)
@@ -35,13 +37,37 @@ namespace SpellCheckingTool.Client
             string password = ReadPassword();
             string hashed = Hash(password);
 
-            var result = isRegister
-                ? _service.Register(username, hashed)
-                : _service.Login(username, hashed);
-
-            if (!result.Success)
+            // Payload muss param-Namen im Controller matchen:
+            var payload = new
             {
-                Console.WriteLine($"{(isRegister ? "Registration" : "Login")} failed: {result.ErrorMessage}");
+                username = username,
+                hashedPassword = hashed
+            };
+
+            string json = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            string url = isRegister
+                ? $"{_backendUrl}/api/v1/users/register"
+                : $"{_backendUrl}/api/v1/users/login";
+
+            HttpResponseMessage response;
+            try
+            {
+                response = _httpClient.PostAsync(url, content).Result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error connecting to backend: {ex.Message}");
+                return;
+            }
+
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"{(isRegister ? "Registration" : "Login")} failed: {response.StatusCode}");
+                Console.WriteLine(responseBody); //TO DO: Parse the error properly in the frontend
                 return;
             }
 

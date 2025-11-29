@@ -61,9 +61,9 @@ namespace SpellCheckingTool
         public static void Login(
             HttpListenerContext context,
             [FromBody] string username,
-            [FromBody] string password)
+            [FromBody] string hashedPassword)
         {
-            var result = _service.Login(username, password);
+            var result = _service.Login(username, hashedPassword);
             if (!result.Success || result.Value == null)
             {
                 WriteError(context, 401, result.ErrorMessage ?? "Login failed.");
