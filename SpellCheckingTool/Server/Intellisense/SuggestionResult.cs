@@ -2,11 +2,11 @@
 {
     public unsafe struct SuggestionResult
     {
-        string[] results;
+        Word[] results;
         int suggestionCount;
         int totalMatchCount;
 
-        public SuggestionResult(string[] results, int suggestionCount, int totalMatchCount)
+        public SuggestionResult(Word[] results, int suggestionCount, int totalMatchCount)
         {
             this.results = results;
             this.suggestionCount = suggestionCount;
@@ -23,7 +23,7 @@
             return totalMatchCount;
         }
 
-        public string[] GetSuggestionArray()
+        public Word[] GetSuggestionArray()
         {
             return results;
         }

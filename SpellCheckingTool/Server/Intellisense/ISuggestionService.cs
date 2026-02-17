@@ -2,6 +2,6 @@
 {
     public interface ISuggestionService : IDisposable
     {
-        public SuggestionResult GetSuggestionResult(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance);
+        public SuggestionResult GetSuggestionResult(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance);
     }
 }

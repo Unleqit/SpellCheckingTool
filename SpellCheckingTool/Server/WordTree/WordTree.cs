@@ -227,7 +227,7 @@ namespace SpellCheckingTool
             return this.persistenceService.Load(filepath);
         }
 
-        public SuggestionResult GetSuggestions(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
+        public SuggestionResult GetSuggestions(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
         {
             return this.SuggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
         }

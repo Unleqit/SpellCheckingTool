@@ -50,7 +50,7 @@ namespace SpellCheckingTool
         }
 
     //    public abstract void WalkTree(Action<long, int> onEachWord);
-        public abstract void WalkTree(Action<string> onEachWord);
+        public abstract void WalkTree(Action<Word> onEachWord);
 
     }
 }

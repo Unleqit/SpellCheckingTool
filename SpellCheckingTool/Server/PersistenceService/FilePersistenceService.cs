@@ -79,7 +79,7 @@ namespace SpellCheckingTool
 
 
             //walk the wordTree using the provided WalkWordTreeService, appending each word (contained in the native char* wordBuffer) in the tree to the file
-            this.walkWordTreeService.WalkTree((string wordBuffer) =>
+            this.walkWordTreeService.WalkTree((Word wordBuffer) =>
             {
                 //save beginning of current word to index partition of file
                 *(wordIndicesBuffer + wordIndicesBufferIndex++) = fileLength;

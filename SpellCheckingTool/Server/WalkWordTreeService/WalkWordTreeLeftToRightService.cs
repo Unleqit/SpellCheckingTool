@@ -16,7 +16,7 @@ namespace SpellCheckingTool
         /// The first parameter of the delegate is a char* to the wordBuffer holding the current word in native memory, wrapped as a long.
         /// The second parameter of the delegate is the length of the word in native memory
         /// </param>
-        public unsafe override void WalkTree(Action<string> onEachWord)
+        public unsafe override void WalkTree(Action<Word> onEachWord)
         {
             //we can't use recursion, as deep trees may cause a StackOverflowException, hence we walk the tree in an iterative manner.
             stack[stackIndex++] = tree.rootNode;
@@ -78,7 +78,7 @@ namespace SpellCheckingTool
                     a[i] = wordBuffer[i];
                 string s = new string(a);
                 
-                onEachWord(s);
+                onEachWord(new Word(new LatinAlphabet(), s));
 
                 //the current node and its children have been fullt examined and saved - pop it from the stack and resume with the next node
                 stackIndex--;

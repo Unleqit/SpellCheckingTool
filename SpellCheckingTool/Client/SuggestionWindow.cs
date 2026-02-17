@@ -49,14 +49,14 @@ namespace SpellCheckingTool.Client
             get => currentlySelectedLine;
             set => currentlySelectedLine = value < 0 ? 0 : value > currentSuggestionCount ? currentSuggestionCount : value;
         }
-        public string CurrentlySelectedSuggestion
+        public Word CurrentlySelectedSuggestion
         {
             get
             {
                 if (currentlySelectedLine >= currentSuggestions.GetSuggestionCount() || currentlySelectedLine < 0)
-                    return "";
+                    return new Word(tree.alphabet, "");
 
-                string[] suggestions = currentSuggestions.GetSuggestionArray();
+                Word[] suggestions = currentSuggestions.GetSuggestionArray();
                 return suggestions[currentlySelectedLine];
             }
         }
@@ -93,7 +93,7 @@ namespace SpellCheckingTool.Client
 
         public void ShowSuggestionsForString(ref string input)
         {
-            string lastWord = input.Substring(input.LastIndexOf(' ') + 1);
+            Word lastWord = new Word(tree.alphabet, input.Substring(input.LastIndexOf(' ') + 1));
 
             switch (input[input.Length - 1])
             {
@@ -134,16 +134,16 @@ namespace SpellCheckingTool.Client
 
             removeLastCharacterFromWord(ref input);
 
-            string lastWord = input.Substring(input.LastIndexOf(' ') + 1);
+            Word lastWord = new Word(new LatinAlphabet(), input.Substring(input.LastIndexOf(' ') + 1));
             getSuggestions(lastWord);
 
             if (input.Length > 0)
                 showSuggestions();
         }
 
-        void checkAndColorLastWord(string lastWord)
+        void checkAndColorLastWord(Word lastWord)
         {
-            bool contained = tree.Contains(lastWord.Trim().ToLower());
+            bool contained = tree.Contains(lastWord.ToString().Trim().ToLower());
             Console.CursorLeft = cursorLeft - lastWord.Length;
             Console.BackgroundColor = contained ? ValidWordBackColor : InvalidWordBackColor;
             Console.ForegroundColor = contained ? ValidWordForeColor : InvalidWordForeColor;
@@ -170,10 +170,11 @@ namespace SpellCheckingTool.Client
 
             input = input.Substring(0, input.Length - 2);
             alreadyEnteredCharacterCount = input.Length - (input.LastIndexOf(' ') + 1);
-            checkAndColorLastWord(input.Substring(input.LastIndexOf(' ') + 1));
+            Word result = new Word(tree.alphabet, input.Substring(input.LastIndexOf(' ') + 1));
+            checkAndColorLastWord(result);
         }
 
-        void getSuggestions(string input)
+        void getSuggestions(Word input)
         {
             this.currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
             int suggestionResultCount = this.currentSuggestions.GetSuggestionCount();
@@ -190,7 +191,7 @@ namespace SpellCheckingTool.Client
             int wordLeftInConsole = Console.CursorLeft;
             int wordTopInConsole = Console.CursorTop;
 
-            string[] suggestions = this.currentSuggestions.GetSuggestionArray();
+            Word[] suggestions = this.currentSuggestions.GetSuggestionArray();
 
 
             //check if console is high enough to display suggestion window
@@ -295,7 +296,7 @@ namespace SpellCheckingTool.Client
 
             Console.ForegroundColor = ValidWordForeColor;
             Console.BackgroundColor = ValidWordBackColor;
-            string selectedSuggestion = CurrentlySelectedSuggestion;
+            Word selectedSuggestion = CurrentlySelectedSuggestion;
 
             //example: "avocad" entered, completed with suggestion "avoid" -> 'd' of "avocad" needs to be cleared!
             if (selectedSuggestion.Length < alreadyEnteredCharacterCount)

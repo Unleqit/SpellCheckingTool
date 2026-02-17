@@ -18,7 +18,7 @@ namespace SpellCheckingTool
         /// Returns the Levenshtein distance between the two provided words.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public int GetDistance(string wordA, string wordB)
+        public int GetDistance(Word wordA, Word wordB)
         {
             int minimalCost;
             int deletionCost;
@@ -34,7 +34,7 @@ namespace SpellCheckingTool
             //make sure s1 is the longer string
             if (wordB.Length > wordA.Length)
             {
-                string tmp = wordA;
+                Word tmp = wordA;
                 wordA = wordB;
                 wordB = tmp;
             }

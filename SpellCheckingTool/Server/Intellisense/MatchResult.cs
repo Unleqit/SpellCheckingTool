@@ -1,17 +1,19 @@
-﻿public class MatchResult
-{
-    public string matchString;
-    public int distance;
+﻿using SpellCheckingTool;
 
-    public MatchResult(string matchString, int distance)
+public class MatchResult
+{
+    private Word matchWord;
+    private int distance;
+
+    public MatchResult(Word matchWord, int distance)
     {
-        this.matchString = matchString;
+        this.matchWord = matchWord;
         this.distance = distance;
     }
 
-    public string GetMatchString()
+    public Word GetMatchedWord()
     {
-        return matchString;
+        return matchWord;
     }
 
     public int GetMatchDistance()
@@ -21,6 +23,6 @@
 
     public override string ToString()
     {
-        return GetMatchString();
+        return GetMatchedWord().ToString();
     }
 }

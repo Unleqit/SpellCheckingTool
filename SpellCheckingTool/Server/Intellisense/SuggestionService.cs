@@ -20,7 +20,7 @@
         /// <param name="maxAmountOfSuggestionsToBeReturned">The maximum amount of suggestions to return. Returns fewer suggestions if there are less than this upper limit.</param>
         /// <param name="maxAllowedDistance">The maximum allowed distance between the input word and a word from the tree for it to be considered a possible suggestion using the DistanceAlgorithm of this instance.</param>
         /// <returns></returns>
-        public SuggestionResult GetSuggestionResult(string input, int maxAmountOfSuggestionsToBeReturned = 3, int maxAllowedDistance = 4)
+        public SuggestionResult GetSuggestionResult(Word input, int maxAmountOfSuggestionsToBeReturned = 3, int maxAllowedDistance = 4)
         {
             int maxSuggestions = maxAmountOfSuggestionsToBeReturned < 0 ? 0 : maxAmountOfSuggestionsToBeReturned > 20 ? 20 : maxAmountOfSuggestionsToBeReturned;
             int distanceToInputWord = 0;
@@ -35,7 +35,7 @@
             int worstDistanceValueInResults = maxAllowedDistance < (tree.metaData.wordBufferLength - 1) ? (maxAllowedDistance + 1) : tree.metaData.wordBufferLength;
 
             //for each word in tree, update the matches buffer to maintain a collection of best matches for the current input as the tree gets traversed
-            this.walkWordTreeService.WalkTree((string word) =>
+            this.walkWordTreeService.WalkTree((Word word) =>
             {
                 distanceToInputWord = distanceAlgorithm.GetDistance(input, word);
 
@@ -52,10 +52,10 @@
                         worstDistanceValueInResults = 0;
                         for (int i = 0; i < maxSuggestions; ++i)
                         {
-                            if (matchResults[i].distance > worstDistanceValueInResults)
+                            if (matchResults[i].GetMatchDistance() > worstDistanceValueInResults)
                             {
                                 indexOfMatchToBeReplacedNext = i;
-                                worstDistanceValueInResults = matchResults[i].distance;
+                                worstDistanceValueInResults = matchResults[i].GetMatchDistance();
                             }
                         }
                     }
@@ -66,7 +66,7 @@
             sortMatches(matchResults, matchesCount);
 
             //ugly .NET solution of .reduce() in TypeScript
-            string[] matchStrings = matchResults.Where((result) => result != null).Select((result) => result.matchString).ToArray();
+            Word[] matchStrings = matchResults.Where((result) => result != null).Select((result) => result.GetMatchedWord()).ToArray();
 
             SuggestionResult result = new SuggestionResult(matchStrings, matchesCount, totalMatchesCount);
             return result;
@@ -81,10 +81,9 @@
         {
             MatchResult resultToBeSwapped;
 
-            
             for (int i = 0; i < matchesCount - 1; ++i)
                 for (int j = 0; j < matchesCount - i - 1; ++j)
-                    if (results[j].distance > results[j + 1].distance)
+                    if (results[j].GetMatchDistance() > results[j + 1].GetMatchDistance())
                     {
                         resultToBeSwapped = results[j];
                         results[j] = results[j + 1];

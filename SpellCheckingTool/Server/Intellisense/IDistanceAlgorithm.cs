@@ -2,6 +2,6 @@
 {
     public unsafe interface IDistanceAlgorithm
     {
-        public abstract int GetDistance(string a, string b);
+        public abstract int GetDistance(Word a, Word b);
     }
 }
