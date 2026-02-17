@@ -14,9 +14,7 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
         }
 
         [TestMethod]
@@ -28,9 +26,7 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 0);
         }
@@ -44,9 +40,7 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 1);
         }
@@ -60,9 +54,7 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 9);
         }

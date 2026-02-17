@@ -53,17 +53,11 @@ namespace SpellCheckingTool.Client
         {
             get
             {
-                if (currentlySelectedLine >= currentSuggestions->GetSuggestionCount() || currentlySelectedLine < 0)
+                if (currentlySelectedLine >= currentSuggestions.GetSuggestionCount() || currentlySelectedLine < 0)
                     return "";
 
-                string tmp = "";
-                char** suggestions = currentSuggestions->GetSuggestionArray();
-                int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
-
-                for (int i = 0; i < suggestionLengths[currentlySelectedLine]; ++i)
-                    tmp += suggestions[currentlySelectedLine][i];
-
-                return tmp;
+                string[] suggestions = currentSuggestions.GetSuggestionArray();
+                return suggestions[currentlySelectedLine];
             }
         }
 
@@ -77,7 +71,7 @@ namespace SpellCheckingTool.Client
         bool suggestionsShown = true;
         bool consoleTooSmallErrorMessageDisplayed = false;
         WordTree tree;
-        SuggestionResult* currentSuggestions;
+        SuggestionResult currentSuggestions;
 
         //holds a single suggestion line with horizontalBufferSize padding on each side
         char[] suggestionDisplayBuffer;
@@ -88,7 +82,6 @@ namespace SpellCheckingTool.Client
             this.tree = tree;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
-            this.currentSuggestions = (SuggestionResult*)API.malloc(sizeof(SuggestionResult));
             this.suggestionDisplayBuffer = new char[tree.metaData.wordBufferLength + 2 * horizontalPaddingSz];
 
             //subscribe to handler to dynamically update longestWord property
@@ -182,8 +175,8 @@ namespace SpellCheckingTool.Client
 
         void getSuggestions(string input)
         {
-            *currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
-            int suggestionResultCount = currentSuggestions->GetSuggestionCount();
+            this.currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
+            int suggestionResultCount = this.currentSuggestions.GetSuggestionCount();
             currentSuggestionCount = suggestionResultCount < MaxSuggestionsToBeDisplayed ? suggestionResultCount : currentSuggestionCount > MaxSuggestionsToBeDisplayed ? MaxSuggestionsToBeDisplayed : suggestionResultCount;
         }
 
@@ -197,8 +190,7 @@ namespace SpellCheckingTool.Client
             int wordLeftInConsole = Console.CursorLeft;
             int wordTopInConsole = Console.CursorTop;
 
-            char** suggestions = currentSuggestions->GetSuggestionArray();
-            int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
+            string[] suggestions = this.currentSuggestions.GetSuggestionArray();
 
 
             //check if console is high enough to display suggestion window
@@ -219,7 +211,7 @@ namespace SpellCheckingTool.Client
                     Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
                     Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
 
-                    currentLength = suggestionLengths[j];
+                    currentLength = suggestions[j].Length;
 
 
                     for (int i = 0; i < currentLength; ++i)

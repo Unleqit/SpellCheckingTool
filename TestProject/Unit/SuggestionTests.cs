@@ -41,7 +41,7 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("contain", 5, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 5);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
+            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
         }
 
         [TestMethod]
@@ -49,7 +49,7 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("contain", 100, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 20);
-            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
+            Assert.IsTrue(result.GetSuggestionArray()[0] == "contain");
         }
 
         [TestMethod]
@@ -59,7 +59,7 @@ namespace TestProject.Unit
             Assert.AreEqual(result.GetSuggestionCount(), 20);
             SuggestionResult result2 = tree.GetSuggestions("aba", 20, 999);
             Assert.AreEqual(result2.GetSuggestionCount(), 20);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(result2.GetSuggestionArrayManaged()));
+            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(result2.GetSuggestionArray()));
         }
 
         [TestMethod]
@@ -67,7 +67,7 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("contai", 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 0);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArray().All(element => element == null));
         }
 
         [TestMethod]
@@ -75,7 +75,7 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("تزنيت", 5, 999);
             Assert.IsTrue(result.GetSuggestionCount() == 5);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
+            Assert.IsTrue(result.GetSuggestionArray().SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
         }
 
         [TestMethod]
@@ -83,8 +83,8 @@ namespace TestProject.Unit
         {
             SuggestionResult result = tree.GetSuggestions("contain", 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 1);
-            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
-            Assert.IsTrue(result.GetSuggestionArrayManaged().Take(new Range(1, 50)).All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArray()[0] == "contain");
+            Assert.IsTrue(result.GetSuggestionArray().Take(new Range(1, 50)).All(element => element == null));
         }
     }
 }

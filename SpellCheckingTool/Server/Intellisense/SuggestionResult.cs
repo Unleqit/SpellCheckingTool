@@ -2,44 +2,30 @@
 {
     public unsafe struct SuggestionResult
     {
-        char** suggestions;
-        int* suggestionLengths;
-        int length;
+        string[] results;
+        int suggestionCount;
+        int totalMatchCount;
 
-        public SuggestionResult(char** suggestions, int* suggestionLengths, int length)
+        public SuggestionResult(string[] results, int suggestionCount, int totalMatchCount)
         {
-            this.suggestions = suggestions;
-            this.suggestionLengths = suggestionLengths;
-            this.length = length;
+            this.results = results;
+            this.suggestionCount = suggestionCount;
+            this.totalMatchCount = totalMatchCount;
         }
 
         public int GetSuggestionCount()
         {
-            return length;
+            return suggestionCount;
         }
 
-        public int* GetSuggestionLengths()
+        public int GetTotalMatchCount()
         {
-            return suggestionLengths;
+            return totalMatchCount;
         }
 
-        public char** GetSuggestionArray()
+        public string[] GetSuggestionArray()
         {
-            return suggestions;
-        }
-
-        /// <summary>
-        /// Convenience method. Use GetSuggestionArray() and GetSuggestionLengths() in performance-critical scenarios instead.
-        /// </summary>
-        public string[] GetSuggestionArrayManaged()
-        {
-            string[] tmp = new string[length];
-
-            for (int i = 0; i < length; ++i)
-                for (int j = 0; j < *(suggestionLengths + i); ++j)
-                    tmp[i] += suggestions[i][j];
-
-            return tmp;
+            return results;
         }
     }
 }
