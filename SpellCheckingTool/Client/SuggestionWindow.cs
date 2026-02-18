@@ -91,9 +91,30 @@ namespace SpellCheckingTool.Client
             });
         }
 
+        //in windows, pressing backspace triggers '\b', while in linux systems, a char representable by the ASCII value 127 is emitted
+        private string ReplaceBackspaceChar(string input)
+        {
+            char consoleBackspaceChar;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                consoleBackspaceChar = '\b';
+            else
+                consoleBackspaceChar = (char)127;
+
+            return input.Replace(consoleBackspaceChar.ToString(), "");
+        }
+
+        private Word GetLastWordFromInputString(string input)
+        {
+            string wordString = input.Substring(input.LastIndexOf(' ') + 1);
+            wordString = ReplaceBackspaceChar(wordString); 
+
+            Word lastWord = new Word(tree.alphabet, wordString);
+            return lastWord;
+        }
+
         public void ShowSuggestionsForString(ref string input)
         {
-            Word lastWord = new Word(tree.alphabet, input.Substring(input.LastIndexOf(' ') + 1));
+            Word lastWord = GetLastWordFromInputString(input);
 
             switch (input[input.Length - 1])
             {
