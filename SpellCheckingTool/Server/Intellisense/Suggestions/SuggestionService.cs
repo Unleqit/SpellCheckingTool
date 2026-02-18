@@ -1,12 +1,12 @@
 ﻿namespace SpellCheckingTool
 {
-    unsafe class SuggestionService : ISuggestionService, IDisposable
+    unsafe class SuggestionService : ISuggestionService
     {
         WordTree tree;
         IDistanceAlgorithm distanceAlgorithm;
-        WalkWordTreeService walkWordTreeService;
+        IWalkWordTreeService walkWordTreeService;
 
-        public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm, WalkWordTreeService walkWordTreeService)
+        public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm, IWalkWordTreeService walkWordTreeService)
         {
             this.tree = tree;
             this.distanceAlgorithm = distanceAlgorithm;
@@ -89,11 +89,6 @@
                         results[j] = results[j + 1];
                         results[j + 1] = resultToBeSwapped;
                     }
-        }
-
-        public void Dispose()
-        {
-            walkWordTreeService.Dispose();
         }
     }
 }

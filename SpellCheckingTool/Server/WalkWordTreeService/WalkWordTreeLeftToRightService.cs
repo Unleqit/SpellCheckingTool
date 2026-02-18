@@ -2,10 +2,13 @@
 
 namespace SpellCheckingTool
 {
-    public unsafe class WalkWordTreeLeftToRightService : WalkWordTreeService, IDisposable
+    public unsafe class WalkWordTreeLeftToRightService : IWalkWordTreeService
     {
-        public WalkWordTreeLeftToRightService(WordTree tree) : base(tree)
+        WordTree tree;
+
+        public WalkWordTreeLeftToRightService(WordTree tree)
         {
+            this.tree = tree;
         }
 
         /// <summary>
@@ -14,10 +17,16 @@ namespace SpellCheckingTool
         /// <param name="onEachWord">
         /// The action to be performed for each word in the tree, commonly denoted as lambda method `(word) => { ... }`
         /// </param>
-        public unsafe override void WalkTree(Action<Word> onEachWord)
+        public void WalkTree(Action<Word> onEachWord)
         {
             char[] wordBuffer = new char[tree.metaData.wordBufferLength + 1];
             int wordBufferIndex = 0;
+
+            char[] alphabetChars = tree.alphabet.GetChars();
+            int alphabetLength = tree.alphabet.GetLength();
+
+            WordTreeNode[] stack = new WordTreeNode[this.tree.metaData.wordBufferLength + 1];
+            int stackIndex = 0;
 
             //we can't use recursion, as deep trees may cause a StackOverflowException, hence we walk the tree in an iterative manner.
             stack[stackIndex++] = tree.rootNode;

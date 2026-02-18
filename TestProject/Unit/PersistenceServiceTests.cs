@@ -22,9 +22,9 @@ namespace TestProject.Unit
         [TestMethod]
         public void SerializeAndDeserializeWordTree_ShouldSucceed()
         {
-            bool success = tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.wdb"));
+            bool success = tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.json"));
             Assert.IsTrue(success);
-            WordTree tree2 = tree.Deserialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.wdb"));
+            WordTree tree2 = tree.Deserialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.json"));
             Assert.IsTrue(tree2 != null);
             Assert.AreEqual(tree.metaData.wordBufferLength, tree2.metaData.wordBufferLength);
             Assert.AreEqual(tree.metaData.wordCount, tree2.metaData.wordCount);
@@ -33,8 +33,8 @@ namespace TestProject.Unit
             Assert.IsTrue(tree.alphabet.GetChars().SequenceEqual(tree2.alphabet.GetChars()));
             Assert.AreEqual(tree.alphabet.GetLength(), tree2.alphabet.GetLength());
             Assert.AreEqual(tree.Contains(new Word(tree.alphabet, "these")), tree2.Contains(new Word(tree2.alphabet, "these")));
-            File.Delete(Directory.GetCurrentDirectory() + @"\test.wdb");
-            Assert.IsTrue(!File.Exists(Directory.GetCurrentDirectory() + @"\test.wdb"));
+            File.Delete(Directory.GetCurrentDirectory() + @"\test.json");
+            Assert.IsTrue(!File.Exists(Directory.GetCurrentDirectory() + @"\test.json"));
         }
 
         [TestMethod]

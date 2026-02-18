@@ -14,10 +14,10 @@ namespace TestProject.Unit
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
-            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.wdb");
+            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.json");
 
             if (!File.Exists(path))
-                throw new FileNotFoundException($"Wörterbuchdatei nicht gefunden: {path}");
+                throw new FileNotFoundException($"Wordfile not found at {path}");
 
             var filePath = new FilePath(path);
             tree = new WordTree();
@@ -33,7 +33,6 @@ namespace TestProject.Unit
             tree.Add(words);
             SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "containing"), 20, 999);
             Assert.AreEqual(result.GetSuggestionCount(), tree.metaData.wordCount);
-            tree.Dispose();
         }
 
         [TestMethod]

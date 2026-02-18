@@ -1,6 +1,6 @@
 ﻿namespace SpellCheckingTool
 {
-    public interface ISuggestionService : IDisposable
+    public interface ISuggestionService
     {
         public SuggestionResult GetSuggestionResult(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance);
     }
