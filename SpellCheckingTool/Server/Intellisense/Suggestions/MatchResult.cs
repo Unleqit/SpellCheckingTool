@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool;
 
-public class MatchResult
+class MatchResult
 {
     private Word matchWord;
     private int distance;
