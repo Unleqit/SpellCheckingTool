@@ -65,17 +65,21 @@ namespace SpellCheckingTool
 
             string wordTreeJson = File.ReadAllText(path);
 
-            WordTreeDto wordTreeDto = JsonConvert.DeserializeObject<WordTreeDto>(wordTreeJson);
-            if (wordTreeDto == null)
-                throw new Exception("Deserialization of wordfile failed!");
+            try
+            {
+                WordTreeDto wordTreeDto = JsonConvert.DeserializeObject<WordTreeDto>(wordTreeJson);
+                IAlphabet alphabet = new CustomAlphabet(wordTreeDto.alphabet);
 
-            IAlphabet alphabet = new CustomAlphabet(wordTreeDto.alphabet);
+                WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
+                Word[] parsedWords = Word.ParseWords(alphabet, wordTreeDto.words);
 
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word[] parsedWords = Word.ParseWords(alphabet, wordTreeDto.words);
-
-            tree.Add(parsedWords);
-            return tree;
+                tree.Add(parsedWords);
+                return tree;
+            }
+            catch 
+            {
+                throw new Exception("Failed to parse WordTree DTO");
+            }
         }
     }
 }

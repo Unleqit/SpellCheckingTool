@@ -20,7 +20,6 @@ namespace SpellCheckingTool.Client
             Console.WriteLine(WelcomeMessage);
 
             string input = "";
-            string[] suggestions;
             bool enterCommand = false;
 
             while (true)

@@ -1,6 +1,6 @@
 ﻿namespace SpellCheckingTool
 {
-    class WordTreeDto
+    struct WordTreeDto
     {
         public char[] alphabet;
         public string[] words;
