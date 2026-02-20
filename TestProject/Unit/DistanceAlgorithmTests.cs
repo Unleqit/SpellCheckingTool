@@ -14,23 +14,19 @@ namespace TestProject.Unit
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
             tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
         }
 
         [TestMethod]
         public void LevenshteinDistanceMatchingMatchSameWord_ShouldReturnZero()
         {
-            string word = "test";
-            string word2 = "test";
             IAlphabet alphabet = new LatinAlphabet();
+            Word word = new Word(alphabet, "test");
+            Word word2 = new Word(alphabet, "test");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(new Word(alphabet, word));
+            tree.Add(word);
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
-            tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 0);
         }
@@ -38,15 +34,13 @@ namespace TestProject.Unit
         [TestMethod]
         public void LevenshteinDistanceMatchingMatchTestAndText_ShouldReturnOne()
         {
-            string word = "test";
-            string word2 = "text";
             IAlphabet alphabet = new LatinAlphabet();
+            Word word = new Word(alphabet, "test");
+            Word word2 = new Word(alphabet, "text");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(new Word(alphabet, word));
+            tree.Add(word);
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
-            tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 1);
         }
@@ -54,17 +48,15 @@ namespace TestProject.Unit
         [TestMethod]
         public void LevenshteinDistanceMatchingMatchInterestingAndImplementation_ShouldReturnNine()
         {
-            string word = "interesting";
-            string word2 = "implementation";
             IAlphabet alphabet = new LatinAlphabet();
+            Word word = new Word(alphabet, "interesting");
+            Word word2 = new Word(alphabet, "implementation");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(new Word(alphabet, word));
+            tree.Add(word);
             LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word.Length + 1);
-            tree.Add(new Word(alphabet, word2));
-            Assert.AreEqual(distanceAlgorithm.BufferSize, word2.Length + 1);
+            tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 9);
-        }
+        } 
     }
 }

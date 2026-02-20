@@ -49,21 +49,15 @@ namespace SpellCheckingTool.Client
             get => currentlySelectedLine;
             set => currentlySelectedLine = value < 0 ? 0 : value > currentSuggestionCount ? currentSuggestionCount : value;
         }
-        public string CurrentlySelectedSuggestion
+        public Word CurrentlySelectedSuggestion
         {
             get
             {
-                if (currentlySelectedLine >= currentSuggestions->GetSuggestionCount() || currentlySelectedLine < 0)
-                    return "";
+                if (currentlySelectedLine >= currentSuggestions.GetSuggestionCount() || currentlySelectedLine < 0)
+                    return new Word(tree.alphabet, "");
 
-                string tmp = "";
-                char** suggestions = currentSuggestions->GetSuggestionArray();
-                int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
-
-                for (int i = 0; i < suggestionLengths[currentlySelectedLine]; ++i)
-                    tmp += suggestions[currentlySelectedLine][i];
-
-                return tmp;
+                Word[] suggestions = currentSuggestions.GetSuggestionArray();
+                return suggestions[currentlySelectedLine];
             }
         }
 
@@ -77,7 +71,7 @@ namespace SpellCheckingTool.Client
         bool suggestionsShown = true;
         bool consoleTooSmallErrorMessageDisplayed = false;
         WordTree tree;
-        SuggestionResult* currentSuggestions;
+        SuggestionResult currentSuggestions;
 
         //holds a single suggestion line with horizontalBufferSize padding on each side
         char[] suggestionDisplayBuffer;
@@ -88,7 +82,6 @@ namespace SpellCheckingTool.Client
             this.tree = tree;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
-            this.currentSuggestions = (SuggestionResult*)API.malloc(sizeof(SuggestionResult));
             this.suggestionDisplayBuffer = new char[tree.metaData.wordBufferLength + 2 * horizontalPaddingSz];
 
             //subscribe to handler to dynamically update longestWord property
@@ -98,9 +91,30 @@ namespace SpellCheckingTool.Client
             });
         }
 
+        //in windows, pressing backspace triggers '\b', while in linux systems, a char representable by the ASCII value 127 is emitted
+        private string ReplaceBackspaceChar(string input)
+        {
+            char consoleBackspaceChar;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                consoleBackspaceChar = '\b';
+            else
+                consoleBackspaceChar = (char)127;
+
+            return input.Replace(consoleBackspaceChar.ToString(), "");
+        }
+
+        private Word GetLastWordFromInputString(string input)
+        {
+            string wordString = input.Substring(input.LastIndexOf(' ') + 1);
+            wordString = ReplaceBackspaceChar(wordString); 
+
+            Word lastWord = new Word(tree.alphabet, wordString);
+            return lastWord;
+        }
+
         public void ShowSuggestionsForString(ref string input)
         {
-            string lastWord = input.Substring(input.LastIndexOf(' ') + 1);
+            Word lastWord = GetLastWordFromInputString(input);
 
             switch (input[input.Length - 1])
             {
@@ -141,16 +155,16 @@ namespace SpellCheckingTool.Client
 
             removeLastCharacterFromWord(ref input);
 
-            string lastWord = input.Substring(input.LastIndexOf(' ') + 1);
+            Word lastWord = new Word(new LatinAlphabet(), input.Substring(input.LastIndexOf(' ') + 1));
             getSuggestions(lastWord);
 
             if (input.Length > 0)
                 showSuggestions();
         }
 
-        void checkAndColorLastWord(string lastWord)
+        void checkAndColorLastWord(Word lastWord)
         {
-            bool contained = tree.Contains(lastWord.Trim().ToLower());
+            bool contained = tree.Contains(lastWord.ToString().Trim().ToLower());
             Console.CursorLeft = cursorLeft - lastWord.Length;
             Console.BackgroundColor = contained ? ValidWordBackColor : InvalidWordBackColor;
             Console.ForegroundColor = contained ? ValidWordForeColor : InvalidWordForeColor;
@@ -177,13 +191,14 @@ namespace SpellCheckingTool.Client
 
             input = input.Substring(0, input.Length - 2);
             alreadyEnteredCharacterCount = input.Length - (input.LastIndexOf(' ') + 1);
-            checkAndColorLastWord(input.Substring(input.LastIndexOf(' ') + 1));
+            Word result = new Word(tree.alphabet, input.Substring(input.LastIndexOf(' ') + 1));
+            checkAndColorLastWord(result);
         }
 
-        void getSuggestions(string input)
+        void getSuggestions(Word input)
         {
-            *currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
-            int suggestionResultCount = currentSuggestions->GetSuggestionCount();
+            this.currentSuggestions = tree.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
+            int suggestionResultCount = this.currentSuggestions.GetSuggestionCount();
             currentSuggestionCount = suggestionResultCount < MaxSuggestionsToBeDisplayed ? suggestionResultCount : currentSuggestionCount > MaxSuggestionsToBeDisplayed ? MaxSuggestionsToBeDisplayed : suggestionResultCount;
         }
 
@@ -197,8 +212,7 @@ namespace SpellCheckingTool.Client
             int wordLeftInConsole = Console.CursorLeft;
             int wordTopInConsole = Console.CursorTop;
 
-            char** suggestions = currentSuggestions->GetSuggestionArray();
-            int* suggestionLengths = currentSuggestions->GetSuggestionLengths();
+            Word[] suggestions = this.currentSuggestions.GetSuggestionArray();
 
 
             //check if console is high enough to display suggestion window
@@ -219,7 +233,7 @@ namespace SpellCheckingTool.Client
                     Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
                     Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
 
-                    currentLength = suggestionLengths[j];
+                    currentLength = suggestions[j].Length;
 
 
                     for (int i = 0; i < currentLength; ++i)
@@ -303,7 +317,7 @@ namespace SpellCheckingTool.Client
 
             Console.ForegroundColor = ValidWordForeColor;
             Console.BackgroundColor = ValidWordBackColor;
-            string selectedSuggestion = CurrentlySelectedSuggestion;
+            Word selectedSuggestion = CurrentlySelectedSuggestion;
 
             //example: "avocad" entered, completed with suggestion "avoid" -> 'd' of "avocad" needs to be cleared!
             if (selectedSuggestion.Length < alreadyEnteredCharacterCount)

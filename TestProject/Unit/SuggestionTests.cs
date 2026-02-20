@@ -14,10 +14,10 @@ namespace TestProject.Unit
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
-            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.wdb");
+            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.json");
 
             if (!File.Exists(path))
-                throw new FileNotFoundException($"Wörterbuchdatei nicht gefunden: {path}");
+                throw new FileNotFoundException($"Wordfile not found at {path}");
 
             var filePath = new FilePath(path);
             tree = new WordTree();
@@ -31,60 +31,60 @@ namespace TestProject.Unit
             Word[] words = Word.ParseWords(alphabet, new string[] { "these", "are", "some", "random", "english", "words", "containing", "only", "latin", "characters" });
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(words);
-            SuggestionResult result = tree.GetSuggestions("containing", 20, 999);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "containing"), 20, 999);
             Assert.AreEqual(result.GetSuggestionCount(), tree.metaData.wordCount);
-            tree.Dispose();
         }
 
         [TestMethod]
         public void GetFiveSuggestionsInLargeTreeForContain_ShouldReturnContainContainsCongaingConinConjoin()
         {
-            SuggestionResult result = tree.GetSuggestions("contain", 5, 999);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contain"), 5, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 5);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
+            Assert.IsTrue(result.GetSuggestionArray().Select((word) => word.ToString()).SequenceEqual(new string[] { "contain", "contains", "congaing", "conin", "conjoin" }));
         }
 
         [TestMethod]
         public void GetHundredSuggestionsInLargeTreeForContain_ShouldReturnTwentySuggestions()
         {
-            SuggestionResult result = tree.GetSuggestions("contain", 100, 999);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contain"), 100, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 20);
-            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
+            Assert.IsTrue(result.GetSuggestionArray()[0].ToString() == "contain");
         }
 
         [TestMethod]
         public void GetSuggestionsTwice_ShouldYieldSameResult()
         {
-            SuggestionResult result = tree.GetSuggestions("aba", 20, 999);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "aba"), 20, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 20);
-            SuggestionResult result2 = tree.GetSuggestions("aba", 20, 999);
+            SuggestionResult result2 = tree.GetSuggestions(new Word(new LatinAlphabet(), "aba"), 20, 999);
             Assert.AreEqual(result2.GetSuggestionCount(), 20);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(result2.GetSuggestionArrayManaged()));
+            Assert.IsTrue(result.GetSuggestionArray().Select((word) => word.ToString()).SequenceEqual(result2.GetSuggestionArray().Select((word) => word.ToString())));
         }
 
         [TestMethod]
         public void GetSuggestionsOfWordNotContainedInTreeWithMaxDistanceParameterZero_ShouldReturnArrayContainingOnlyNullValues()
         {
-            SuggestionResult result = tree.GetSuggestions("contai", 20, 0);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contai"), 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 0);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArray().All(element => element == null));
         }
 
         [TestMethod]
         public void GetSuggestionForWordContainingCharactersNotPresentInWordTreeAlphabetWithMaxDistance_ShouldReturnFirst5AlphabeticallyOrderedWordsOfWordTree()
         {
-            SuggestionResult result = tree.GetSuggestions("تزنيت", 5, 999);
+            CustomAlphabet partOfArabicAlphabet = new CustomAlphabet("تزنيت".ToCharArray().Distinct().ToArray());
+            SuggestionResult result = tree.GetSuggestions(new Word(partOfArabicAlphabet, "تزنيت"), 5, 999);
             Assert.IsTrue(result.GetSuggestionCount() == 5);
-            Assert.IsTrue(result.GetSuggestionArrayManaged().SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
+            Assert.IsTrue(result.GetSuggestionArray().Select((word) => word.ToString()).SequenceEqual(new string[] { "aah", "aalii", "aal", "aargh", "aa" } ));
         }
 
         [TestMethod]
         public void GetSuggestionsOfWordContainedInTreeWithMaxDistanceParameterZero_ShouldReturnArrayContainingOnlyExactMatchAndNullValues()
         {
-            SuggestionResult result = tree.GetSuggestions("contain", 20, 0);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contain"), 20, 0);
             Assert.IsTrue(result.GetSuggestionCount() == 1);
-            Assert.IsTrue(result.GetSuggestionArrayManaged()[0] == "contain");
-            Assert.IsTrue(result.GetSuggestionArrayManaged().Take(new Range(1, 50)).All(element => element == null));
+            Assert.IsTrue(result.GetSuggestionArray()[0].ToString() == "contain");
+            Assert.IsTrue(result.GetSuggestionArray().Take(new Range(1, 50)).All(element => element == null));
         }
     }
 }

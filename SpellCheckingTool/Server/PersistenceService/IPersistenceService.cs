@@ -8,7 +8,7 @@ namespace SpellCheckingTool
 {
     public interface IPersistenceService
     {
-        bool Save(WordTree tree, FilePath filepath);
+        bool Save(WordTree tree, FilePath filepath, IWalkWordTreeService walkWordTreeService);
         WordTree Load(FilePath filepath);
     }
 }

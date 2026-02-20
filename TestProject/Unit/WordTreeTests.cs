@@ -200,7 +200,7 @@ namespace TestProject.Unit
 
             IAlphabet alphabet = new LatinAlphabet();
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordFile.wdb"));
+            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordFile.json"));
             Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
 
             sw.Stop();
@@ -224,15 +224,15 @@ namespace TestProject.Unit
             
             Stopwatch sw = Stopwatch.StartNew();
 
-            tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
-            Assert.IsTrue(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
+            tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"/tmp.json"));
+            Assert.IsTrue(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.json"));
 
             sw.Stop();
             Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
 
             //clean up temporary files
-            File.Delete(Directory.GetCurrentDirectory() + @"/tmp.wdb");
-            Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.wdb"));
+            File.Delete(Directory.GetCurrentDirectory() + @"/tmp.json");
+            Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.json"));
         }
     }
 }

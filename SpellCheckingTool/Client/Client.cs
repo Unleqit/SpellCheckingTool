@@ -18,7 +18,7 @@ namespace SpellCheckingTool.Client
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
-            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.wdb");
+            string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.json");
 
             if (!File.Exists(path))
                 throw new FileNotFoundException($"word file not found: {path}");

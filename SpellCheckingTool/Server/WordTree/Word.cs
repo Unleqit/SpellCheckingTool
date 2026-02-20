@@ -2,15 +2,40 @@
 {
     public class Word
     {
-        string word;
+        char[] word;
 
-        public Word(IAlphabet alphabet, string word)
+        public Word(IAlphabet alphabet, IEnumerable<char> word, int offset = 0, int length = -1)
         {
-            this.word = word.ToLower();
+            char[] lowerCaseWord = GetLowerCaseArray(word, offset, length);
+            this.CheckValidity(alphabet, lowerCaseWord);
+            this.word = lowerCaseWord;
+
+        }
+
+        private void CheckValidity(IAlphabet alphabet, char[] word)
+        {
             char[] alphabetChars = alphabet.GetChars();
 
-            if (this.word.Any(c => !alphabetChars.Contains(c)))
+            if (word.Any(c => !alphabetChars.Contains(c)))
                 throw new Exception("Word contains invalid characters");
+        }
+
+        private char[] GetLowerCaseArray(IEnumerable<char> word, int offset = 0, int length = -1)
+        {
+            int passedWordLength = word.Count();
+
+            if (length == -1)
+                length = passedWordLength;
+
+            if (offset < 0 || (length >= 0 && offset + length > passedWordLength))
+                throw new Exception("Invalid offset specified");
+
+            if (length < 0 || (offset >= 0 && offset + length > passedWordLength))
+                throw new Exception("Invalid length specified");
+
+            IEnumerable<char> substring = word.Skip(offset).Take(length);
+            char[] lowerCaseWord = substring.Select((c) => char.ToLower(c)).ToArray();
+            return lowerCaseWord;
         }
 
         //define array operator, length property and ToString()-Method on Word class for convenience
@@ -26,7 +51,7 @@
 
         public override string ToString()
         {
-            return word.ToString();
+            return new string(word);
         }
 
         //convenience method

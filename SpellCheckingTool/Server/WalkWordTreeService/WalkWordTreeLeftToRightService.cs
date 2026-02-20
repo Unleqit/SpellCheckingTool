@@ -2,22 +2,32 @@
 
 namespace SpellCheckingTool
 {
-    public unsafe class WalkWordTreeLeftToRightService : WalkWordTreeService, IDisposable
+    public unsafe class WalkWordTreeLeftToRightService : IWalkWordTreeService
     {
-        public WalkWordTreeLeftToRightService(WordTree tree) : base(tree)
+        WordTree tree;
+
+        public WalkWordTreeLeftToRightService(WordTree tree)
         {
-            //initialize service by calling base constructor
+            this.tree = tree;
         }
 
         /// <summary>
         /// Iteratively walks the tree in order and calls the provided delegate method for each word contained in the tree.
         /// </summary>
         /// <param name="onEachWord">
-        /// The first parameter of the delegate is a char* to the wordBuffer holding the current word in native memory, wrapped as a long.
-        /// The second parameter of the delegate is the length of the word in native memory
+        /// The action to be performed for each word in the tree, commonly denoted as lambda method `(word) => { ... }`
         /// </param>
-        public unsafe override void WalkTree(Action<long, int> onEachWord)
+        public void WalkTree(Action<Word> onEachWord)
         {
+            char[] wordBuffer = new char[tree.metaData.wordBufferLength + 1];
+            int wordBufferIndex = 0;
+
+            char[] alphabetChars = tree.alphabet.GetChars();
+            int alphabetLength = tree.alphabet.GetLength();
+
+            WordTreeNode[] stack = new WordTreeNode[this.tree.metaData.wordBufferLength + 1];
+            int stackIndex = 0;
+
             //we can't use recursion, as deep trees may cause a StackOverflowException, hence we walk the tree in an iterative manner.
             stack[stackIndex++] = tree.rootNode;
             WordTreeNode current = tree.rootNode;
@@ -71,10 +81,10 @@ namespace SpellCheckingTool
                     continue;
                 }
 
-                //call onEachWord delegate with a char* to the word buffer pointer wrapped as a long (due to managed code restrictions in delegates), and pass the length of the word in the native buffer as second argument
-                onEachWord((long)wordBuffer, wordBufferIndex);
+                //call provided method for each word in the tree
+                onEachWord(new Word(tree.alphabet, wordBuffer, 0, wordBufferIndex));
 
-                //the current node and its children have been fullt examined and saved - pop it from the stack and resume with the next node
+                //the current node and its children have been fully examined and saved - pop it from the stack and resume with the next node
                 stackIndex--;
             }
         }

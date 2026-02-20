@@ -4,7 +4,7 @@
 
 namespace SpellCheckingTool
 {
-    public class WordTree : IDisposable
+    public class WordTree
     {
         public WordTreeNode rootNode { get; private set; }
         public IAlphabet alphabet { get; private set; }
@@ -219,7 +219,8 @@ namespace SpellCheckingTool
 
         public bool Serialize(FilePath filepath)
         {
-            return this.persistenceService.Save(this, filepath);
+            WalkWordTreeLeftToRightService walkWordTreeService = new WalkWordTreeLeftToRightService(this);
+            return this.persistenceService.Save(this, filepath, walkWordTreeService);
         }
 
         public WordTree Deserialize(FilePath filepath)
@@ -227,14 +228,9 @@ namespace SpellCheckingTool
             return this.persistenceService.Load(filepath);
         }
 
-        public SuggestionResult GetSuggestions(string input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
+        public SuggestionResult GetSuggestions(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
         {
             return this.SuggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
-        }
-
-        public void Dispose()
-        {
-            this.SuggestionService.Dispose();
         }
     }
 }
