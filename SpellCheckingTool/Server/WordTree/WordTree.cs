@@ -10,7 +10,6 @@ namespace SpellCheckingTool
         public IAlphabet alphabet { get; private set; }
         public WordTreeMetaInfo metaData { get; private set; }
         private IPersistenceService persistenceService;
-        public event WordTreeWordBufferLengthChangedEventHandler? wordTreeWordBufferLengthChangedEventHandler;
         private ISuggestionService SuggestionService { get; set; }
         
 #pragma warning disable CS8618 // all class members are set in the initialize method, hence the warnings about uninitialized variables can be ignored here
@@ -99,10 +98,6 @@ namespace SpellCheckingTool
             this.metaData.serializationLength = _serializationLength;
             int oldLength = this.metaData.wordBufferLength;
             this.metaData.wordBufferLength = _wordBufferLength;
-
-            //trigger event if the word buffer size has been expanded
-            if (oldLength < _wordBufferLength)
-                this.wordTreeWordBufferLengthChangedEventHandler?.Invoke(this, _wordBufferLength);
 
             //return the amount of words that were successfully added to the tree structure
             return successCount;
