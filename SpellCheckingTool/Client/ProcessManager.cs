@@ -15,6 +15,7 @@ namespace SpellCheckingTool.Client
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd.exe" : "/bin/bash",
+                    Arguments = "/Q",   // disables command echo
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
