@@ -359,5 +359,11 @@ namespace SpellCheckingTool.Client
             
             showSuggestions();
         }
+
+        public void ResetCursorTracking()
+        {
+            cursorLeft = Console.CursorLeft;
+            alreadyEnteredCharacterCount = 0;
+        }
     }
 }

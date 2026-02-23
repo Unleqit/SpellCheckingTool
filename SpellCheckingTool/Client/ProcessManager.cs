@@ -15,7 +15,7 @@ namespace SpellCheckingTool.Client
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd.exe" : "/bin/bash",
-                    Arguments = "/Q",   // disables command echo
+                    Arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "/Q" : "",    // disable echo on Windows
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -52,6 +52,8 @@ namespace SpellCheckingTool.Client
 
         public void SendInput(string input)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                input = @"bash -i -c 'printf ""%s"" ""${PS1@P}""' && " + input;
             _process.StandardInput.WriteLine(input);
         }
     }

@@ -41,7 +41,9 @@ namespace SpellCheckingTool.Client
                     case ConsoleKey.Enter:
                         if (enterCommand)
                         {
+                            Console.WriteLine();
                             _processManager.SendInput(input);
+                            _suggestionDisplay.ResetCursorTracking();
                             input = "";
                             enterCommand = false;
                         }
