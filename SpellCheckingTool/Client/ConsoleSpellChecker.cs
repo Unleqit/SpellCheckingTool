@@ -41,12 +41,17 @@ namespace SpellCheckingTool.Client
                     case ConsoleKey.Enter:
                         if (enterCommand)
                         {
-                            enterCommand = false;
+                            Console.WriteLine();
                             _processManager.SendInput(input);
+                            _suggestionDisplay.ResetCursorTracking();
                             input = "";
+                            enterCommand = false;
                         }
-                        _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
-                        enterCommand = true;
+                        else
+                        {
+                            _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
+                            enterCommand = true;
+                        }
                         break;
 
                     case ConsoleKey.UpArrow:
