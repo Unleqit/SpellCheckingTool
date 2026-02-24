@@ -66,8 +66,6 @@ namespace SpellCheckingTool.Client
         
         ConsoleColor originalForeColor;
         ConsoleColor originalBackColor;
-        int cursorLeft;
-        int alreadyEnteredCharacterCount = 0;
         bool suggestionsShown = true;
         bool consoleTooSmallErrorMessageDisplayed = false;
         WordTree tree;
@@ -91,109 +89,61 @@ namespace SpellCheckingTool.Client
             });
         }
 
-        //in windows, pressing backspace triggers '\b', while in linux systems, a char representable by the ASCII value 127 is emitted
-        private string ReplaceBackspaceChar(string input)
+        private int GetStartIndexOfCurrentWord(string input)
         {
-            char consoleBackspaceChar;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                consoleBackspaceChar = '\b';
-            else
-                consoleBackspaceChar = (char)127;
-
-            return input.Replace(consoleBackspaceChar.ToString(), "");
+            return input.LastIndexOf(' ') + 1;
         }
-
+   
         private Word GetLastWordFromInputString(string input)
         {
-            string wordString = input.Substring(input.LastIndexOf(' ') + 1);
-            wordString = ReplaceBackspaceChar(wordString); 
-
-            Word lastWord = new Word(tree.alphabet, wordString);
-            return lastWord;
+            int startIndexOfCurrentWord = GetStartIndexOfCurrentWord(input);
+            string wordString = input.Substring(startIndexOfCurrentWord);
+            return new Word(tree.alphabet, wordString);
         }
 
         public void ShowSuggestionsForString(ref string input)
         {
-            Word lastWord = GetLastWordFromInputString(input);
+            Word lastWordInInput = GetLastWordFromInputString(input);
+            int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
 
-            switch (input[input.Length - 1])
-            {
-                default:
-                    alreadyEnteredCharacterCount++;
-                    cursorLeft++;
-                    checkAndColorLastWord(lastWord);
-                    hideSuggestions();
-                    getSuggestions(lastWord);
-                    showSuggestions();
-                    break;
-
-                case ' ':
-                    alreadyEnteredCharacterCount = 0;
-                    cursorLeft++;
-                    hideSuggestions();
-                    break;
-
-                //pressing the backspace key in windows produces this character (ascii code 10, therefore (int)'\b' = 10)
-                case '\b':
-                    deleteLastChar(ref input);
-                    break;
-
-                //pressing the backspace key in linux produces this character (ascii code 127, hence we do an explicit cast of 127 as char => \u007f)
-                case (char)127:
-                    deleteLastChar(ref input);
-                    break;
-            }
+            colorWord(lastWordInInput, startIndexOfCurrentLastWord);
+            hideSuggestions();
+            getSuggestions(lastWordInInput);
+            showSuggestions();
         }
 
-        void deleteLastChar(ref string input)
+        bool checkIfTreeContainsWord(Word word)
         {
-            if (input.Length == 1)
-            {
-                input = "";
-                return;
-            }
-
-            removeLastCharacterFromWord(ref input);
-
-            Word lastWord = new Word(new LatinAlphabet(), input.Substring(input.LastIndexOf(' ') + 1));
-            getSuggestions(lastWord);
-
-            if (input.Length > 0)
-                showSuggestions();
+            return tree.Contains(word.ToString().Trim().ToLower());
         }
 
-        void checkAndColorLastWord(Word lastWord)
+        void replaceWord(Word lastWord, int startIndexOfCurrentLastWord)
         {
-            bool contained = tree.Contains(lastWord.ToString().Trim().ToLower());
-            Console.CursorLeft = cursorLeft - lastWord.Length;
-            Console.BackgroundColor = contained ? ValidWordBackColor : InvalidWordBackColor;
-            Console.ForegroundColor = contained ? ValidWordForeColor : InvalidWordForeColor;
+            int lengthOfWordToBeReplaced = Console.CursorLeft;
+            Console.CursorLeft = startIndexOfCurrentLastWord;
             Console.Write(lastWord);
+
+            //replace any old chars on deletion
+            if (lengthOfWordToBeReplaced - lastWord.Length > 0)
+            {
+                Console.Write(new string(' ', lengthOfWordToBeReplaced - lastWord.Length));
+                Console.CursorLeft = startIndexOfCurrentLastWord + lastWord.Length;
+            }
+        }
+
+        void colorWord(Word lastWord, int startIndexOfCurrentLastWord)
+        {
+            bool isWordInTree = checkIfTreeContainsWord(lastWord);
+
+            Console.BackgroundColor = isWordInTree ? ValidWordBackColor : InvalidWordBackColor;
+            Console.ForegroundColor = isWordInTree ? ValidWordForeColor : InvalidWordForeColor;
+
+            replaceWord(lastWord, startIndexOfCurrentLastWord);
+
             Console.BackgroundColor = originalBackColor;
             Console.ForegroundColor = originalForeColor;
         }
 
-        void removeLastCharacterFromWord(ref string input)
-        {
-            hideSuggestions();
-            cursorLeft--;
-
-            //the windows shell (cmd) seems to process backspace characters differently than a linux shell (tested with WSL/arch)
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Console.Write(" \b");
-            }
-            else
-            {
-                Console.CursorLeft--;
-                Console.Write(" ");
-            }
-
-            input = input.Substring(0, input.Length - 2);
-            alreadyEnteredCharacterCount = input.Length - (input.LastIndexOf(' ') + 1);
-            Word result = new Word(tree.alphabet, input.Substring(input.LastIndexOf(' ') + 1));
-            checkAndColorLastWord(result);
-        }
 
         void getSuggestions(Word input)
         {
@@ -310,30 +260,21 @@ namespace SpellCheckingTool.Client
 
         public void autoCompleteCurrentlySelectedSuggestion(ref string input)
         {
-            //this method gets called when the user presses the 'Enter' key, which automatically sets the 'Console.CursorLeft' property to 0, therefore we need to restore it to its previous value
-            Console.CursorLeft = cursorLeft;
             hideSuggestions();
-            Console.CursorLeft = cursorLeft - alreadyEnteredCharacterCount;
-
+            
+            int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
+            Console.CursorLeft = startIndexOfCurrentLastWord;
+            
             Console.ForegroundColor = ValidWordForeColor;
             Console.BackgroundColor = ValidWordBackColor;
             Word selectedSuggestion = CurrentlySelectedSuggestion;
 
-            //example: "avocad" entered, completed with suggestion "avoid" -> 'd' of "avocad" needs to be cleared!
-            if (selectedSuggestion.Length < alreadyEnteredCharacterCount)
-            {
-                Console.CursorLeft += selectedSuggestion.Length;
-                Console.Write(new string(' ', alreadyEnteredCharacterCount - selectedSuggestion.Length));
-                Console.CursorLeft -= selectedSuggestion.Length + 1;
-            }
+            replaceWord(selectedSuggestion, startIndexOfCurrentLastWord);
 
-            Console.Write(selectedSuggestion);
             Console.ForegroundColor = originalForeColor;
             Console.BackgroundColor = originalBackColor;
-            cursorLeft += (selectedSuggestion.Length - alreadyEnteredCharacterCount);
-            currentlySelectedLine = 0;
-            alreadyEnteredCharacterCount = 0;
-            input = input.Substring(0, input.LastIndexOf(' ') + 1) + selectedSuggestion;
+
+            input = input.Substring(0, startIndexOfCurrentLastWord) + selectedSuggestion;
         }
 
         public void selectNextSuggestion()
@@ -358,12 +299,6 @@ namespace SpellCheckingTool.Client
                 currentlySelectedLine = currentSuggestionCount - 1;
             
             showSuggestions();
-        }
-
-        public void ResetCursorTracking()
-        {
-            cursorLeft = Console.CursorLeft;
-            alreadyEnteredCharacterCount = 0;
         }
     }
 }

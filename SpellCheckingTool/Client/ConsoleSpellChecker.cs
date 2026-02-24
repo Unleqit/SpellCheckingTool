@@ -32,10 +32,28 @@ namespace SpellCheckingTool.Client
                 switch (keyInfo.Key)
                 {
                     default:
+                        //ignore control chars like Ctrl, Alt, Super, ...
+                        if (char.IsControl(c))
+                            break;
                         input += c;
                         Console.Write(c);
                         _suggestionDisplay.ShowSuggestionsForString(ref input);
                         enterCommand = false;
+                        break;
+
+                    case ConsoleKey.Backspace:
+                        if (input == "")
+                            break;
+                        input = input.Substring(0, input.Length - 1);
+                        _suggestionDisplay.ShowSuggestionsForString(ref input);
+                        enterCommand = false;
+                        break;
+
+                    case (ConsoleKey)127:
+                        if (input == "")
+                            break;
+                        input = input.Substring(0, input.Length - 1);
+                        _suggestionDisplay.ShowSuggestionsForString(ref input);
                         break;
 
                     case ConsoleKey.Enter:
@@ -43,7 +61,7 @@ namespace SpellCheckingTool.Client
                         {
                             Console.WriteLine();
                             _processManager.SendInput(input);
-                            _suggestionDisplay.ResetCursorTracking();
+                     //       _suggestionDisplay.ResetCursorTracking();
                             input = "";
                             enterCommand = false;
                         }
