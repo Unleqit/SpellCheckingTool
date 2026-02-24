@@ -4,8 +4,6 @@ namespace SpellCheckingTool.Client
 {
     public unsafe class SuggestionWindow : ISuggestionDisplay
     {
-        const string consoleWindowTooSmallErrorMessage = "Please resize the console window to fit the suggestion buffer.";
-
         //-------public properties--------
         public int MaxSuggestionsToBeDisplayed { get; set; }
         int horizontalPaddingSz;
@@ -67,9 +65,9 @@ namespace SpellCheckingTool.Client
         ConsoleColor originalForeColor;
         ConsoleColor originalBackColor;
         bool suggestionsShown = true;
-        bool consoleTooSmallErrorMessageDisplayed = false;
         WordTree tree;
         SuggestionResult currentSuggestions;
+        ConsoleSizeChecker consoleSizeChecker;
 
         //holds a single suggestion line with horizontalBufferSize padding on each side
         char[] suggestionDisplayBuffer;
@@ -80,6 +78,7 @@ namespace SpellCheckingTool.Client
             this.tree = tree;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
+            this.consoleSizeChecker = new ConsoleSizeChecker();
             this.suggestionDisplayBuffer = new char[tree.metaData.wordBufferLength + 2 * horizontalPaddingSz];
 
             //subscribe to handler to dynamically update longestWord property
@@ -164,48 +163,35 @@ namespace SpellCheckingTool.Client
 
             Word[] suggestions = this.currentSuggestions.GetSuggestionArray();
 
-
             //check if console is high enough to display suggestion window
             int currentLength = 0;
-            if (Console.WindowHeight - Console.CursorTop >= suggestionWindowHeight + 1) //+1 because suggestion floating window gets shown below current line
+            if (consoleSizeChecker.IsConsoleWindowTooSmall(suggestionWindowHeight)) //+1 because suggestion floating window gets shown below current line
             {
-                for (int j = 0; j < suggestionWindowHeight; ++j)
-                {
-                    //remove error message, if it was previously shown
-                    if (consoleTooSmallErrorMessageDisplayed)
-                    {
-                        Console.Write(new string(' ', consoleWindowTooSmallErrorMessage.Length));
-                        Console.CursorLeft -= consoleWindowTooSmallErrorMessage.Length;
-                        consoleTooSmallErrorMessageDisplayed = false;
-                    }
-
-                    Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
-                    Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
-                    Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
-
-                    currentLength = suggestions[j].Length;
-
-
-                    for (int i = 0; i < currentLength; ++i)
-                        suggestionDisplayBuffer[i + horizontalPaddingSz] = suggestions[j][i];
-
-                    for (int i = 0; i < suggestionDisplayBuffer.Length - 1 - horizontalPaddingSz - currentLength; ++i)
-                        suggestionDisplayBuffer[i + horizontalPaddingSz + currentLength] = ' ';
-
-                    Console.Write(suggestionDisplayBuffer, 0, suggestionDisplayBuffer.Length);
-                }
-            }
-            else
-            {
-                //prompt the user to resize the console window (as this cannot be done programmatically in some systems)
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write(consoleWindowTooSmallErrorMessage);
-                Console.BackgroundColor = originalBackColor;
-                Console.ForegroundColor = originalForeColor;
-                consoleTooSmallErrorMessageDisplayed = true;
+                consoleSizeChecker.ShowConsoleTooSmallError();
+                return;
             }
 
+            for (int j = 0; j < suggestionWindowHeight; ++j)
+            {
+                //remove error message, if it was previously shown
+                if (consoleSizeChecker.IsErrorMessageDisplayed())
+                    consoleSizeChecker.HideConsoleTooSmallError();
+
+                Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
+                Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
+                Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
+
+                currentLength = suggestions[j].Length;
+
+                for (int i = 0; i < currentLength; ++i)
+                    suggestionDisplayBuffer[i + horizontalPaddingSz] = suggestions[j][i];
+
+                for (int i = 0; i < suggestionDisplayBuffer.Length - 1 - horizontalPaddingSz - currentLength; ++i)
+                    suggestionDisplayBuffer[i + horizontalPaddingSz + currentLength] = ' ';
+
+                Console.Write(suggestionDisplayBuffer, 0, suggestionDisplayBuffer.Length);
+            }
+           
             //restore cursor to old position and set old console colors
             Console.SetCursorPosition(wordLeftInConsole, wordTopInConsole);
             Console.ForegroundColor = originalForeColor;
@@ -221,39 +207,28 @@ namespace SpellCheckingTool.Client
             int wordTopInConsole = Console.CursorTop;
 
             //check if console is wide enough
-            if (Console.WindowHeight - Console.CursorTop >= suggestionWindowHeight + 1) //+1 because suggestion floating window gets shown below current line
+            if (consoleSizeChecker.IsConsoleWindowTooSmall(suggestionWindowHeight)) //+1 because suggestion floating window gets shown below current line
             {
-                //remove error message, if it was previously shown
-                if (consoleTooSmallErrorMessageDisplayed)
-                {
-                    Console.Write(new string(' ', consoleWindowTooSmallErrorMessage.Length));
-                    Console.CursorLeft -= consoleWindowTooSmallErrorMessage.Length;
-                    consoleTooSmallErrorMessageDisplayed = false;
-                }
-
-                //set colors
-                Console.BackgroundColor = originalBackColor;
-                Console.ForegroundColor = originalForeColor;
-
-                //clear floating suggestions window
-                for (int j = 0; j < suggestionWindowHeight; ++j)
-                {
-                    //set cursor pos
-                    int startIndex = cursorLeft - 1 < 0 ? 0 : cursorLeft - 1;
-                    Console.SetCursorPosition(startIndex, wordTopInConsole + j + 1);
-                    Console.Write(new string(' ', suggestionWindowWidth + 2));
-                }
-            }
-            else
-            {
-                consoleTooSmallErrorMessageDisplayed = true;
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Write("Please resize the window to allow the buffer to fit");
-                Console.BackgroundColor = originalBackColor;
-                Console.ForegroundColor = originalForeColor;
+                consoleSizeChecker.ShowConsoleTooSmallError();
+                return;
             }
 
+            if (consoleSizeChecker.IsErrorMessageDisplayed())
+                consoleSizeChecker.HideConsoleTooSmallError();
+
+            //set colors
+            Console.BackgroundColor = originalBackColor;
+            Console.ForegroundColor = originalForeColor;
+
+            //clear floating suggestions window
+            for (int j = 0; j < suggestionWindowHeight; ++j)
+            {
+                //set cursor pos
+                int startIndex = cursorLeft - 1 < 0 ? 0 : cursorLeft - 1;
+                Console.SetCursorPosition(startIndex, wordTopInConsole + j + 1);
+                Console.Write(new string(' ', suggestionWindowWidth + 2));
+            }
+ 
             //restore cursor to old positions
             Console.SetCursorPosition(cursorLeft, wordTopInConsole);
         }
