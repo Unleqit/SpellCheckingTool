@@ -12,7 +12,7 @@ namespace SpellCheckingTool.Client
         public int HorizontalPaddingSz 
         {
             get => horizontalPaddingSz;
-            set => horizontalPaddingSz = value < 0 ? 0 : value > 10 ? 10 : value;
+            set => horizontalPaddingSz = Math.Clamp(value, 0, 10);
         }
         public ConsoleColor ValidWordForeColor { get; set; }
         public ConsoleColor ValidWordBackColor { get; set; }
