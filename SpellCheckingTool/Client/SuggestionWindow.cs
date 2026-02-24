@@ -12,17 +12,7 @@ namespace SpellCheckingTool.Client
         public int HorizontalPaddingSz 
         {
             get => horizontalPaddingSz;
-            set
-            {
-                horizontalPaddingSz = value < 0 ? 0 : value > 10 ? 10 : value;
-                suggestionDisplayBuffer = new char[tree.metaData.wordBufferLength + 2 * horizontalPaddingSz];
-
-                for (int i = 0; i < horizontalPaddingSz; ++i)
-                    suggestionDisplayBuffer[i] = ' ';
-
-                for (int i = suggestionDisplayBuffer.Length - 1 - horizontalPaddingSz; i < suggestionDisplayBuffer.Length; ++i)
-                    suggestionDisplayBuffer[i] = ' ';
-            }
+            set => horizontalPaddingSz = Math.Clamp(value, 0, 10);
         }
         public ConsoleColor ValidWordForeColor { get; set; }
         public ConsoleColor ValidWordBackColor { get; set; }
@@ -73,22 +63,11 @@ namespace SpellCheckingTool.Client
         WordTree tree;
         SuggestionResult currentSuggestions;
 
-        //holds a single suggestion line with horizontalBufferSize padding on each side
-        char[] suggestionDisplayBuffer;
-
-
         public SuggestionWindow(WordTree tree)
         {
             this.tree = tree;
             this.originalForeColor = Console.ForegroundColor;
             this.originalBackColor = Console.BackgroundColor;
-            this.suggestionDisplayBuffer = new char[tree.metaData.wordBufferLength + 2 * horizontalPaddingSz];
-
-            //subscribe to handler to dynamically update longestWord property
-            tree.wordTreeWordBufferLengthChangedEventHandler += ((object sender, int newLongestWord) =>
-            {
-                suggestionDisplayBuffer = new char[newLongestWord + 2 * horizontalPaddingSz];
-            });
         }
 
         //in windows, pressing backspace triggers '\b', while in linux systems, a char representable by the ASCII value 127 is emitted
@@ -214,9 +193,7 @@ namespace SpellCheckingTool.Client
 
             Word[] suggestions = this.currentSuggestions.GetSuggestionArray();
 
-
             //check if console is high enough to display suggestion window
-            int currentLength = 0;
             if (Console.WindowHeight - Console.CursorTop >= suggestionWindowHeight + 1) //+1 because suggestion floating window gets shown below current line
             {
                 for (int j = 0; j < suggestionWindowHeight; ++j)
@@ -232,17 +209,7 @@ namespace SpellCheckingTool.Client
                     Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
                     Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
                     Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
-
-                    currentLength = suggestions[j].Length;
-
-
-                    for (int i = 0; i < currentLength; ++i)
-                        suggestionDisplayBuffer[i + horizontalPaddingSz] = suggestions[j][i];
-
-                    for (int i = 0; i < suggestionDisplayBuffer.Length - 1 - horizontalPaddingSz - currentLength; ++i)
-                        suggestionDisplayBuffer[i + horizontalPaddingSz + currentLength] = ' ';
-
-                    Console.Write(suggestionDisplayBuffer, 0, suggestionDisplayBuffer.Length);
+                    Console.Write(new string(' ', horizontalPaddingSz) + suggestions[j] + new string(' ', tree.metaData.wordBufferLength + horizontalPaddingSz - 1 - suggestions[j].Length));
                 }
             }
             else
