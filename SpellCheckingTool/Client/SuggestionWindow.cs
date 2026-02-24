@@ -240,5 +240,10 @@
             
             showSuggestions();
         }
+
+        public bool isCurrentlyVisible()
+        {
+            return suggestionsShown;
+        }
     }
 }

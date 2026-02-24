@@ -13,6 +13,7 @@ namespace SpellCheckingTool.Client
         public void autoCompleteCurrentlySelectedSuggestion(ref string input);
         public void selectPreviousSuggestion();
         public void selectNextSuggestion();
+        public bool isCurrentlyVisible();
     }
     delegate void WordTreeWordBufferLengthChangedEventHandler(object sender, int newSize);
 }
