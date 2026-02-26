@@ -2,14 +2,14 @@
 
 namespace SpellCheckingTool
 {
-    public unsafe class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
+    public unsafe class LevenshteinDistanceService : IDistanceService
     {
         WordTree tree;
 
         /// <summary>
         /// Provides an implementation of the levenshtein distance matching algorithm (see https://en.wikipedia.org/wiki/Levenshtein_distance)
         /// </summary>
-        public LevenshteinDistanceAlgorithm(WordTree tree)
+        public LevenshteinDistanceService(WordTree tree)
         {
             this.tree = tree;
         }

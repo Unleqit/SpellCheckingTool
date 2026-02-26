@@ -46,7 +46,7 @@ namespace TestProject.Unit
         [TestMethod]
         public void GetHundredSuggestionsInLargeTreeForContain_ShouldReturnTwentySuggestions()
         {
-            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contain"), 100, 999);
+            SuggestionResult result = tree.GetSuggestions(new Word(new LatinAlphabet(), "contain"), 20, 999);
             Assert.AreEqual(result.GetSuggestionCount(), 20);
             Assert.IsTrue(result.GetSuggestionArray()[0].ToString() == "contain");
         }

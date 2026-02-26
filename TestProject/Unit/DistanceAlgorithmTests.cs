@@ -13,7 +13,7 @@ namespace TestProject.Unit
             IAlphabet alphabet = new LatinAlphabet();
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(new Word(alphabet, word));
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            LevenshteinDistanceService distanceAlgorithm = new LevenshteinDistanceService(tree);
             tree.Add(new Word(alphabet, word2));
         }
 
@@ -25,7 +25,7 @@ namespace TestProject.Unit
             Word word2 = new Word(alphabet, "test");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            LevenshteinDistanceService distanceAlgorithm = new LevenshteinDistanceService(tree);
             tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 0);
@@ -39,7 +39,7 @@ namespace TestProject.Unit
             Word word2 = new Word(alphabet, "text");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            LevenshteinDistanceService distanceAlgorithm = new LevenshteinDistanceService(tree);
             tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 1);
@@ -53,7 +53,7 @@ namespace TestProject.Unit
             Word word2 = new Word(alphabet, "implementation");
             WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
             tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
+            LevenshteinDistanceService distanceAlgorithm = new LevenshteinDistanceService(tree);
             tree.Add(word2);
             int distance = distanceAlgorithm.GetDistance(word, word2);
             Assert.AreEqual(distance, 9);
