@@ -18,9 +18,7 @@ namespace SpellCheckingTool.Client
         public void Run()
         {
             Console.WriteLine(WelcomeMessage);
-
             string input = "";
-            bool enterCommand = false;
 
             while (true)
             {
@@ -31,41 +29,43 @@ namespace SpellCheckingTool.Client
                 switch (keyInfo.Key)
                 {
                     default:
+                        //ignore control chars like Ctrl, Alt, Super, ...
+                        if (char.IsControl(c))
+                            break;
                         input += c;
                         Console.Write(c);
                         _suggestionDisplay.ShowSuggestionsForString(ref input);
-                        enterCommand = false;
+                        break;
+
+                    case ConsoleKey.Backspace: 
+                    case (ConsoleKey)127:
+                        if (input == "")
+                            break;
+                        input = input.Substring(0, input.Length - 1);
+                        _suggestionDisplay.ShowSuggestionsForString(ref input);
                         break;
 
                     case ConsoleKey.Enter:
-                        if (enterCommand)
+                        if (_suggestionDisplay.isCurrentlyVisible())
+                            _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
+                        else
                         {
                             Console.WriteLine();
                             _processManager.SendInput(input);
-                            _suggestionDisplay.ResetCursorTracking();
                             input = "";
-                            enterCommand = false;
-                        }
-                        else
-                        {
-                            _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
-                            enterCommand = true;
                         }
                         break;
 
                     case ConsoleKey.UpArrow:
                         _suggestionDisplay.selectPreviousSuggestion();
-                        enterCommand = false;
                         break;
 
                     case ConsoleKey.DownArrow:
                         _suggestionDisplay.selectNextSuggestion();
-                        enterCommand = false;
                         break;
 
                     case ConsoleKey.Escape:
                         _suggestionDisplay.hideSuggestions();
-                        enterCommand = true;
                         break;
                 }
             }
