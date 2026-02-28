@@ -1,14 +1,9 @@
-﻿using SpellCheckingTool.Application.WalkWordTreeService;
-using SpellCheckingTool.Domain.WordTree;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Application.PersistenceService;
-    public interface IPersistenceService
-    {
-        bool Save(WordTree tree, FilePath filepath, IWalkWordTreeService walkWordTreeService);
-        WordTree Load(FilePath filepath);
-    }
+
+public interface IPersistenceService
+{
+    bool Save(WordTree tree, FilePath filepath);
+    WordTree Load(FilePath filepath);
+}

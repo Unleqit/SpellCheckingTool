@@ -6,12 +6,12 @@ namespace SpellCheckingTool.Infrastructure.Suggestions;
 
     public unsafe class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
     {
-        WordTree tree;
+        IWordTree tree;
 
         /// <summary>
         /// Provides an implementation of the levenshtein distance matching algorithm (see https://en.wikipedia.org/wiki/Levenshtein_distance)
         /// </summary>
-        public LevenshteinDistanceAlgorithm(WordTree tree)
+        public LevenshteinDistanceAlgorithm(IWordTree tree)
         {
             this.tree = tree;
         }
@@ -27,8 +27,8 @@ namespace SpellCheckingTool.Infrastructure.Suggestions;
             int insertionCost;
             int substitutionCost;
 
-            int[] prev = new int[tree.metaData.wordBufferLength + 1];
-            int[] current = new int[tree.metaData.wordBufferLength + 1];
+            int[] prev = new int[tree.WordBufferLength + 1];
+            int[] current = new int[tree.WordBufferLength + 1];
             int[] _prev = prev;
             int[] _current = current;
             int[] _tmpBuffer;

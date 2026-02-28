@@ -1,35 +1,83 @@
 ﻿using ClientApp = SpellCheckingTool.Presentation.Client.Client;
+using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.PersistenceService;
+using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.SuggestionService;
+using SpellCheckingTool.Application.UserService;
+using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Infrastructure.Dictionary;
+using SpellCheckingTool.Infrastructure.FilePersistence;
+using SpellCheckingTool.Infrastructure.Suggestions;
+using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Presentation.Controller;
 using SpellCheckingTool.Presentation.Servers;
+
 namespace SpellCheckingTool.Presentation;
-    public unsafe class Program
+
+public unsafe class Program
+{
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
+        //Display copyright notices
+        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
+        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
+        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
+
+        //TODO: make these passable as command line arguments
+        int serverPort = 12345;
+        bool startHeadless = false;
+
+        // ----------------------------------------------------
+        // Composition root (Clean Architecture wiring)
+        // All infrastructure + application dependencies
+        // are created and wired here in ONE place.
+        // ----------------------------------------------------
+
+        IAlphabet alphabet = new LatinAlphabet();
+
+        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
+        var userService = new UserService(store, store);
+
+        // persistence + dictionary loader
+        IPersistenceService persistenceService = new FilePersistenceService();
+        IDictionaryLoader dictionaryLoader = new DictionaryLoader(persistenceService);
+
+        // Inject dependencies into controller
+        UserController.Configure(store, userService);
+
+        // ----------------------------------------------------
+
+        //create a server backend component
+        Server server = new Server();
+
+        //define logging middleware for server (like in Express.js)
+        server.Use((context, next) =>
         {
-            //Display copyright notices
-            Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
-            Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
-            Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
+            Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
+            next();
+        });
 
-            //TODO: make these passable as command line arguments
-            int serverPort = 12345;
-            bool startHeadless = false;
+        //start the server on a desired port
+        server.Start(serverPort);
 
-            //create a server backend component
-            Server server = new Server();
-
-            //define logging middleware for server (like in Express.js)
-            server.Use((context, next) =>
+        //start CLI 'frontend' and connect it to the backend, if desired
+        if (!startHeadless)
+        {
+            new Thread(() =>
             {
-                Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
-                next();
-            });
+                // Load dictionary once for the client
+                var tree = dictionaryLoader.LoadDefaultDictionary();
 
-            //start the server on a desired port
-            server.Start(12345);
-            
-            //start CLI 'frontend' and connect it to the backend, if desired
-            if (!startHeadless)
-                new Thread(() => ClientApp.StartClient(serverPort)).Start();
+                // Infrastructure suggestion implementation
+                ISuggestionService suggestionService =
+                    new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
 
+                // Application use-case
+                ISpellcheckService spellcheckService =
+                    new SpellcheckService(tree, suggestionService);
+
+                ClientApp.StartClient(serverPort, spellcheckService);
+            }).Start();
         }
     }
+}
