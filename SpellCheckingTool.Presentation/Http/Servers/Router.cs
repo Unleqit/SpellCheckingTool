@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SpellCheckingTool.Presentation.Servers.Attributes;
+using SpellCheckingTool.Presentation.Http.Servers.Attributes;
 using System.Net;
 using System.Reflection;
 
-namespace SpellCheckingTool.Presentation.Servers;
+namespace SpellCheckingTool.Presentation.Http.Servers;
     public class Router
     {
         private readonly Dictionary<(string Method, string Path), Action<HttpListenerContext>> Routes = new();

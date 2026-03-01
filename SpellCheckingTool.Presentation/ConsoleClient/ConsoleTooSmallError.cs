@@ -1,5 +1,6 @@
-﻿namespace SpellCheckingTool.Presentation.Client;
-    internal class ConsoleSizeChecker
+﻿
+namespace SpellCheckingTool.Presentation.ConsoleClient;
+internal class ConsoleSizeChecker
     {
         const string consoleWindowTooSmallErrorMessage = "Please resize the console window to fit the suggestion buffer.";
         bool consoleTooSmallErrorMessageDisplayed;

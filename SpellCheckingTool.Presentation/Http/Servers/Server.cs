@@ -1,8 +1,9 @@
-﻿using SpellCheckingTool.Presentation.Servers.Attributes;
+﻿
+using SpellCheckingTool.Presentation.Http.Servers.Attributes;
 using System.Net;
 using System.Reflection;
 
-namespace SpellCheckingTool.Presentation.Servers;
+namespace SpellCheckingTool.Presentation.Http.Servers;
     public class Server
     {
         HttpListener listener;

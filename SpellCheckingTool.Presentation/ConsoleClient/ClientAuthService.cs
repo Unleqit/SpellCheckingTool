@@ -7,8 +7,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 
-namespace SpellCheckingTool.Presentation.Client;
-    public class ClientAuthService
+
+namespace SpellCheckingTool.Presentation.ConsoleClient;
+public class ClientAuthService
     {
         private readonly HttpClient _httpClient;
         private readonly string _backendUrl;

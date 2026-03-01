@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
 
-namespace SpellCheckingTool.Presentation.Client;
+namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {

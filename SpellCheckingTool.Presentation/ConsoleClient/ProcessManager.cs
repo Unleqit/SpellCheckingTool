@@ -2,8 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace SpellCheckingTool.Presentation.Client;
-    public class ProcessManager
+
+namespace SpellCheckingTool.Presentation.ConsoleClient;
+public class ProcessManager
     {
         private readonly Process _process;
 

@@ -1,4 +1,4 @@
-﻿using ClientApp = SpellCheckingTool.Presentation.Client.Client;
+﻿using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
 using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.PersistenceService;
 using SpellCheckingTool.Application.Spellcheck;
@@ -9,12 +9,12 @@ using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.Suggestions;
 using SpellCheckingTool.Infrastructure.UserPersistence;
-using SpellCheckingTool.Presentation.Controller;
-using SpellCheckingTool.Presentation.Servers;
+using SpellCheckingTool.Presentation.Http.Servers;
+using SpellCheckingTool.Presentation.Http.Controllers;
 
 namespace SpellCheckingTool.Presentation;
 
-public unsafe class Program
+public class Program
 {
     static void Main(string[] args)
     {
@@ -48,7 +48,7 @@ public unsafe class Program
         var defaultDictionaryLoader = new DefaultDictionaryLoader(dictionaryLoader);
 
         // Inject dependencies into controller
-        UserController.Configure(store, userService);
+        UserController.Configure(userService);
 
         // ----------------------------------------------------
 

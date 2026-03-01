@@ -1,4 +1,4 @@
-﻿namespace SpellCheckingTool.Presentation.Servers.Attributes;
+﻿namespace SpellCheckingTool.Presentation.Http.Servers.Attributes;
     class HttpDelete : HttpAttribute
     {
         public HttpDelete(string path) : base("DELETE", path)

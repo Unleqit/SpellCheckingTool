@@ -1,30 +1,26 @@
 ﻿using Newtonsoft.Json;
 using SpellCheckingTool.Application.UserService;
-using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Infrastructure.UserPersistence;
-using SpellCheckingTool.Presentation.Servers.Attributes;
+using SpellCheckingTool.Presentation.Http.Servers.Attributes;
 using System.Net;
 
-namespace SpellCheckingTool.Presentation.Controller;
+namespace SpellCheckingTool.Presentation.Http.Controllers;
 
 public static class UserController
 {
     // Dependencies are injected once from Program (composition root).
-    private static FileUserStore? _store;
     private static UserService? _service;
 
     /// <summary>
     /// Called once during startup from Program.cs to inject dependencies.
     /// </summary>
-    public static void Configure(FileUserStore store, UserService service)
+    public static void Configure(UserService service)
     {
-        _store = store;
         _service = service;
     }
 
     private static void EnsureConfigured()
     {
-        if (_store == null || _service == null)
+        if (_service == null)
             throw new InvalidOperationException("UserController is not configured. Call UserController.Configure(...) during startup.");
     }
 
@@ -111,8 +107,7 @@ public static class UserController
     }
 
     // Show words file (raw view)
-    // NOTE: This still reaches into FileUserStore directly.
-    // We'll clean this later by moving it behind an Application method.
+    // NOTE: This is now behind the Application service (no Infrastructure dependency in Presentation).
     [HttpPost("/api/v1/users/words/file")]
     public static void GetWordsFile(
         HttpListenerContext context,
@@ -120,22 +115,21 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var all = _store!.GetAllWordStatsRaw();
-
-        if (!all.TryGetValue(userId, out var wordsForUser))
+        var result = _service!.GetStatsRaw(userId);
+        if (!result.Success || result.Value == null)
         {
-            WriteError(context, 404, "No words found for this user.");
+            WriteError(context, 404, result.ErrorMessage ?? "No words found for this user.");
             return;
         }
 
         WriteJson(context, 200, new
         {
             userId,
-            words = wordsForUser.Values.Select(w => new
+            words = result.Value.Select(s => new
             {
-                word = w.Word.ToString(),
-                usageCount = w.UsageCount,
-                lastUsedAt = w.LastUsedAt
+                word = s.Word.ToString(),
+                usageCount = s.UsageCount,
+                lastUsedAt = s.LastUsedAt
             })
         });
     }
@@ -158,7 +152,7 @@ public static class UserController
 
         var ordered = result.Value
             .OrderByDescending(s => s.UsageCount)
-            .ThenBy(s => s.Word);
+            .ThenBy(s => s.Word.ToString());
 
         WriteJson(context, 200, new
         {

@@ -1,6 +1,7 @@
 using SpellCheckingTool.Application.Spellcheck;
 
-namespace SpellCheckingTool.Presentation.Client;
+
+namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class ConsoleSpellChecker
 {
@@ -27,7 +28,6 @@ public class ConsoleSpellChecker
 
         while (true)
         {
-            int cursorLeft = Console.CursorLeft;
             ConsoleKeyInfo keyInfo = Console.ReadKey(true);
             char c = keyInfo.KeyChar;
 
@@ -53,8 +53,8 @@ public class ConsoleSpellChecker
                     break;
 
                 case ConsoleKey.Enter:
-                    if (_suggestionDisplay.isCurrentlyVisible())
-                        _suggestionDisplay.autoCompleteCurrentlySelectedSuggestion(ref input);
+                    if (_suggestionDisplay.IsCurrentlyVisible())
+                        _suggestionDisplay.AutoCompleteCurrentlySelectedSuggestion(ref input);
                     else
                     {
                         Console.WriteLine();
@@ -64,15 +64,15 @@ public class ConsoleSpellChecker
                     break;
 
                 case ConsoleKey.UpArrow:
-                    _suggestionDisplay.selectPreviousSuggestion();
+                    _suggestionDisplay.SelectPreviousSuggestion();
                     break;
 
                 case ConsoleKey.DownArrow:
-                    _suggestionDisplay.selectNextSuggestion();
+                    _suggestionDisplay.SelectNextSuggestion();
                     break;
 
                 case ConsoleKey.Escape:
-                    _suggestionDisplay.hideSuggestions();
+                    _suggestionDisplay.HideSuggestions();
                     break;
             }
         }
