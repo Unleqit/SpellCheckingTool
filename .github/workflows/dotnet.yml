@@ -1,4 +1,5 @@
-# Build, test and measure coverage for .NET project
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 name: .NET
 
@@ -11,60 +12,34 @@ on:
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: |
+        dotnet test --no-build --verbosity normal --settings coverage.runsettings --collect:"XPlat Code Coverage"
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+        sudo apt install cloc --no-install-suggests --no-install-recommends -y
 
-      - name: Restore dependencies
-        run: dotnet restore
+        # Production LoC only: exclude tests + bin/obj, strip comments, then print only CODE column from SUM
+        echo "Lines of Code: "$(cloc --include-lang=C# . --exclude-dir=bin,obj,TestProject --strip-comments | awk '/SUM:/ {print $5}')
 
-      - name: Build
-        run: dotnet build --no-restore
+        # Find newest cobertura coverage file (path can differ between local/CI)
+        COV_FILE=$(find . -name coverage.cobertura.xml -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
 
-      - name: Test (with coverage)
-        run: |
-          dotnet test \
-            --no-build \
-            --verbosity normal \
-            --settings coverage.runsettings \
-            --collect:"XPlat Code Coverage"
+        if [ -z "$COV_FILE" ]; then
+          echo "No coverage.cobertura.xml found."
+          exit 1
+        fi
 
-      - name: Install cloc
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cloc
-
-      - name: Lines of Code (production only)
-        run: |
-          # Count only production C# code lines
-          # Excludes:
-          # - TestProject (tests)
-          # - bin / obj folders
-          # - comments and blank lines
-          LOC=$(cloc . \
-            --include-lang=C# \
-            --exclude-dir=bin,obj,TestProject \
-            --strip-comments \
-            --json \
-            | python3 -c "import sys, json; print(json.load(sys.stdin)['SUM']['code'])")
-
-          echo "Lines of Code: $LOC"
-
-      - name: Print coverage percentage
-        run: |
-          COV_FILE=$(find . -name 'coverage.cobertura.xml' | head -n 1)
-
-          if [ -z "$COV_FILE" ]; then
-            echo "No coverage file found."
-            exit 1
-          fi
-
-          grep '<coverage line-rate="' "$COV_FILE" \
-            | awk -F'line-rate="' '{print $2}' \
-            | awk -F'"' '{printf "Test Coverage: %.2f %%\n", $1 * 100}'
+        grep '<coverage line-rate="' "$COV_FILE" | awk -F'line-rate="' '{print $2}' | awk -F'"' '{printf "Test Coverage: %.2f %%\n", $1 * 100}'
