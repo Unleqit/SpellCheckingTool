@@ -1,8 +1,19 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Application.PersistenceService;
+using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Application.Dictionary;
 
-public interface IDictionaryLoader
+public class DictionaryLoader : IDictionaryLoader
 {
-    WordTree LoadDefaultDictionary();
+    private readonly IPersistenceService persistenceService;
+
+    public DictionaryLoader(IPersistenceService persistenceService)
+    {
+        this.persistenceService = persistenceService;
+    }
+
+    public WordTree Load(FilePath filepath)
+    {
+        return persistenceService.Load(filepath);
+    }
 }

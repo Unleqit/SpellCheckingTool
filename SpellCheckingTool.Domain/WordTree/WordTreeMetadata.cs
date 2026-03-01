@@ -1,12 +1,12 @@
 ﻿namespace SpellCheckingTool.Domain.WordTree;
-    public class WordTreeMetaInfo
+    public class WordTreeMetadata
     {
         private int _wordCount;
         private int _nodeCount;
         private int _serializationLength;
         private int _wordBufferLength;
 
-        public WordTreeMetaInfo(int wordCount, int nodeCount, int serializationLength, int wordBufferLength)
+        public WordTreeMetadata(int wordCount, int nodeCount, int serializationLength, int wordBufferLength)
         {
             this._wordCount = wordCount;
             this._nodeCount = nodeCount;

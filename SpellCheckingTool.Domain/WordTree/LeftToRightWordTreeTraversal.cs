@@ -1,12 +1,10 @@
-﻿using System;
+﻿namespace SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Domain.WordTree;
-
-public unsafe class WalkWordTreeLeftToRightService
+public class LeftToRightWordTreeTraversal
 {
     private readonly WordTree tree;
 
-    public WalkWordTreeLeftToRightService(WordTree tree)
+    public LeftToRightWordTreeTraversal(WordTree tree)
     {
         this.tree = tree;
     }
@@ -19,13 +17,13 @@ public unsafe class WalkWordTreeLeftToRightService
     /// </param>
     public void WalkTree(Action<Word> onEachWord)
     {
-        char[] wordBuffer = new char[tree.metaData.wordBufferLength + 1];
+        char[] wordBuffer = new char[tree.WordBufferLength + 1];
         int wordBufferIndex = 0;
 
-        char[] alphabetChars = tree.alphabet.GetChars();
-        int alphabetLength = tree.alphabet.GetLength();
+        char[] alphabetChars = tree.Alphabet.GetChars();
+        int alphabetLength = tree.Alphabet.GetLength();
 
-        WordTreeNode[] stack = new WordTreeNode[tree.metaData.wordBufferLength + 1];
+        WordTreeNode[] stack = new WordTreeNode[tree.WordBufferLength + 1];
         int stackIndex = 0;
 
         //we can't use recursion, as deep trees may cause a StackOverflowException, hence we walk the tree in an iterative manner.
@@ -91,7 +89,7 @@ public unsafe class WalkWordTreeLeftToRightService
             }
 
             //call provided method for each word in the tree
-            onEachWord(new Word(tree.alphabet, wordBuffer, 0, wordBufferIndex));
+            onEachWord(new Word(tree.Alphabet, wordBuffer, 0, wordBufferIndex));
 
             //the current node and its children have been fully examined and saved - pop it from the stack and resume with the next node
             stackIndex--;

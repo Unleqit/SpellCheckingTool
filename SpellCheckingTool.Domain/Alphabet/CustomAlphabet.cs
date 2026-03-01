@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-namespace SpellCheckingTool.Domain.Alphabet;
+﻿namespace SpellCheckingTool.Domain.Alphabet;
     public class CustomAlphabet : BaseAlphabet
     {
         int[] mapping;

@@ -20,7 +20,7 @@ public unsafe class FilePersistenceService : IPersistenceService
         if (!path.EndsWith(".json"))
             throw new Exception("File not supported");
 
-        var walker = new WalkWordTreeLeftToRightService(tree);
+        var walker = new LeftToRightWordTreeTraversal(tree);
 
         string[] words = new string[tree.WordCount];
         int i = 0;

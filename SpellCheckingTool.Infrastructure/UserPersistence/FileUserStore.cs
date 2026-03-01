@@ -3,6 +3,8 @@ using SpellCheckingTool.Application.UserService;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Application;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain.WordStats;
+using SpellCheckingTool.Domain.Users;
 
 namespace SpellCheckingTool.Infrastructure.UserPersistence;
     public class FileUserStore : IUserRepository, IUserWordStatsRepository

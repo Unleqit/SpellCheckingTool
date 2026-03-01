@@ -1,6 +1,8 @@
 ﻿using System.Text;
 
 namespace SpellCheckingTool.Domain.Alphabet;
+
+    //TODO: This class still contains unsafe pointers, needs to be adjusted
     public abstract class BaseAlphabet : IAlphabet
     {
         

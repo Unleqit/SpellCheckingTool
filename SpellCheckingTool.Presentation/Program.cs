@@ -38,9 +38,14 @@ public unsafe class Program
         var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
         var userService = new UserService(store, store);
 
-        // persistence + dictionary loader
+        // persistence
         IPersistenceService persistenceService = new FilePersistenceService();
+
+        // Application dictionary loader (only loads from a given FilePath)
         IDictionaryLoader dictionaryLoader = new DictionaryLoader(persistenceService);
+
+        // Infrastructure default dictionary loader (decides where the default file is)
+        var defaultDictionaryLoader = new DefaultDictionaryLoader(dictionaryLoader);
 
         // Inject dependencies into controller
         UserController.Configure(store, userService);
@@ -66,7 +71,7 @@ public unsafe class Program
             new Thread(() =>
             {
                 // Load dictionary once for the client
-                var tree = dictionaryLoader.LoadDefaultDictionary();
+                var tree = defaultDictionaryLoader.LoadDefaultDictionary();
 
                 // Infrastructure suggestion implementation
                 ISuggestionService suggestionService =

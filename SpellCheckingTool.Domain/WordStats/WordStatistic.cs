@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Application;
-    public class WordStatistic
+namespace SpellCheckingTool.Domain.WordStats;
+public class WordStatistic
     {
         public Word Word { get; private set; }   
         public int UsageCount { get; private set; }

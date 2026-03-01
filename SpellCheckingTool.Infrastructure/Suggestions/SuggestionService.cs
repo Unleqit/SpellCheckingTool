@@ -7,13 +7,13 @@ public unsafe class SuggestionService : ISuggestionService
 {
     private readonly WordTree tree;
     private readonly IDistanceAlgorithm distanceAlgorithm;
-    private readonly WalkWordTreeLeftToRightService walkWordTreeService;
+    private readonly LeftToRightWordTreeTraversal traversal;
 
     public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm)
     {
         this.tree = tree;
         this.distanceAlgorithm = distanceAlgorithm;
-        this.walkWordTreeService = new WalkWordTreeLeftToRightService(tree);
+        this.traversal = new LeftToRightWordTreeTraversal(tree);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public unsafe class SuggestionService : ISuggestionService
                 : tree.WordBufferLength;
 
         // traverse tree
-        this.walkWordTreeService.WalkTree((Word word) =>
+        this.traversal.WalkTree((Word word) =>
         {
             distanceToInputWord = distanceAlgorithm.GetDistance(input, word);
 
@@ -97,5 +97,33 @@ public unsafe class SuggestionService : ISuggestionService
                     results[j] = results[j + 1];
                     results[j + 1] = resultToBeSwapped;
                 }
+    }
+
+    // Implementation detail: match buffer entry for selecting best suggestions
+    private class MatchResult
+    {
+        private readonly Word matchWord;
+        private readonly int distance;
+
+        public MatchResult(Word matchWord, int distance)
+        {
+            this.matchWord = matchWord;
+            this.distance = distance;
+        }
+
+        public Word GetMatchedWord()
+        {
+            return matchWord;
+        }
+
+        public int GetMatchDistance()
+        {
+            return distance;
+        }
+
+        public override string ToString()
+        {
+            return GetMatchedWord().ToString();
+        }
     }
 }

@@ -8,7 +8,7 @@ public class WordTree : IWordTree
     // We can encapsulate them later, but they must stay for now.
     public WordTreeNode rootNode { get; private set; }
     public IAlphabet alphabet { get; private set; }
-    public WordTreeMetaInfo metaData { get; private set; }
+    public WordTreeMetadata metaData { get; private set; }
 
     // IWordTree abstraction (read-only)
     public IAlphabet Alphabet => alphabet;
@@ -22,7 +22,7 @@ public class WordTree : IWordTree
     {
         this.alphabet = alphabet ?? new LatinAlphabet();
         this.rootNode = new WordTreeNode(null, this.alphabet.GetLength(), false);
-        this.metaData = new WordTreeMetaInfo(0, 0, 0, 0);
+        this.metaData = new WordTreeMetadata(0, 0, 0, 0);
     }
 
     public int Add(Word word)
