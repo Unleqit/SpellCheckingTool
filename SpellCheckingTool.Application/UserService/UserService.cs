@@ -1,11 +1,6 @@
-﻿using SpellCheckingTool.Domain.Users;
+﻿using SpellCheckingTool.Application.Common;
+using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpellCheckingTool.Application.UserService;
     public class UserService

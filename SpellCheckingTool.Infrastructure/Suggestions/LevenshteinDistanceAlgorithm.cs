@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace SpellCheckingTool.Infrastructure.Suggestions;
 
-    public unsafe class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
+    public class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
     {
         IWordTree tree;
 

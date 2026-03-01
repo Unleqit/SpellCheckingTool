@@ -3,7 +3,7 @@ using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Suggestions;
 
-public unsafe class SuggestionService : ISuggestionService
+public  class SuggestionService : ISuggestionService
 {
     private readonly WordTree tree;
     private readonly IDistanceAlgorithm distanceAlgorithm;

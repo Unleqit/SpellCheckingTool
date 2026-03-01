@@ -5,7 +5,7 @@ using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence;
 
-public unsafe class FilePersistenceService : IPersistenceService
+public class FilePersistenceService : IPersistenceService
 {
     /// <summary>
     /// Serializes a WordTree into a .json file
