@@ -1,75 +1,96 @@
-﻿using SpellCheckingTool;
-using System.Runtime.InteropServices;
+﻿using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.FilePersistence;
 
-namespace TestProject.Unit
+namespace TestProject.Unit;
+
+[TestClass]
+public class PersistenceServiceTests
 {
-    [TestClass]
-    public unsafe class PersistenceServiceTests
+    private WordTree tree = null!;
+
+    [TestInitialize]
+    public void SetupTests()
     {
-#pragma warning disable CS8618 
-        WordTree tree;
-#pragma warning restore CS8618
-
-        [TestInitialize]
-        public void SetupTests()
+        IAlphabet alphabet = new LatinAlphabet();
+        Word[] words = Word.ParseWords(alphabet, new[]
         {
-            IAlphabet alphabet = new LatinAlphabet();
-            Word[] words = Word.ParseWords(alphabet, new string[] { "these", "are", "some", "random", "english", "words", "containing", "only", "latin", "characters" });
-            tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(words);
-        }
+            "these","are","some","random","english","words","containing","only","latin","characters"
+        });
 
-        [TestMethod]
-        public void SerializeAndDeserializeWordTree_ShouldSucceed()
-        {
-            bool success = tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.json"));
-            Assert.IsTrue(success);
-            WordTree tree2 = tree.Deserialize(new FilePath(Directory.GetCurrentDirectory() + @"\test.json"));
-            Assert.IsTrue(tree2 != null);
-            Assert.AreEqual(tree.metaData.wordBufferLength, tree2.metaData.wordBufferLength);
-            Assert.AreEqual(tree.metaData.wordCount, tree2.metaData.wordCount);
-            Assert.AreEqual(tree.metaData.nodeCount, tree2.metaData.nodeCount);
-            Assert.AreEqual(tree.metaData.serializationLength, tree2.metaData.serializationLength);
-            Assert.IsTrue(tree.alphabet.GetChars().SequenceEqual(tree2.alphabet.GetChars()));
-            Assert.AreEqual(tree.alphabet.GetLength(), tree2.alphabet.GetLength());
-            Assert.AreEqual(tree.Contains(new Word(tree.alphabet, "these")), tree2.Contains(new Word(tree2.alphabet, "these")));
-            File.Delete(Directory.GetCurrentDirectory() + @"\test.json");
-            Assert.IsTrue(!File.Exists(Directory.GetCurrentDirectory() + @"\test.json"));
-        }
+        tree = new WordTree(alphabet);
+        tree.Add(words);
+    }
 
-        [TestMethod]
-        public void CreateWordFilePathWithInvalidPath_ShouldThrowException()
-        {
-            Assert.ThrowsException<Exception>(() => { new FilePath(@"this/is/an/invalid/filepath"); });
-        }
+    [TestMethod]
+    public void SerializeAndDeserializeWordTree_ShouldSucceed()
+    {
+        string file = Path.Combine(Directory.GetCurrentDirectory(), "test.json");
+        var filePath = new FilePath(file);
 
-        [TestMethod]
-        public void CreateWordFilePathInDirectory_ShouldThrowException()
-        {
-            Assert.ThrowsException<Exception>(() => { new FilePath(Directory.GetCurrentDirectory() + @"\"); });
-        }
+        var persistence = new FilePersistenceService();
 
-        [TestMethod]
-        public void SaveToNonWDBFile_ShouldThrowException()
-        {
-            Assert.ThrowsException<Exception>(() => { tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt")); });
-        }
+        bool success = persistence.Save(tree, filePath);
+        Assert.IsTrue(success);
+        Assert.IsTrue(File.Exists(file));
 
-        [TestMethod]
-        public void DeserializeNonExistantFile_ShouldThrowException()
-        {
-            Assert.ThrowsException<Exception>(() => { tree.Deserialize(new FilePath(@"this/is/an/invalid/filepath")); });
-        }
+        WordTree tree2 = persistence.Load(filePath);
 
-        [TestMethod]
-        public void DeserializeTreeFromNonWDBFile_ShouldThrowException()
-        {
-            //create the invalid file
-            File.WriteAllText(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt", "");
-            Assert.IsTrue(File.Exists(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt"));
-            Assert.ThrowsException<Exception>(() => { tree.Deserialize(new FilePath(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt")); });
-            File.Delete(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt");
-            Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"\thisIsNotAValidFileFormat.txt"));
-        }
-    } 
+        Assert.IsNotNull(tree2);
+        Assert.AreEqual(tree.WordBufferLength, tree2.WordBufferLength);
+        Assert.AreEqual(tree.WordCount, tree2.WordCount);
+        Assert.IsTrue(tree.Alphabet.GetChars().SequenceEqual(tree2.Alphabet.GetChars()));
+        Assert.AreEqual(tree.Alphabet.GetLength(), tree2.Alphabet.GetLength());
+        Assert.AreEqual(tree.Contains(new Word(tree.Alphabet, "these")), tree2.Contains(new Word(tree2.Alphabet, "these")));
+
+        File.Delete(file);
+        Assert.IsFalse(File.Exists(file));
+    }
+
+    [TestMethod]
+    public void CreateWordFilePathWithInvalidPath_ShouldThrowException()
+    {
+        Assert.ThrowsException<Exception>(() => new FilePath(@"this/is/an/invalid/filepath"));
+    }
+
+    [TestMethod]
+    public void CreateWordFilePathInDirectory_ShouldThrowException()
+    {
+        Assert.ThrowsException<Exception>(() => new FilePath(Directory.GetCurrentDirectory() + @"\"));
+    }
+
+    [TestMethod]
+    public void SaveToNonJsonFile_ShouldThrowException()
+    {
+        var persistence = new FilePersistenceService();
+        Assert.ThrowsException<Exception>(() =>
+            persistence.Save(tree, new FilePath(Path.Combine(Directory.GetCurrentDirectory(), "thisIsNotAValidFileFormat.txt"))));
+    }
+
+    [TestMethod]
+    public void DeserializeNonExistantFile_ShouldThrowException()
+    {
+        var persistence = new FilePersistenceService();
+
+        string file = Path.Combine(Directory.GetCurrentDirectory(), "does_not_exist.json");
+        var filePath = new FilePath(file);
+
+        Assert.ThrowsException<FileNotFoundException>(() => persistence.Load(filePath));
+    }
+
+    [TestMethod]
+    public void DeserializeTreeFromNonJsonFile_ShouldThrowException()
+    {
+        // create invalid file
+        string file = Path.Combine(Directory.GetCurrentDirectory(), "thisIsNotAValidFileFormat.txt");
+        File.WriteAllText(file, "");
+        Assert.IsTrue(File.Exists(file));
+
+        var persistence = new FilePersistenceService();
+        Assert.ThrowsException<Exception>(() => persistence.Load(new FilePath(file)));
+
+        File.Delete(file);
+        Assert.IsFalse(File.Exists(file));
+    }
 }

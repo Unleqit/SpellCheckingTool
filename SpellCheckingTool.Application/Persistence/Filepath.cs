@@ -1,4 +1,4 @@
-﻿namespace SpellCheckingTool.Application.PersistenceService;
+﻿namespace SpellCheckingTool.Application.Persistence;
     public class FilePath
     {
         public string Path { get; private set; }
@@ -15,6 +15,6 @@
             if (filepath.EndsWith("/"))
                 throw new Exception("Specified filepath is a directory");
 
-            this.Path = filepath;
+            Path = filepath;
         }
     }

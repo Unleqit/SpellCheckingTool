@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Application.SuggestionService;
+namespace SpellCheckingTool.Application.Suggestion;
 
 public interface ISuggestionService
 {

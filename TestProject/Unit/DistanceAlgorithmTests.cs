@@ -1,62 +1,76 @@
-﻿using SpellCheckingTool;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.Suggestions;
 
-namespace TestProject.Unit
+namespace TestProject.Unit;
+
+[TestClass]
+public class DistanceAlgorithmTests
 {
-    [TestClass]
-    public class DistanceAlgorithmTests
+    [TestMethod]
+    public void LevenshteinDistanceMatchingResizeWordTree_ShouldNotThrow()
     {
-        [TestMethod]
-        public void LevenshteinDistanceMatchingResizeWordTree_ShouldResizeInternalBuffers()
-        {
-            string word = "example";
-            string word2 = "longerExample";
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(new Word(alphabet, word));
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            tree.Add(new Word(alphabet, word2));
-        }
+        string word1 = "example";
+        string word2 = "longerExample";
 
-        [TestMethod]
-        public void LevenshteinDistanceMatchingMatchSameWord_ShouldReturnZero()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            Word word = new Word(alphabet, "test");
-            Word word2 = new Word(alphabet, "test");
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            tree.Add(word2);
-            int distance = distanceAlgorithm.GetDistance(word, word2);
-            Assert.AreEqual(distance, 0);
-        }
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-        [TestMethod]
-        public void LevenshteinDistanceMatchingMatchTestAndText_ShouldReturnOne()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            Word word = new Word(alphabet, "test");
-            Word word2 = new Word(alphabet, "text");
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            tree.Add(word2);
-            int distance = distanceAlgorithm.GetDistance(word, word2);
-            Assert.AreEqual(distance, 1);
-        }
+        tree.Add(new Word(alphabet, word1));
+        var algo = new LevenshteinDistanceAlgorithm(tree);
 
-        [TestMethod]
-        public void LevenshteinDistanceMatchingMatchInterestingAndImplementation_ShouldReturnNine()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            Word word = new Word(alphabet, "interesting");
-            Word word2 = new Word(alphabet, "implementation");
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(word);
-            LevenshteinDistanceAlgorithm distanceAlgorithm = new LevenshteinDistanceAlgorithm(tree);
-            tree.Add(word2);
-            int distance = distanceAlgorithm.GetDistance(word, word2);
-            Assert.AreEqual(distance, 9);
-        } 
+        tree.Add(new Word(alphabet, word2));
+
+        // should not throw; no assert needed (test passes if no exception)
+        _ = algo.GetDistance(new Word(alphabet, word1), new Word(alphabet, word2));
+    }
+
+    [TestMethod]
+    public void LevenshteinDistanceMatchingMatchSameWord_ShouldReturnZero()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        Word wordA = new Word(alphabet, "test");
+        Word wordB = new Word(alphabet, "test");
+
+        WordTree tree = new WordTree(alphabet);
+        tree.Add(wordA);
+
+        var algo = new LevenshteinDistanceAlgorithm(tree);
+
+        int distance = algo.GetDistance(wordA, wordB);
+        Assert.AreEqual(0, distance);
+    }
+
+    [TestMethod]
+    public void LevenshteinDistanceMatchingMatchTestAndText_ShouldReturnOne()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        Word wordA = new Word(alphabet, "test");
+        Word wordB = new Word(alphabet, "text");
+
+        WordTree tree = new WordTree(alphabet);
+        tree.Add(wordA);
+
+        var algo = new LevenshteinDistanceAlgorithm(tree);
+
+        int distance = algo.GetDistance(wordA, wordB);
+        Assert.AreEqual(1, distance);
+    }
+
+    [TestMethod]
+    public void LevenshteinDistanceMatchingMatchInterestingAndImplementation_ShouldReturnNine()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        Word wordA = new Word(alphabet, "interesting");
+        Word wordB = new Word(alphabet, "implementation");
+
+        WordTree tree = new WordTree(alphabet);
+        tree.Add(wordA);
+
+        var algo = new LevenshteinDistanceAlgorithm(tree);
+
+        int distance = algo.GetDistance(wordA, wordB);
+        Assert.AreEqual(9, distance);
     }
 }

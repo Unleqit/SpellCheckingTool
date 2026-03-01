@@ -2,7 +2,7 @@
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 
-namespace SpellCheckingTool.Application.UserService;
+namespace SpellCheckingTool.Application.Users;
 
 public class UserService
 {

@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using SpellCheckingTool.Application.UserService;
+using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Presentation.Http.Servers.Attributes;
 using System.Net;
 

@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain.Users;
 
-namespace SpellCheckingTool.Application.UserService;
+namespace SpellCheckingTool.Application.Users;
     public interface IUserRepository
     {
         User? GetById(Guid id);

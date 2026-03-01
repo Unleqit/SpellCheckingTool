@@ -1,5 +1,5 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
-using SpellCheckingTool.Application.PersistenceService;
+using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Dictionary;

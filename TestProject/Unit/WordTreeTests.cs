@@ -1,238 +1,200 @@
-﻿//required in order to be able to reference data types (e.g. WordTree) from the main project
-using SpellCheckingTool;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.WordTree;
 using System.Diagnostics;
 
-namespace TestProject.Unit
+namespace TestProject.Unit;
+
+[TestClass]
+public class WordTreeTests
 {
-    [TestClass]
-    public class WordTreeTests
+    [TestMethod]
+    public void CreateNewWordTree_ShouldInitialize()
     {
-        [TestMethod]
-        public void CreateNewWordTree_ShouldInitialize()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            Assert.IsTrue(alphabet != null);
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Assert.IsTrue(tree != null);
-        }
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
+        Assert.IsNotNull(tree);
+    }
 
-        [TestMethod]
-        public void ParseValidWord_ShouldCreateWord()
-        {
-            string rawWord = "test";
-            IAlphabet alphabet = new LatinAlphabet();
-            Word parsedWord = new Word(alphabet, rawWord);
-            Assert.IsTrue(parsedWord != null);
-            Assert.AreEqual(parsedWord.ToString(), rawWord.ToString());
-        }
+    [TestMethod]
+    public void ParseValidWord_ShouldCreateWord()
+    {
+        string rawWord = "test";
+        IAlphabet alphabet = new LatinAlphabet();
+        Word parsedWord = new Word(alphabet, rawWord);
 
-        [TestMethod]
-        public void ParseInvalidWord_ShouldFail()
-        {
-            string rawWord = "test\n";
-            IAlphabet alphabet = new LatinAlphabet();
-            Assert.ThrowsException<Exception>(() => { Word parsedWord = new Word(alphabet, rawWord); }, "Word contains invalid characters");
-        }
+        Assert.IsNotNull(parsedWord);
+        Assert.AreEqual(rawWord, parsedWord.ToString());
+    }
 
-        [TestMethod]
-        public void ParseMultipleWords_ShouldSucceed()
-        {
-            string[] rawWords = new string[] { "test", "anotherWord" };
-            IAlphabet alphabet = new LatinAlphabet();
-            Word[] words = Word.ParseWords(alphabet, rawWords);
-            Assert.AreEqual(words.Length, rawWords.Length);
-        }
+    [TestMethod]
+    public void ParseInvalidWord_ShouldFail()
+    {
+        string rawWord = "test\n";
+        IAlphabet alphabet = new LatinAlphabet();
 
-        [TestMethod]
-        public void ParseMultipleWordsIncludingInvalidWords_ShouldOnlyReturnArrayOfValidWords()
-        {
-            string[] rawWords = new string[] { "test", "anotherWord", "ungültigesWort" };
-            IAlphabet alphabet = new LatinAlphabet();
-            Word[] words = Word.ParseWords(alphabet, rawWords);
-            Assert.AreEqual(words.Length, rawWords.Length - 1);
-        }
+        Assert.ThrowsException<Exception>(() => new Word(alphabet, rawWord));
+    }
 
-        //TODO: Add tests for adding/searching/removing from the tree
-        [TestMethod]
-        public void AddWordToTree_ShouldReturnSuccessCount()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            int successCount = tree.Add(new Word(alphabet, "test"));
-            Assert.AreEqual(successCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-        }
+    [TestMethod]
+    public void ParseMultipleWords_ShouldSucceed()
+    {
+        string[] rawWords = { "test", "anotherWord" };
+        IAlphabet alphabet = new LatinAlphabet();
 
-        [TestMethod]
-        public void AddWordAlreadyContainedInTree_ShouldNotAddWord()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            int successCount = tree.Add(new Word(alphabet, "test"));
-            Assert.AreEqual(successCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            int successCount2 = tree.Add(new Word(alphabet, "test"));
-            Assert.AreEqual(successCount2, 0);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-        }
+        Word[] words = Word.ParseWords(alphabet, rawWords);
+        Assert.AreEqual(rawWords.Length, words.Length);
+    }
 
-        [TestMethod]
-        public void SearchWordContainedInTree_ShouldReturnTrue()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "test");
-            int successCount = tree.Add(w);
-            Assert.AreEqual(successCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            bool result = tree.Contains(w);
-            Assert.AreEqual(result, true);
-        }
+    [TestMethod]
+    public void ParseMultipleWordsIncludingInvalidWords_ShouldOnlyReturnArrayOfValidWords()
+    {
+        string[] rawWords = { "test", "anotherWord", "ungültigesWort" };
+        IAlphabet alphabet = new LatinAlphabet();
 
-        [TestMethod]
-        public void SearchWordNotContainedInTree_ShouldReturnFalse()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "test");
-            int successCount = tree.Add(w);
-            Assert.AreEqual(successCount, 1);
-            bool result = tree.Contains(new Word(alphabet, "someOtherWord"));
-            Assert.AreEqual(result, false);
-        }
+        Word[] words = Word.ParseWords(alphabet, rawWords);
+        Assert.AreEqual(rawWords.Length - 1, words.Length);
+    }
 
-        [TestMethod]
-        public void RemoveWordContainedInTree_ShouldRemoveWordAndReturnSuccess()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "test");
-            int successCount = tree.Add(w);
-            Assert.AreEqual(successCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            int removeSuccessCount = tree.Remove(w);
-            Assert.AreEqual(removeSuccessCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 0);
-        }
+    //TODO: Add tests for adding/searching/removing from the tree
 
-        [TestMethod]
-        public void RemoveWordNotContainedInTree_ShouldReturnZero()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "test");
-            int successCount = tree.Add(w);
-            Assert.AreEqual(successCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            int removeSuccessCount = tree.Remove(new Word(alphabet, "someOtherWord"));
-            Assert.AreEqual(removeSuccessCount, 0);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-        }
+    [TestMethod]
+    public void AddWordToTree_ShouldReturnSuccessCount()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-        [TestMethod]
-        public void RemoveShorterWord_ShouldKeepLongerWordAndOnlyRemoveShorterOne()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "lol");
-            Word w2 = new Word(alphabet, "lollipop");
-            int successCount = tree.Add(new Word[] { w, w2 });
-            Assert.AreEqual(successCount, 2);
-            Assert.AreEqual(tree.metaData.wordCount, 2);
-            int removeSuccessCount = tree.Remove(w);
-            Assert.AreEqual(removeSuccessCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            bool containsRemovedWord = tree.Contains(w);
-            Assert.AreEqual(containsRemovedWord, false);
-            bool containsLongerWord = tree.Contains(w2);
-            Assert.AreEqual(containsLongerWord, true);
-        }
+        int successCount = tree.Add(new Word(alphabet, "test"));
 
-        [TestMethod]
-        public void RemoveLongerWord_ShouldKeepShorterWordAndOnlyRemoveLongerOne()
-        {
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            Word w = new Word(alphabet, "lol");
-            Word w2 = new Word(alphabet, "lollipop");
-            int successCount = tree.Add(new Word[] { w, w2 });
-            Assert.AreEqual(successCount, 2);
-            Assert.AreEqual(tree.metaData.wordCount, 2);
-            int removeSuccessCount = tree.Remove(w2);
-            Assert.AreEqual(removeSuccessCount, 1);
-            Assert.AreEqual(tree.metaData.wordCount, 1);
-            bool containsRemovedWord = tree.Contains(w2);
-            Assert.AreEqual(containsRemovedWord, false);
-            bool containsShorterWord = tree.Contains(w);
-            Assert.AreEqual(containsShorterWord, true);
-        }
+        Assert.AreEqual(1, successCount);
+        Assert.AreEqual(1, tree.WordCount);
+    }
 
-        [TestMethod]
-        public void ParseProductionSizedWordTreeFromStringArray_ShouldTakeLessThanTwoSecondsToComplete()
-        {
-            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
-            resourceDirectory += @"/../../../Resources/";
+    [TestMethod]
+    public void AddWordAlreadyContainedInTree_ShouldNotAddWord()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
-            Assert.IsTrue(rawWords.Length > 0);
+        Assert.AreEqual(1, tree.Add(new Word(alphabet, "test")));
+        Assert.AreEqual(1, tree.WordCount);
 
-            Stopwatch sw = Stopwatch.StartNew();
+        Assert.AreEqual(0, tree.Add(new Word(alphabet, "test")));
+        Assert.AreEqual(1, tree.WordCount);
+    }
 
-            IAlphabet alphabet = new LatinAlphabet();
-            Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(parsedWords);
-            Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
+    [TestMethod]
+    public void SearchWordContainedInTree_ShouldReturnTrue()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-            sw.Stop();
-            Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
-        }
+        Word w = new Word(alphabet, "test");
+        Assert.AreEqual(1, tree.Add(w));
 
-        [TestMethod]
-        public void DeserializeProductionSizedWordTreeFromWDBFile_ShouldTakeLessThanTwoSecondsToComplete()
-        {
-            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
-            resourceDirectory += @"/../../../Resources/";
-            
-            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
+        bool result = tree.Contains(w);
+        Assert.IsTrue(result);
+    }
 
-            Stopwatch sw = Stopwatch.StartNew();
+    [TestMethod]
+    public void SearchWordNotContainedInTree_ShouldReturnFalse()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-            IAlphabet alphabet = new LatinAlphabet();
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree = tree.Deserialize(new FilePath(resourceDirectory + @"/wordFile.json"));
-            Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
+        tree.Add(new Word(alphabet, "test"));
+        bool result = tree.Contains(new Word(alphabet, "someOtherWord"));
 
-            sw.Stop();
-            Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
-        }
+        Assert.IsFalse(result);
+    }
 
-        [TestMethod]
-        public void SerializeProductionSizedWordTree_ShouldTakeLessThanTwoSecondsToComplete()
-        {
-            string resourceDirectory = Directory.GetCurrentDirectory(); //prints .../SpellCheckingTool/TestProject/bin/Debug/net8.0
-            resourceDirectory += @"/../../../Resources/";
+    [TestMethod]
+    public void RemoveWordContainedInTree_ShouldRemoveWordAndReturnSuccess()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-            string[] rawWords = File.ReadAllText(resourceDirectory + "wordfile.txt").Replace("\r\n", "\n").Split("\n", StringSplitOptions.RemoveEmptyEntries);
-            Assert.IsTrue(rawWords.Length > 0);
+        Word w = new Word(alphabet, "test");
+        tree.Add(w);
 
-            IAlphabet alphabet = new LatinAlphabet();
-            Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
-            WordTree tree = new WordTree(new WordTreeParameters() { alphabet = alphabet });
-            tree.Add(parsedWords);
-            Assert.AreEqual(tree.metaData.wordCount, rawWords.Length);
-            
-            Stopwatch sw = Stopwatch.StartNew();
+        int removeSuccessCount = tree.Remove(w);
 
-            tree.Serialize(new FilePath(Directory.GetCurrentDirectory() + @"/tmp.json"));
-            Assert.IsTrue(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.json"));
+        Assert.AreEqual(1, removeSuccessCount);
+        Assert.AreEqual(0, tree.WordCount);
+    }
 
-            sw.Stop();
-            Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
+    [TestMethod]
+    public void RemoveWordNotContainedInTree_ShouldReturnZero()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
 
-            //clean up temporary files
-            File.Delete(Directory.GetCurrentDirectory() + @"/tmp.json");
-            Assert.IsFalse(File.Exists(Directory.GetCurrentDirectory() + @"/tmp.json"));
-        }
+        tree.Add(new Word(alphabet, "test"));
+        int removeSuccessCount = tree.Remove(new Word(alphabet, "someOtherWord"));
+
+        Assert.AreEqual(0, removeSuccessCount);
+        Assert.AreEqual(1, tree.WordCount);
+    }
+
+    [TestMethod]
+    public void RemoveShorterWord_ShouldKeepLongerWordAndOnlyRemoveShorterOne()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
+
+        Word w = new Word(alphabet, "lol");
+        Word w2 = new Word(alphabet, "lollipop");
+
+        Assert.AreEqual(2, tree.Add(new[] { w, w2 }));
+        Assert.AreEqual(2, tree.WordCount);
+
+        Assert.AreEqual(1, tree.Remove(w));
+        Assert.AreEqual(1, tree.WordCount);
+
+        Assert.IsFalse(tree.Contains(w));
+        Assert.IsTrue(tree.Contains(w2));
+    }
+
+    [TestMethod]
+    public void RemoveLongerWord_ShouldKeepShorterWordAndOnlyRemoveLongerOne()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
+
+        Word w = new Word(alphabet, "lol");
+        Word w2 = new Word(alphabet, "lollipop");
+
+        Assert.AreEqual(2, tree.Add(new[] { w, w2 }));
+        Assert.AreEqual(2, tree.WordCount);
+
+        Assert.AreEqual(1, tree.Remove(w2));
+        Assert.AreEqual(1, tree.WordCount);
+
+        Assert.IsFalse(tree.Contains(w2));
+        Assert.IsTrue(tree.Contains(w));
+    }
+
+    [TestMethod]
+    public void ParseProductionSizedWordTreeFromStringArray_ShouldTakeLessThanTwoSecondsToComplete()
+    {
+        string resourceDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"../../../Resources/"));
+        string[] rawWords = File.ReadAllText(Path.Combine(resourceDirectory, "wordfile.txt"))
+            .Replace("\r\n", "\n")
+            .Split("\n", StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.IsTrue(rawWords.Length > 0);
+
+        Stopwatch sw = Stopwatch.StartNew();
+
+        IAlphabet alphabet = new LatinAlphabet();
+        Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
+
+        WordTree tree = new WordTree(alphabet);
+        tree.Add(parsedWords);
+
+        Assert.AreEqual(rawWords.Length, tree.WordCount);
+
+        sw.Stop();
+        Assert.IsTrue(sw.ElapsedMilliseconds < 2000);
     }
 }

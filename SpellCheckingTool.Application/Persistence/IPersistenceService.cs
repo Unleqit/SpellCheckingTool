@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Application.PersistenceService;
+namespace SpellCheckingTool.Application.Persistence;
 
 public interface IPersistenceService
 {

@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using SpellCheckingTool.Application.PersistenceService;
+using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 

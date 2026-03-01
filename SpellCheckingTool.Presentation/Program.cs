@@ -1,9 +1,7 @@
 ﻿using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
 using SpellCheckingTool.Application.Dictionary;
-using SpellCheckingTool.Application.PersistenceService;
 using SpellCheckingTool.Application.Spellcheck;
-using SpellCheckingTool.Application.SuggestionService;
-using SpellCheckingTool.Application.UserService;
+using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
@@ -11,6 +9,9 @@ using SpellCheckingTool.Infrastructure.Suggestions;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Http.Controllers;
+using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Application.Users;
 
 namespace SpellCheckingTool.Presentation;
 
