@@ -1,5 +1,4 @@
 ﻿using SpellCheckingTool.Application.SuggestionService;
-using SpellCheckingTool.Domain.DistanceAlgorithms;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Suggestions;

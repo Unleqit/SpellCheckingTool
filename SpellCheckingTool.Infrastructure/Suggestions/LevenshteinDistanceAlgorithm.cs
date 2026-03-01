@@ -1,4 +1,4 @@
-﻿using SpellCheckingTool.Domain.DistanceAlgorithms;
+﻿using SpellCheckingTool.Application.SuggestionService;
 using SpellCheckingTool.Domain.WordTree;
 using System.Runtime.CompilerServices;
 
