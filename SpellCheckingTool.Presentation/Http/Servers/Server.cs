@@ -1,129 +1,133 @@
-﻿
-using SpellCheckingTool.Presentation.Http.Servers.Attributes;
+﻿using SpellCheckingTool.Presentation.Http.Servers;
 using System.Net;
 using System.Reflection;
 
-namespace SpellCheckingTool.Presentation.Http.Servers;
-    public class Server
+namespace SpellCheckingTool.Presentation.Servers;
+
+public class Server
+{
+    private readonly HttpListener listener;
+    private readonly MiddlewarePipeline middlewares;
+    private readonly Router router;
+    private readonly Thread requestThread;
+
+    private bool isRequestLoopRunning;
+    public bool IsStarted { get; private set; }
+
+    /// <summary>
+    /// Initializes the server
+    /// </summary>
+    public Server()
     {
-        HttpListener listener;
-        MiddlewarePipeline middlewares;
-        Router router;
-        Thread requestThread;
-        bool isRequestLoopRunning;
-        public bool IsStarted { get; private set; }
+        listener = new HttpListener();
+        middlewares = new MiddlewarePipeline();
 
-        /// <summary>
-        /// Initializes the server
-        /// </summary>
-        public Server()
+        // IMPORTANT (CI FIX):
+        // Always scan the Presentation assembly that contains the Server + Controllers.
+        // Avoid "contains SpellCheckingTool" heuristics, because CI/test runners load multiple assemblies.
+        Assembly assembly = typeof(Server).Assembly;
+        router = new Router(assembly);
+
+        requestThread = new Thread(HandleRequests)
         {
-            listener = new HttpListener();
-            middlewares = new MiddlewarePipeline();
+            IsBackground = true
+        };
+    }
 
-            //Find the assembly of this current project from its name
-            var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(assembly => (assembly.FullName ?? "").Contains("SpellCheckingTool")).ToArray()[0];
-#pragma warning disable CS8604
-            router = new Router(assembly);
-#pragma warning restore CS8604 
+    /// <summary>
+    /// Starts the server
+    /// </summary>
+    public void Start(int port)
+    {
+        listener.Prefixes.Add("http://localhost:" + port + "/");
+        listener.Start();
+        Console.WriteLine("Listening on http://localhost:" + port);
+        isRequestLoopRunning = true;
+        requestThread.Start();
+    }
 
-            requestThread = new Thread(HandleRequests);
-        }
+    /// <summary>
+    /// Stops the server
+    /// </summary>
+    public void Stop()
+    {
+        IsStarted = false;
+        isRequestLoopRunning = false;
 
-        /// <summary>
-        /// Starts the server
-        /// </summary>
-        public void Start(int port)
+        try
         {
-            listener.Prefixes.Add("http://localhost:" + port + "/");
-            listener.Start();
-            Console.WriteLine("Listening on http://localhost:" + port);
-            isRequestLoopRunning = true;
-            requestThread.Start();
-        }
-
-        /// <summary>
-        /// Stops the server
-        /// </summary>
-        public void Stop()
-        {
-            IsStarted = false;
-            isRequestLoopRunning = false;
             listener.Stop();
             listener.Close();
-            //join the requestThread to ensure its completion
-            requestThread.Join();
+        }
+        catch
+        {
+            // ignore shutdown errors
         }
 
-        /// <summary>
-        /// Registers middleware in order, like Express.js
-        /// </summary>
-        /// <param name="middleware">The middleware to use</param>
-        public void Use(Middleware middleware)
+        try
         {
-            middlewares.Use(middleware);
+            requestThread.Join(TimeSpan.FromSeconds(2));
         }
-
-        /// <summary>
-        /// Handles incoming requests, runs middleware, and calls route handlers.
-        /// </summary>
-        private void HandleRequests()
+        catch
         {
-            string path;
-            string method;
-            HttpListenerContext context;
-            IsStarted = true;
-
-            while (isRequestLoopRunning)
-            {
-                try
-                {
-                    context = listener.GetContext();
-                }
-                catch (Exception)
-                {
-                    //acquiring request context failed (TODO: logging?)
-                    break;
-                }
-
-                //drop empty requests
-                if (context.Request.Url == null)
-                    continue;
-
-                //get path and method of the request
-                path = context.Request.Url.AbsolutePath.ToLower();
-                method = context.Request.HttpMethod;
-
-                //determine the C# method to call for this request
-                var handler = router.TryGetRoute(method, path);
-
-                if (handler != null)
-                {
-                    context.Response.StatusCode = 200;
-                    middlewares.Execute(context, () => handler(context));
-                }
-                else
-                {
-                    //requested endpoint doesn't exist (TODO: add logging?)
-                    middlewares.Execute(context, () => { });
-                    context.Response.StatusCode = 404;
-                }
-
-                //send the response back to the client
-                context.Response.Close();
-            }
-        }
-
-        [HttpGet("/api/v1/healthcheck")]
-        public static void HandleHealthcheck(HttpListenerContext context)
-        {
-            //nothing to do here, status 200 returned by default
-        }
-
-        //To test this, make a POST request at this endpoint and put this in the request body:   {"testString":"Hello from POST request"}
-        [HttpPost("/api/v1/jsonexample")]
-        public static void TestFromBodyJsonAttribute([FromBody] string testString)
-        {
-            Console.WriteLine(testString);
+            // ignore
         }
     }
+
+    /// <summary>
+    /// Registers middleware in order, like Express.js
+    /// </summary>
+    public void Use(Middleware middleware)
+    {
+        middlewares.Use(middleware);
+    }
+
+    /// <summary>
+    /// Handles incoming requests, runs middleware, and calls route handlers.
+    /// </summary>
+    private void HandleRequests()
+    {
+        IsStarted = true;
+
+        while (isRequestLoopRunning)
+        {
+            HttpListenerContext context;
+
+            try
+            {
+                context = listener.GetContext();
+            }
+            catch
+            {
+                // acquiring request context failed (server stopping)
+                break;
+            }
+
+            if (context.Request.Url == null)
+            {
+                context.Response.StatusCode = 400;
+                context.Response.Close();
+                continue;
+            }
+
+            string path = context.Request.Url.AbsolutePath.ToLowerInvariant();
+            string method = context.Request.HttpMethod;
+
+            var handler = router.TryGetRoute(method, path);
+
+            if (handler != null)
+            {
+                context.Response.StatusCode = 200;
+                middlewares.Execute(context, () => handler(context));
+            }
+            else
+            {
+                // requested endpoint doesn't exist (TODO: add logging?)
+                middlewares.Execute(context, () => { });
+                context.Response.StatusCode = 404;
+            }
+
+            context.Response.Close();
+        }
+    }
+}
