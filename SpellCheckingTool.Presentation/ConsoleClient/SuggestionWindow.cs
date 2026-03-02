@@ -2,7 +2,6 @@
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
 
-
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class SuggestionWindow : ISuggestionDisplay
@@ -159,6 +158,47 @@ public class SuggestionWindow : ISuggestionDisplay
         return true;
     }
 
+    private int GetDisplayWidth(Word[] suggestions, int count)
+    {
+        // Old behavior padded to a "global max word length" (tree.metaData.wordBufferLength).
+        // In clean architecture we avoid reaching into tree internals from Presentation.
+        // Best replacement: pad to the longest suggestion currently visible.
+        int maxLen = 0;
+
+        for (int i = 0; i < count; i++)
+        {
+            var w = suggestions[i];
+            if (w == null) continue;
+
+            int len = w.Length;
+            if (len > maxLen) maxLen = len;
+        }
+
+        // Keep the same "global max length" feel by ensuring at least 1 char
+        // (and you can tweak this minimum if you want a wider box)
+        return Math.Max(1, maxLen);
+    }
+
+    private void WriteSuggestionLine(Word suggestion, int displayWidth)
+    {
+        // Old:
+        // Console.Write(new string(' ', horizontalPaddingSz) + suggestions[j] +
+        //              new string(' ', tree.metaData.wordBufferLength + horizontalPaddingSz - 1 - suggestions[j].Length));
+        //
+        // New goal:
+        // - left padding: HorizontalPaddingSz
+        // - write suggestion
+        // - right padding: enough spaces so every line has same width (displayWidth)
+        // - plus the same HorizontalPaddingSz as a margin
+
+        int rightFill = (displayWidth - suggestion.Length);
+        if (rightFill < 0) rightFill = 0;
+
+        Console.Write(new string(' ', horizontalPaddingSz));
+        Console.Write(suggestion.ToString());
+        Console.Write(new string(' ', rightFill + horizontalPaddingSz));
+    }
+
     void ShowSuggestions()
     {
         suggestionsShown = true;
@@ -173,13 +213,15 @@ public class SuggestionWindow : ISuggestionDisplay
         if (!CheckAvailableConsoleWindowSpace(suggestionWindowHeight))
             return;
 
+        int displayWidth = GetDisplayWidth(suggestions, suggestionWindowHeight);
+
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
             Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
             Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
             Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
 
-            Console.Write(new string(' ', horizontalPaddingSz) + suggestions[j] + new string(' ', horizontalPaddingSz));
+            WriteSuggestionLine(suggestions[j], displayWidth);
         }
 
         //restore cursor to old position and set old console colors
