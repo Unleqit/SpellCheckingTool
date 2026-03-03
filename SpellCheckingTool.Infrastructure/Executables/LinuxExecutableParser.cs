@@ -2,13 +2,13 @@
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
-internal class LinuxExecutableParser : ExecutableParser
+public class LinuxExecutableParser : ExecutableParser
 {
     public override WordTree GetAllShellExecutables()
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
-        string workingDir = Path.Combine(projectRoot, "Server", "ExecutableService");
+        string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
+        string workingDir = Path.Combine(projectRoot, "SpellCheckingTool.Infrastructure", "Executables");
         string filename = "listExecutables.sh";
 
         List<string> executablePaths = base.InvokeShellCommand("/bin/bash", filename, workingDir);

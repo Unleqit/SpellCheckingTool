@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
 
-    internal abstract class ExecutableParser : IExecutableParser
+public abstract class ExecutableParser : IExecutableParser
     {
         public abstract WordTree GetAllShellExecutables();
 

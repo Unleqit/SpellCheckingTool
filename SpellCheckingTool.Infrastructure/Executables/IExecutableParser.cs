@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
-    internal interface IExecutableParser
+public interface IExecutableParser
     {
         public WordTree GetAllShellExecutables();
     }

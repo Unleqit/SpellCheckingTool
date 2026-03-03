@@ -2,7 +2,7 @@
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
-internal class WindowsExecutableParser : ExecutableParser
+public class WindowsExecutableParser : ExecutableParser
 {
     public override WordTree GetAllShellExecutables()
     {

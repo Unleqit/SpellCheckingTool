@@ -222,7 +222,9 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
 
-        int longestSuggestionLength =  (this.currentSuggestions?.GetSuggestionArray().Max((suggestion) => suggestion.Length) ?? 0);
+        int longestSuggestionLength = 0;
+        if (this.currentSuggestions != null && this.currentSuggestions.GetSuggestionCount() > 0)
+            longestSuggestionLength = this.currentSuggestions.GetSuggestionArray().Max((suggestion) => suggestion.Length);
         int length = 2 * horizontalPaddingSz + longestSuggestionLength + 2;
 
         for (int j = 0; j < suggestionWindowHeight; ++j)
