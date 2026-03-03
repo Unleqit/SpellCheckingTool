@@ -22,9 +22,6 @@ public class Server
         listener = new HttpListener();
         middlewares = new MiddlewarePipeline();
 
-        // IMPORTANT (CI FIX):
-        // Always scan the Presentation assembly that contains the Server + Controllers.
-        // Avoid "contains SpellCheckingTool" heuristics, because CI/test runners load multiple assemblies.
         Assembly assembly = typeof(Server).Assembly;
         router = new Router(assembly);
 
@@ -59,18 +56,19 @@ public class Server
             listener.Stop();
             listener.Close();
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore shutdown errors
+            Console.WriteLine($"[Server Stop] Listener shutdown error: {ex.Message}");
         }
 
         try
         {
-            requestThread.Join(TimeSpan.FromSeconds(2));
+            if (requestThread.IsAlive)
+                requestThread.Join(TimeSpan.FromSeconds(2));
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            Console.WriteLine($"[Server Stop] Thread join error: {ex.Message}");
         }
     }
 
@@ -122,7 +120,6 @@ public class Server
             }
             else
             {
-                // requested endpoint doesn't exist (TODO: add logging?)
                 middlewares.Execute(context, () => { });
                 context.Response.StatusCode = 404;
             }

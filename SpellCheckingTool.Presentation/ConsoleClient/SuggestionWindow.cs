@@ -6,8 +6,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class SuggestionWindow : ISuggestionDisplay
 {
-    //-------public properties--------
-
     public int MaxSuggestionsToBeDisplayed { get; set; }
 
     int horizontalPaddingSz;
@@ -54,8 +52,6 @@ public class SuggestionWindow : ISuggestionDisplay
             return suggestions[currentlySelectedLine];
         }
     }
-
-    //-------private properties--------
 
     ConsoleColor originalForeColor;
     ConsoleColor originalBackColor;
@@ -108,7 +104,6 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.CursorLeft = startIndexOfCurrentLastWord;
         Console.Write(lastWord);
 
-        //replace any old chars on deletion
         if (lengthOfWordToBeReplaced - lastWord.Length > 0)
         {
             Console.Write(new string(' ', lengthOfWordToBeReplaced - lastWord.Length));
@@ -131,7 +126,6 @@ public class SuggestionWindow : ISuggestionDisplay
 
     void GetSuggestions(Word input)
     {
-        // TEMP: suggestions are still disabled inside SpellcheckService for now.
         this.currentSuggestions = spellcheckService.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
 
         int suggestionResultCount = this.currentSuggestions.GetSuggestionCount();
@@ -160,9 +154,6 @@ public class SuggestionWindow : ISuggestionDisplay
 
     private int GetDisplayWidth(Word[] suggestions, int count)
     {
-        // Old behavior padded to a "global max word length" (tree.metaData.wordBufferLength).
-        // In clean architecture we avoid reaching into tree internals from Presentation.
-        // Best replacement: pad to the longest suggestion currently visible.
         int maxLen = 0;
 
         for (int i = 0; i < count; i++)
@@ -174,24 +165,12 @@ public class SuggestionWindow : ISuggestionDisplay
             if (len > maxLen) maxLen = len;
         }
 
-        // Keep the same "global max length" feel by ensuring at least 1 char
-        // (and you can tweak this minimum if you want a wider box)
         return Math.Max(1, maxLen);
     }
 
     private void WriteSuggestionLine(Word suggestion, int displayWidth)
     {
-        // Old:
-        // Console.Write(new string(' ', horizontalPaddingSz) + suggestions[j] +
-        //              new string(' ', tree.metaData.wordBufferLength + horizontalPaddingSz - 1 - suggestions[j].Length));
-        //
-        // New goal:
-        // - left padding: HorizontalPaddingSz
-        // - write suggestion
-        // - right padding: enough spaces so every line has same width (displayWidth)
-        // - plus the same HorizontalPaddingSz as a margin
-
-        int rightFill = (displayWidth - suggestion.Length);
+        int rightFill = displayWidth - suggestion.Length;
         if (rightFill < 0) rightFill = 0;
 
         Console.Write(new string(' ', horizontalPaddingSz));
@@ -224,7 +203,6 @@ public class SuggestionWindow : ISuggestionDisplay
             WriteSuggestionLine(suggestions[j], displayWidth);
         }
 
-        //restore cursor to old position and set old console colors
         Console.SetCursorPosition(wordLeftInConsole, wordTopInConsole);
         Console.ForegroundColor = originalForeColor;
         Console.BackgroundColor = originalBackColor;
@@ -241,19 +219,16 @@ public class SuggestionWindow : ISuggestionDisplay
         if (!CheckAvailableConsoleWindowSpace(suggestionWindowHeight))
             return;
 
-        //set colors
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
 
-        //clear floating suggestions window
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
             int startIndex = cursorLeft - 1 < 0 ? 0 : cursorLeft - 1;
             Console.SetCursorPosition(startIndex, wordTopInConsole + j + 1);
-            Console.Write(new string(' ', 200)); // simple clear; we’ll size it properly later
+            Console.Write(new string(' ', 200));
         }
 
-        //restore cursor to old positions
         Console.SetCursorPosition(cursorLeft, wordTopInConsole);
     }
 

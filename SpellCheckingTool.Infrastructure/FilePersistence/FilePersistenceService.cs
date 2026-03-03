@@ -55,11 +55,8 @@ public class FilePersistenceService : IPersistenceService
         {
             WordTreeDto dto = JsonConvert.DeserializeObject<WordTreeDto>(json);
 
-            // Reconstruct alphabet from file
             IAlphabet alphabet = new CustomAlphabet(dto.alphabet);
 
-            // IMPORTANT FIX:
-            // Create tree with correct alphabet
             WordTree tree = new WordTree(alphabet);
 
             Word[] parsedWords = Word.ParseWords(alphabet, dto.words);

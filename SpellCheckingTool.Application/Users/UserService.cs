@@ -71,7 +71,6 @@ public class UserService
     /// </summary>
     public OperationResult<IReadOnlyCollection<WordStatistic>> GetStatsRaw(Guid userId)
     {
-        // "Raw" here means: no sorting/transformation; just return what the repository provides.
         return GetStats(userId);
     }
 }

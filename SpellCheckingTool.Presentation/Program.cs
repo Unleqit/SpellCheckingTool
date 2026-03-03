@@ -19,7 +19,6 @@ public class Program
 {
     static void Main(string[] args)
     {
-        //Display copyright notices
         Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
         Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
         Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
@@ -28,32 +27,20 @@ public class Program
         int serverPort = 12345;
         bool startHeadless = false;
 
-        // ----------------------------------------------------
-        // Composition root (Clean Architecture wiring)
-        // All infrastructure + application dependencies
-        // are created and wired here in ONE place.
-        // ----------------------------------------------------
 
         IAlphabet alphabet = new LatinAlphabet();
 
         var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
         var userService = new UserService(store, store);
 
-        // persistence
         IPersistenceService persistenceService = new FilePersistenceService();
 
-        // Application dictionary loader (only loads from a given FilePath)
         IDictionaryLoader dictionaryLoader = new DictionaryLoader(persistenceService);
 
-        // Infrastructure default dictionary loader (decides where the default file is)
         var defaultDictionaryLoader = new DefaultDictionaryLoader(dictionaryLoader);
 
-        // Inject dependencies into controller
         UserController.Configure(userService);
 
-        // ----------------------------------------------------
-
-        //create a server backend component
         Server server = new Server();
 
         //define logging middleware for server (like in Express.js)
@@ -76,7 +63,7 @@ public class Program
 
                 // Infrastructure suggestion implementation
                 ISuggestionService suggestionService =
-                    new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+                    new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
 
                 // Application use-case
                 ISpellcheckService spellcheckService =

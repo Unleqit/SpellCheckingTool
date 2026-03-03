@@ -18,7 +18,7 @@ public class DistanceAlgorithmTests
         WordTree tree = new WordTree(alphabet);
 
         tree.Add(new Word(alphabet, word1));
-        var algo = new LevenshteinDistanceAlgorithm(tree);
+        var algo = new LevenshteinDistanceAlgorithm();
 
         tree.Add(new Word(alphabet, word2));
 
@@ -36,7 +36,7 @@ public class DistanceAlgorithmTests
         WordTree tree = new WordTree(alphabet);
         tree.Add(wordA);
 
-        var algo = new LevenshteinDistanceAlgorithm(tree);
+        var algo = new LevenshteinDistanceAlgorithm();
 
         int distance = algo.GetDistance(wordA, wordB);
         Assert.AreEqual(0, distance);
@@ -52,7 +52,7 @@ public class DistanceAlgorithmTests
         WordTree tree = new WordTree(alphabet);
         tree.Add(wordA);
 
-        var algo = new LevenshteinDistanceAlgorithm(tree);
+        var algo = new LevenshteinDistanceAlgorithm();
 
         int distance = algo.GetDistance(wordA, wordB);
         Assert.AreEqual(1, distance);
@@ -68,7 +68,7 @@ public class DistanceAlgorithmTests
         WordTree tree = new WordTree(alphabet);
         tree.Add(wordA);
 
-        var algo = new LevenshteinDistanceAlgorithm(tree);
+        var algo = new LevenshteinDistanceAlgorithm();
 
         int distance = algo.GetDistance(wordA, wordB);
         Assert.AreEqual(9, distance);

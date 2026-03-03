@@ -3,7 +3,7 @@ using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Suggestions;
 
-public  class SuggestionService : ISuggestionService
+public class SuggestionService : ISuggestionService
 {
     private readonly WordTree tree;
     private readonly IDistanceAlgorithm distanceAlgorithm;
@@ -19,12 +19,12 @@ public  class SuggestionService : ISuggestionService
     /// <summary>
     /// Returns an object holding the best fit matches determined by the DistanceAlgorithm used in this instance.
     /// </summary>
-    public SuggestionResult GetSuggestionResult(Word input, int maxAmountOfSuggestionsToBeReturned = 3, int maxAllowedDistance = 4)
+    public SuggestionResult GetSuggestionResult(
+        Word input,
+        int maxAmountOfSuggestionsToBeReturned = 3,
+        int maxAllowedDistance = 4)
     {
-        int maxSuggestions =
-            maxAmountOfSuggestionsToBeReturned < 0 ? 0 :
-            maxAmountOfSuggestionsToBeReturned > 20 ? 20 :
-            maxAmountOfSuggestionsToBeReturned;
+        int maxSuggestions = Math.Clamp(maxAmountOfSuggestionsToBeReturned, 0, 20);
 
         int distanceToInputWord = 0;
         int matchesCount = 0;
@@ -40,13 +40,15 @@ public  class SuggestionService : ISuggestionService
                 : tree.WordBufferLength;
 
         // traverse tree
-        this.traversal.WalkTree((Word word) =>
+        traversal.WalkTree((Word word) =>
         {
             distanceToInputWord = distanceAlgorithm.GetDistance(input, word);
 
             if (distanceToInputWord < worstDistanceValueInResults)
             {
-                matchResults[indexOfMatchToBeReplacedNext] = new MatchResult(word, distanceToInputWord);
+                matchResults[indexOfMatchToBeReplacedNext] =
+                    new MatchResult(word, distanceToInputWord);
+
                 totalMatchesCount++;
 
                 if (totalMatchesCount < maxSuggestions)
@@ -69,23 +71,23 @@ public  class SuggestionService : ISuggestionService
             }
         });
 
-        matchesCount = totalMatchesCount < maxSuggestions ? totalMatchesCount : maxSuggestions;
+        matchesCount = Math.Min(totalMatchesCount, maxSuggestions);
 
-        sortMatches(matchResults, matchesCount);
+        SortMatches(matchResults, matchesCount);
 
-        Word[] matchStrings =
+        Word[] matchedWords =
             matchResults
                 .Where(result => result != null)
                 .Select(result => result.GetMatchedWord())
                 .ToArray();
 
-        return new SuggestionResult(matchStrings, matchesCount, totalMatchesCount);
+        return new SuggestionResult(matchedWords, matchesCount, totalMatchesCount);
     }
 
     /// <summary>
     /// bubble sorts the matches array by their distances in ascending order
     /// </summary>
-    void sortMatches(MatchResult[] results, int matchesCount)
+    private void SortMatches(MatchResult[] results, int matchesCount)
     {
         MatchResult resultToBeSwapped;
 
@@ -123,7 +125,7 @@ public  class SuggestionService : ISuggestionService
 
         public override string ToString()
         {
-            return GetMatchedWord().ToString();
+            return matchWord.ToString();
         }
     }
 }

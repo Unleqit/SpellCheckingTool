@@ -41,7 +41,7 @@ public class SuggestionTests
         WordTree smallTree = new WordTree(alphabet);
         smallTree.Add(words);
 
-        ISuggestionService service = new SuggestionService(smallTree, new LevenshteinDistanceAlgorithm(smallTree));
+        ISuggestionService service = new SuggestionService(smallTree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "containing"), 20, 999);
 
         Assert.AreEqual(smallTree.WordCount, result.GetSuggestionCount());
@@ -50,7 +50,7 @@ public class SuggestionTests
     [TestMethod]
     public void GetFiveSuggestionsInLargeTreeForContain_ShouldReturnFiveAndContainFirst()
     {
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "contain"), 5, 999);
 
         Assert.AreEqual(5, result.GetSuggestionCount());
@@ -60,7 +60,7 @@ public class SuggestionTests
     [TestMethod]
     public void GetHundredSuggestionsInLargeTreeForContain_ShouldReturnAtMostTwenty()
     {
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "contain"), 100, 999);
 
         Assert.AreEqual(20, result.GetSuggestionCount());
@@ -70,7 +70,7 @@ public class SuggestionTests
     [TestMethod]
     public void GetSuggestionsTwice_ShouldYieldSameResult()
     {
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
 
         SuggestionResult r1 = service.GetSuggestionResult(new Word(new LatinAlphabet(), "aba"), 20, 999);
         SuggestionResult r2 = service.GetSuggestionResult(new Word(new LatinAlphabet(), "aba"), 20, 999);
@@ -85,7 +85,7 @@ public class SuggestionTests
     [TestMethod]
     public void GetSuggestionsOfWordNotContainedInTreeWithMaxDistanceParameterZero_ShouldReturnZeroSuggestions()
     {
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "contai"), 20, 0);
 
         Assert.AreEqual(0, result.GetSuggestionCount());
@@ -96,7 +96,7 @@ public class SuggestionTests
     public void GetSuggestionForWordContainingDifferentAlphabet_ShouldStillReturnSomeSuggestions()
     {
         // This test is made robust: we only assert count + all are non-null.
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
 
         CustomAlphabet partOfArabicAlphabet = new CustomAlphabet("تزنيت".ToCharArray().Distinct().ToArray());
         SuggestionResult result = service.GetSuggestionResult(new Word(partOfArabicAlphabet, "تزنيت"), 5, 999);
@@ -108,7 +108,7 @@ public class SuggestionTests
     [TestMethod]
     public void GetSuggestionsOfWordContainedInTreeWithMaxDistanceParameterZero_ShouldReturnOnlyExactMatch()
     {
-        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm(tree));
+        ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "contain"), 20, 0);
 
         Assert.AreEqual(1, result.GetSuggestionCount());

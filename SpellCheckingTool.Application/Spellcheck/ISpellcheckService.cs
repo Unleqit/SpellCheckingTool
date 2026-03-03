@@ -10,6 +10,5 @@ public interface ISpellcheckService
 
     bool IsCorrect(Word word);
 
-    // Keep signature similar to your old flow. For now it can return empty results.
     SuggestionResult GetSuggestions(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance);
 }

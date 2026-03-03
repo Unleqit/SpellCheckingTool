@@ -16,7 +16,6 @@ namespace SpellCheckingTool.Presentation.Http.Servers;
 
             Action next = null!;
 
-            //recursively call next handler
             next = () =>
             {
                 if (index < Middlewares.Count)
@@ -31,7 +30,6 @@ namespace SpellCheckingTool.Presentation.Http.Servers;
                 }
             };
 
-            // start the chain
             next();
         }
     }

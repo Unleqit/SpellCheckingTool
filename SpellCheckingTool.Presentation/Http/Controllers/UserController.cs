@@ -7,7 +7,6 @@ namespace SpellCheckingTool.Presentation.Http.Controllers;
 
 public static class UserController
 {
-    // Dependencies are injected once from Program (composition root).
     private static UserService? _service;
 
     /// <summary>
@@ -39,7 +38,6 @@ public static class UserController
         WriteJson(context, statusCode, new { error = message });
     }
 
-    // Authentication
 
     [HttpPost("/api/v1/users/register")]
     public static void Register(
@@ -86,8 +84,6 @@ public static class UserController
         });
     }
 
-    // Adding words
-
     [HttpPost("/api/v1/users/words/add")]
     public static void AddWord(
         HttpListenerContext context,
@@ -106,8 +102,6 @@ public static class UserController
         WriteJson(context, 200, new { success = true });
     }
 
-    // Show words file (raw view)
-    // NOTE: This is now behind the Application service (no Infrastructure dependency in Presentation).
     [HttpPost("/api/v1/users/words/file")]
     public static void GetWordsFile(
         HttpListenerContext context,
@@ -133,8 +127,6 @@ public static class UserController
             })
         });
     }
-
-    // Show statistics (sorted view)
 
     [HttpPost("/api/v1/users/words/stats")]
     public static void GetStats(

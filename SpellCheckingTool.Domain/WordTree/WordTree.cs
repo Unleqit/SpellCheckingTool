@@ -4,8 +4,7 @@ namespace SpellCheckingTool.Domain.WordTree;
 
 public class WordTree : IWordTree
 {
-    // These are still used by Domain traversal/persistence/suggestions.
-    // We can encapsulate them later, but they must stay for now.
+
     public WordTreeNode rootNode { get; private set; }
     public IAlphabet alphabet { get; private set; }
     public WordTreeMetadata metaData { get; private set; }

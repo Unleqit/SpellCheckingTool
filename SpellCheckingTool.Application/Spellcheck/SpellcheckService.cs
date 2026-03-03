@@ -24,7 +24,6 @@ public class SpellcheckService : ISpellcheckService
 
     public SuggestionResult GetSuggestions(Word input, int maxAmountOfSuggestionsToBeReturned, int maxAllowedDistance)
     {
-        // Now routed through the Application boundary interface
         return suggestionService.GetSuggestionResult(input, maxAmountOfSuggestionsToBeReturned, maxAllowedDistance);
     }
 }
