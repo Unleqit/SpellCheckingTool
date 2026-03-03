@@ -1,9 +1,11 @@
 ﻿
+using SpellCheckingTool.Application.Suggestion;
+
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public interface ISuggestionDisplay
 {
-    void ShowSuggestionsForString(ref string input);
+    void Show(SuggestionViewModel model, int startIndexOfWord);
     void HideSuggestions();
     void AutoCompleteCurrentlySelectedSuggestion(ref string input);
     void SelectPreviousSuggestion();
