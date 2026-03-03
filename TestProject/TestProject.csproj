@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -22,7 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SpellCheckingTool\SpellCheckingTool.csproj" />
+    <ProjectReference Include="..\SpellCheckingTool.Application\SpellCheckingTool.Application.csproj" />
+    <ProjectReference Include="..\SpellCheckingTool.Domain\SpellCheckingTool.Domain.csproj" />
+    <ProjectReference Include="..\SpellCheckingTool.Infrastructure\SpellCheckingTool.Infrastructure.csproj" />
+    <ProjectReference Include="..\SpellCheckingTool.Presentation\SpellCheckingTool.Presentation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
