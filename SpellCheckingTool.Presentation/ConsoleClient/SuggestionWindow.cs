@@ -222,11 +222,14 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
 
+        int longestSuggestionLength =  (this.currentSuggestions?.GetSuggestionArray().Max((suggestion) => suggestion.Length) ?? 0);
+        int length = 2 * horizontalPaddingSz + longestSuggestionLength + 2;
+
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
             int startIndex = cursorLeft - 1 < 0 ? 0 : cursorLeft - 1;
             Console.SetCursorPosition(startIndex, wordTopInConsole + j + 1);
-            Console.Write(new string(' ', 200));
+            Console.Write(new string(' ', length));
         }
 
         Console.SetCursorPosition(cursorLeft, wordTopInConsole);
