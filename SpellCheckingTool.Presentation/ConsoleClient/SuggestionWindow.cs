@@ -1,6 +1,7 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
+using System.Reflection;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -11,6 +12,7 @@ public class SuggestionWindow : ISuggestionDisplay
 
     private IReadOnlyList<Word> currentSuggestions = Array.Empty<Word>();
     private int currentlySelectedLine = 0;
+
     private bool suggestionsShown = false;
     private readonly ConsoleSizeChecker consoleSizeChecker;
 
@@ -39,7 +41,7 @@ public class SuggestionWindow : ISuggestionDisplay
         }
     }
 
-    public Word CurrentlySelectedSuggestion
+    public Word? CurrentlySelectedSuggestion
      {
          get
          {
@@ -64,14 +66,14 @@ public class SuggestionWindow : ISuggestionDisplay
         return input.LastIndexOf(' ') + 1;
     }
 
-    public void Show(SuggestionViewModel viewModel, int startIndex)
+    public void Show(SuggestionViewModel viewModel)
     {
         HideSuggestions();
 
         currentSuggestions = viewModel.Suggestions;
-        currentlySelectedLine = 0; 
+        currentlySelectedLine = 0;
 
-        ColorWord(viewModel.CurrentWord, startIndex, viewModel.IsCorrect);
+        ColorWord(viewModel.CurrentWord, viewModel.StartIndex, viewModel.IsCorrect);
 
         if (currentSuggestions.Count > 0)
         {
@@ -208,7 +210,7 @@ public class SuggestionWindow : ISuggestionDisplay
 
     public void AutoCompleteCurrentlySelectedSuggestion(ref string input)
     {
-        Word selectedSuggestion = CurrentlySelectedSuggestion;
+        Word? selectedSuggestion = CurrentlySelectedSuggestion;
 
         if (selectedSuggestion == null) return;
 

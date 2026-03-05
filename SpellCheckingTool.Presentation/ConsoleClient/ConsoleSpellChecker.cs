@@ -14,18 +14,6 @@ public class ConsoleSpellChecker
 
     private const string WelcomeMessage = "Type text and press space to check words.";
 
-    private int GetStartIndexOfCurrentWord(string input)
-    {
-        return input.LastIndexOf(' ') + 1;
-    }
-
-    private Word ExtractWord(string input)
-    {
-        int startIndex = GetStartIndexOfCurrentWord(input);
-        string wordString = input.Substring(startIndex);
-        return new Word(_spellcheckService.Alphabet, wordString);
-    }
-
     private void UpdateSuggestions(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -34,12 +22,9 @@ public class ConsoleSpellChecker
             return;
         }
 
-        int startIndex = GetStartIndexOfCurrentWord(input);
-        Word word = ExtractWord(input);
+        var viewModel = _suggestionUseCase.Execute(input);
 
-        var viewModel = _suggestionUseCase.Execute(word);
-
-        _suggestionDisplay.Show(viewModel, startIndex);
+        _suggestionDisplay.Show(viewModel);
     }
 
     public ConsoleSpellChecker(
@@ -81,7 +66,6 @@ public class ConsoleSpellChecker
                         break;
 
                     input = input.Substring(0, input.Length - 1);
-                    Console.Write("\b \b");
                     UpdateSuggestions(input);
                     break;
 

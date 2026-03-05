@@ -13,13 +13,17 @@ public class SuggestionViewModel
     public bool IsCorrect { get; }
     public IReadOnlyList<Word> Suggestions { get; }
 
+    public int StartIndex { get; }
+
     public SuggestionViewModel(
         Word currentWord,
         bool isCorrect,
-        IReadOnlyList<Word> suggestions)
+        IReadOnlyList<Word> suggestions,
+        int startIndex)
     {
         CurrentWord = currentWord;
         IsCorrect = isCorrect;
         Suggestions = suggestions;
+        StartIndex = startIndex;
     }
 }

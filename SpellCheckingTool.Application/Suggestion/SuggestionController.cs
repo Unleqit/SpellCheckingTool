@@ -20,7 +20,8 @@ namespace SpellCheckingTool.Application.Suggestion
         public SuggestionViewModel BuildViewModel(
             Word word,
             int maxSuggestions,
-            int maxDistance)
+            int maxDistance,
+            int startIndex)
         {
             bool isCorrect = spellcheckService.IsCorrect(word);
 
@@ -30,7 +31,8 @@ namespace SpellCheckingTool.Application.Suggestion
             return new SuggestionViewModel(
                 word,
                 isCorrect,
-                suggestionResult.GetSuggestionArray());
+                suggestionResult.GetSuggestionArray(),
+                startIndex);
         }
     }
 }

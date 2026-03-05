@@ -5,7 +5,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public interface ISuggestionDisplay
 {
-    void Show(SuggestionViewModel model, int startIndexOfWord);
+    void Show(SuggestionViewModel model);
     void HideSuggestions();
     void AutoCompleteCurrentlySelectedSuggestion(ref string input);
     void SelectPreviousSuggestion();
