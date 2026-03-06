@@ -84,25 +84,24 @@ public class SuggestionWindow : ISuggestionDisplay
 
     void ReplaceWord(Word lastWord, int startIndexOfCurrentLastWord)
     {
-        int currentCursorPos = Console.CursorLeft;
+        int lengthOfWordToBeReplaced = Console.CursorLeft;
         Console.CursorLeft = startIndexOfCurrentLastWord;
 
         Console.Write(lastWord);
 
-        //replace any old chars on deletion
-        if (currentCursorPos - lastWord.Length > 0)
+        if (lengthOfWordToBeReplaced - lastWord.Length > 0)
         {
-            Console.Write(new string(' ', currentCursorPos - lastWord.Length));
+            Console.Write(new string(' ', lengthOfWordToBeReplaced - lastWord.Length));
             Console.CursorLeft = startIndexOfCurrentLastWord + lastWord.Length;
         }
     }
 
-    void ColorWord(Word word, int startIndex, bool isCorrect)
+    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord, bool isCorrect)
     {
         Console.BackgroundColor = isCorrect ? ValidWordBackColor : InvalidWordBackColor;
         Console.ForegroundColor = isCorrect ? ValidWordForeColor : InvalidWordForeColor;
 
-        ReplaceWord(word, startIndex);
+        ReplaceWord(lastWord, startIndexOfCurrentLastWord);
 
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
@@ -168,14 +167,13 @@ public class SuggestionWindow : ISuggestionDisplay
 
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
-            Console.SetCursorPosition(wordLeftInConsole, wordTopInConsole + j + 1);
+            Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
             Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
             Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
 
             WriteSuggestionLine(currentSuggestions[j], displayWidth);
         }
 
-        //restore cursor to old position and set old console colors
         Console.SetCursorPosition(wordLeftInConsole, wordTopInConsole);
         Console.ForegroundColor = originalForeColor;
         Console.BackgroundColor = originalBackColor;
@@ -183,6 +181,9 @@ public class SuggestionWindow : ISuggestionDisplay
 
     public void HideSuggestions()
     {
+        if (currentSuggestions == null || currentSuggestions.Count == 0)
+            return;
+
         suggestionsShown = false;
 
         int suggestionWindowHeight = currentSuggestions.Count;
@@ -192,19 +193,21 @@ public class SuggestionWindow : ISuggestionDisplay
         if (!CheckAvailableConsoleWindowSpace(suggestionWindowHeight))
             return;
 
-        //set colors
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
 
-        //clear floating suggestions window
+        int displayWidth = GetDisplayWidth(currentSuggestions, suggestionWindowHeight);
+
+        int length = 2 * horizontalPaddingSz + displayWidth + 2;
+
+
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
             int startIndex = cursorLeft - 1 < 0 ? 0 : cursorLeft - 1;
             Console.SetCursorPosition(startIndex, wordTopInConsole + j + 1);
-            Console.Write(new string(' ', 200)); // simple clear; we’ll size it properly later
+            Console.Write(new string(' ', length));
         }
 
-        //restore cursor to old positions
         Console.SetCursorPosition(cursorLeft, wordTopInConsole);
     }
 
