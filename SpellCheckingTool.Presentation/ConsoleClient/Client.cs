@@ -37,12 +37,10 @@ public class Client
 
     private static void StartSpellChecker(ISpellcheckService spellcheckService, ProcessManager processManager)
     {
-        int globalMaxSuggestions = 5;
-        int globalMaxSuggestionAlgorithmDistance = 3;
         var suggestionUseCase = new SuggestionUseCase(spellcheckService)
         {
-            MaxSuggestions = globalMaxSuggestions,
-            MaxDistance = globalMaxSuggestionAlgorithmDistance
+            MaxSuggestions = 5,
+            MaxDistance = 3
         };
 
         var suggestionWindow = new SuggestionWindow()
