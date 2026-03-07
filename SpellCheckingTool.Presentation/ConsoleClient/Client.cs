@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.Suggestion;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -36,7 +37,13 @@ public class Client
 
     private static void StartSpellChecker(ISpellcheckService spellcheckService, ProcessManager processManager)
     {
-        var suggestionWindow = new SuggestionWindow(spellcheckService)
+        var suggestionUseCase = new SuggestionUseCase(spellcheckService)
+        {
+            MaxSuggestions = 5,
+            MaxDistance = 3
+        };
+
+        var suggestionWindow = new SuggestionWindow()
         {
             SuggestionBackColor = ConsoleColor.Red,
             SuggestionForeColor = ConsoleColor.White,
@@ -47,13 +54,12 @@ public class Client
             InvalidWordBackColor = Console.BackgroundColor,
             InvalidWordForeColor = ConsoleColor.Red,
             CurrentlySelectedLine = 0,
-            HorizontalPaddingSz = 3,
-            SuggestionAlgorithmMaxAllowedDistance = 3,
-            MaxSuggestionsToBeDisplayed = 7
+            HorizontalPaddingSz = 3
         };
 
         var consoleSpellChecker = new ConsoleSpellChecker(
             spellcheckService,
+            suggestionUseCase,
             processManager,
             suggestionWindow);
 

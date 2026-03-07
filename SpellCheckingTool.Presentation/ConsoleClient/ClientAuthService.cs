@@ -44,8 +44,8 @@ public class ClientAuthService
                 hashedPassword = hashed
             };
 
-            string json = JsonConvert.SerializeObject(payload);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            string requestJson = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
             string url = isRegister
                 ? $"{_backendUrl}/api/v1/users/register"
@@ -63,15 +63,34 @@ public class ClientAuthService
             }
 
             string responseBody = response.Content.ReadAsStringAsync().Result;
-
+            
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"{(isRegister ? "Registration" : "Login")} failed: {response.StatusCode}");
-                Console.WriteLine(responseBody); //TO DO: Parse the error properly in the frontend
+                string action = isRegister ? "Registration" : "Login";
+
+                try
+                {
+                    Dictionary<string, string>? json =
+                        JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody);
+
+                    if (json != null && json.TryGetValue("error", out var message))
+                    {
+                        Console.WriteLine($"{action} failed: {message}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{action} failed: {response.StatusCode}");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine($"{action} failed: {response.StatusCode}");
+                }
+
                 return;
             }
 
-            Console.WriteLine($"{(isRegister ? "Registration" : "Login")} successful!");
+        Console.WriteLine($"{(isRegister ? "Registration" : "Login")} successful!");
         }
 
         private string ReadPassword()

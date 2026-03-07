@@ -1,12 +1,20 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
+using System.Reflection;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class SuggestionWindow : ISuggestionDisplay
 {
-    public int MaxSuggestionsToBeDisplayed { get; set; }
+    ConsoleColor originalForeColor;
+    ConsoleColor originalBackColor;
+
+    private IReadOnlyList<Word> currentSuggestions = Array.Empty<Word>();
+    private int currentlySelectedLine = 0;
+
+    private bool suggestionsShown = false;
+    private readonly ConsoleSizeChecker consoleSizeChecker;
 
     int horizontalPaddingSz;
     public int HorizontalPaddingSz
@@ -14,7 +22,6 @@ public class SuggestionWindow : ISuggestionDisplay
         get => horizontalPaddingSz;
         set => horizontalPaddingSz = Math.Clamp(value, 0, 10);
     }
-
     public ConsoleColor ValidWordForeColor { get; set; }
     public ConsoleColor ValidWordBackColor { get; set; }
     public ConsoleColor InvalidWordForeColor { get; set; }
@@ -24,50 +31,34 @@ public class SuggestionWindow : ISuggestionDisplay
     public ConsoleColor CurrentlySelectedSuggestionForeColor { get; set; }
     public ConsoleColor CurrentlySelectedSuggestionBackColor { get; set; }
 
-    int currentSuggestionCount;
-    public int CurrentSuggestionCount { get => currentSuggestionCount; }
-
-    int suggestionAlgorithmMaxAllowedDistance;
-    public int SuggestionAlgorithmMaxAllowedDistance
-    {
-        get => suggestionAlgorithmMaxAllowedDistance;
-        set => suggestionAlgorithmMaxAllowedDistance = value < 0 ? 0 : value;
-    }
-
-    int currentlySelectedLine;
     public int CurrentlySelectedLine
     {
         get => currentlySelectedLine;
-        set => currentlySelectedLine = value < 0 ? 0 : value > currentSuggestionCount ? currentSuggestionCount : value;
-    }
-
-    public Word CurrentlySelectedSuggestion
-    {
-        get
+        set
         {
-            if (currentlySelectedLine >= currentSuggestions.GetSuggestionCount() || currentlySelectedLine < 0)
-                return new Word(spellcheckService.Alphabet, "");
-
-            Word[] suggestions = currentSuggestions.GetSuggestionArray();
-            return suggestions[currentlySelectedLine];
+            int maxIndex = Math.Max(0, currentSuggestions.Count - 1);
+            currentlySelectedLine = Math.Clamp(value, 0, maxIndex);
         }
     }
 
-    ConsoleColor originalForeColor;
-    ConsoleColor originalBackColor;
-    bool suggestionsShown = true;
+    public Word? CurrentlySelectedSuggestion
+     {
+         get
+         {
+            if (currentSuggestions == null ||
+             currentlySelectedLine < 0 ||
+             currentlySelectedLine >= currentSuggestions.Count)
+               return null;
 
-    private readonly ISpellcheckService spellcheckService;
+            return currentSuggestions[currentlySelectedLine];
+         }
+     }
 
-    SuggestionResult currentSuggestions;
-    ConsoleSizeChecker consoleSizeChecker;
-
-    public SuggestionWindow(ISpellcheckService spellcheckService)
+    public SuggestionWindow()
     {
-        this.spellcheckService = spellcheckService;
-        this.originalForeColor = Console.ForegroundColor;
-        this.originalBackColor = Console.BackgroundColor;
-        this.consoleSizeChecker = new ConsoleSizeChecker();
+        originalForeColor = Console.ForegroundColor;
+        originalBackColor = Console.BackgroundColor;
+        consoleSizeChecker = new ConsoleSizeChecker();
     }
 
     private int GetStartIndexOfCurrentWord(string input)
@@ -75,33 +66,27 @@ public class SuggestionWindow : ISuggestionDisplay
         return input.LastIndexOf(' ') + 1;
     }
 
-    private Word GetLastWordFromInputString(string input)
+    public void Show(SuggestionViewModel viewModel)
     {
-        int startIndexOfCurrentWord = GetStartIndexOfCurrentWord(input);
-        string wordString = input.Substring(startIndexOfCurrentWord);
-        return new Word(spellcheckService.Alphabet, wordString);
-    }
-
-    public void ShowSuggestionsForString(ref string input)
-    {
-        Word lastWordInInput = GetLastWordFromInputString(input);
-        int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
-
-        ColorWord(lastWordInInput, startIndexOfCurrentLastWord);
         HideSuggestions();
-        GetSuggestions(lastWordInInput);
-        ShowSuggestions();
+
+        currentSuggestions = viewModel.Suggestions;
+        currentlySelectedLine = 0;
+
+        ColorWord(viewModel.CurrentWord, viewModel.StartIndex, viewModel.IsCorrect);
+
+        if (currentSuggestions.Count > 0)
+        {
+            ShowSuggestions();
+        }
     }
 
-    bool CheckIfTreeContainsWord(Word word)
-    {
-        return spellcheckService.IsCorrect(word);
-    }
 
     void ReplaceWord(Word lastWord, int startIndexOfCurrentLastWord)
     {
         int lengthOfWordToBeReplaced = Console.CursorLeft;
         Console.CursorLeft = startIndexOfCurrentLastWord;
+
         Console.Write(lastWord);
 
         if (lengthOfWordToBeReplaced - lastWord.Length > 0)
@@ -111,30 +96,15 @@ public class SuggestionWindow : ISuggestionDisplay
         }
     }
 
-    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord)
+    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord, bool isCorrect)
     {
-        bool isWordInTree = CheckIfTreeContainsWord(lastWord);
-
-        Console.BackgroundColor = isWordInTree ? ValidWordBackColor : InvalidWordBackColor;
-        Console.ForegroundColor = isWordInTree ? ValidWordForeColor : InvalidWordForeColor;
+        Console.BackgroundColor = isCorrect ? ValidWordBackColor : InvalidWordBackColor;
+        Console.ForegroundColor = isCorrect ? ValidWordForeColor : InvalidWordForeColor;
 
         ReplaceWord(lastWord, startIndexOfCurrentLastWord);
 
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
-    }
-
-    void GetSuggestions(Word input)
-    {
-        this.currentSuggestions = spellcheckService.GetSuggestions(input, MaxSuggestionsToBeDisplayed, this.SuggestionAlgorithmMaxAllowedDistance);
-
-        int suggestionResultCount = this.currentSuggestions.GetSuggestionCount();
-        currentSuggestionCount =
-            suggestionResultCount < MaxSuggestionsToBeDisplayed
-                ? suggestionResultCount
-                : currentSuggestionCount > MaxSuggestionsToBeDisplayed
-                    ? MaxSuggestionsToBeDisplayed
-                    : suggestionResultCount;
     }
 
     bool CheckAvailableConsoleWindowSpace(int requestedRows)
@@ -152,7 +122,7 @@ public class SuggestionWindow : ISuggestionDisplay
         return true;
     }
 
-    private int GetDisplayWidth(Word[] suggestions, int count)
+    private int GetDisplayWidth(IReadOnlyList<Word> suggestions, int count)
     {
         int maxLen = 0;
 
@@ -180,19 +150,20 @@ public class SuggestionWindow : ISuggestionDisplay
 
     void ShowSuggestions()
     {
+        if (currentSuggestions.Count == 0)
+            return;
+
         suggestionsShown = true;
 
-        int suggestionWindowHeight = currentSuggestionCount;
+        int suggestionWindowHeight = currentSuggestions.Count;
 
         int wordLeftInConsole = Console.CursorLeft;
         int wordTopInConsole = Console.CursorTop;
 
-        Word[] suggestions = this.currentSuggestions.GetSuggestionArray();
-
         if (!CheckAvailableConsoleWindowSpace(suggestionWindowHeight))
             return;
 
-        int displayWidth = GetDisplayWidth(suggestions, suggestionWindowHeight);
+        int displayWidth = GetDisplayWidth(currentSuggestions, suggestionWindowHeight);
 
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
@@ -200,7 +171,7 @@ public class SuggestionWindow : ISuggestionDisplay
             Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
             Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
 
-            WriteSuggestionLine(suggestions[j], displayWidth);
+            WriteSuggestionLine(currentSuggestions[j], displayWidth);
         }
 
         Console.SetCursorPosition(wordLeftInConsole, wordTopInConsole);
@@ -210,9 +181,12 @@ public class SuggestionWindow : ISuggestionDisplay
 
     public void HideSuggestions()
     {
+        if (currentSuggestions == null || currentSuggestions.Count == 0)
+            return;
+
         suggestionsShown = false;
 
-        int suggestionWindowHeight = CurrentSuggestionCount;
+        int suggestionWindowHeight = currentSuggestions.Count;
         int cursorLeft = Console.CursorLeft;
         int wordTopInConsole = Console.CursorTop;
 
@@ -222,10 +196,10 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
 
-        int longestSuggestionLength = 0;
-        if (this.currentSuggestions != null && this.currentSuggestions.GetSuggestionCount() > 0)
-            longestSuggestionLength = this.currentSuggestions.GetSuggestionArray().Max((suggestion) => suggestion.Length);
-        int length = 2 * horizontalPaddingSz + longestSuggestionLength + 2;
+        int displayWidth = GetDisplayWidth(currentSuggestions, suggestionWindowHeight);
+
+        int length = 2 * horizontalPaddingSz + displayWidth + 2;
+
 
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
@@ -239,6 +213,10 @@ public class SuggestionWindow : ISuggestionDisplay
 
     public void AutoCompleteCurrentlySelectedSuggestion(ref string input)
     {
+        Word? selectedSuggestion = CurrentlySelectedSuggestion;
+
+        if (selectedSuggestion == null) return;
+
         HideSuggestions();
 
         int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
@@ -246,8 +224,6 @@ public class SuggestionWindow : ISuggestionDisplay
 
         Console.ForegroundColor = ValidWordForeColor;
         Console.BackgroundColor = ValidWordBackColor;
-
-        Word selectedSuggestion = CurrentlySelectedSuggestion;
 
         ReplaceWord(selectedSuggestion, startIndexOfCurrentLastWord);
 
@@ -263,7 +239,7 @@ public class SuggestionWindow : ISuggestionDisplay
             return;
 
         HideSuggestions();
-        currentlySelectedLine = (currentlySelectedLine + 1) % currentSuggestionCount;
+        currentlySelectedLine = (currentlySelectedLine + 1) % currentSuggestions.Count;
         ShowSuggestions();
     }
 
@@ -277,7 +253,7 @@ public class SuggestionWindow : ISuggestionDisplay
         if (currentlySelectedLine > 0)
             currentlySelectedLine--;
         else
-            currentlySelectedLine = currentSuggestionCount - 1;
+            currentlySelectedLine = currentSuggestions.Count - 1;
 
         ShowSuggestions();
     }

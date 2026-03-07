@@ -1,4 +1,6 @@
 using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain.WordTree;
 
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -8,19 +10,34 @@ public class ConsoleSpellChecker
     private readonly ISpellcheckService _spellcheckService;
     private readonly ProcessManager _processManager;
     private readonly ISuggestionDisplay _suggestionDisplay;
+    private readonly SuggestionUseCase _suggestionUseCase;
 
     private const string WelcomeMessage = "Type text and press space to check words.";
 
+    private void UpdateSuggestions(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        var viewModel = _suggestionUseCase.Execute(input);
+
+        _suggestionDisplay.Show(viewModel);
+    }
+
     public ConsoleSpellChecker(
         ISpellcheckService spellcheckService,
+        SuggestionUseCase suggestionUseCase,
         ProcessManager processManager,
         ISuggestionDisplay suggestionWindow)
     {
         _spellcheckService = spellcheckService;
+        _suggestionUseCase = suggestionUseCase;
         _processManager = processManager;
         _suggestionDisplay = suggestionWindow;
     }
-
     public void Run()
     {
         Console.WriteLine(WelcomeMessage);
@@ -40,7 +57,7 @@ public class ConsoleSpellChecker
 
                     input += c;
                     Console.Write(c);
-                    _suggestionDisplay.ShowSuggestionsForString(ref input);
+                    UpdateSuggestions(input);
                     break;
 
                 case ConsoleKey.Backspace:
@@ -49,7 +66,7 @@ public class ConsoleSpellChecker
                         break;
 
                     input = input.Substring(0, input.Length - 1);
-                    _suggestionDisplay.ShowSuggestionsForString(ref input);
+                    UpdateSuggestions(input);
                     break;
 
                 case ConsoleKey.Enter:
