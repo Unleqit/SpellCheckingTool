@@ -5,12 +5,11 @@ using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Infrastructure.Suggestions;
+using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Http.Controllers;
 using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Presentation.Servers;
 using SpellCheckingTool.Infrastructure.Executables;
 
