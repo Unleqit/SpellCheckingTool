@@ -194,4 +194,62 @@ public class ClientAuthService
             var hash = sha.ComputeHash(bytes);
             return Convert.ToHexString(hash);
         }
+
+    public IReadOnlyList<UserWordDto> GetWords(Guid userId)
+    {
+        var payload = new { userId };
+        string requestJson = JsonConvert.SerializeObject(payload);
+        var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+        string url = $"{_backendUrl}/api/v1/users/words/file";
+
+        try
+        {
+            var response = _httpClient.PostAsync(url, content).Result;
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Could not load words: {response.StatusCode}");
+                return Array.Empty<UserWordDto>();
+            }
+
+            var json = JsonConvert.DeserializeObject<UserWordsFileResponseDto>(responseBody);
+            return json?.Words?.ToList() ?? new List<UserWordDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading words: {ex.Message}");
+            return Array.Empty<UserWordDto>();
+        }
     }
+
+    public IReadOnlyList<UserWordDto> GetStats(Guid userId)
+    {
+        var payload = new { userId };
+        string requestJson = JsonConvert.SerializeObject(payload);
+        var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
+        string url = $"{_backendUrl}/api/v1/users/words/stats";
+
+        try
+        {
+            var response = _httpClient.PostAsync(url, content).Result;
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Could not load stats: {response.StatusCode}");
+                return Array.Empty<UserWordDto>();
+            }
+
+            var json = JsonConvert.DeserializeObject<UserStatsResponseDto>(responseBody);
+            return json?.Stats?.ToList() ?? new List<UserWordDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stats: {ex.Message}");
+            return Array.Empty<UserWordDto>();
+        }
+    }
+}

@@ -15,7 +15,7 @@ public class ConsoleSpellChecker
     private readonly ClientAuthService _authService;
 
     private const string WelcomeMessage =
-        "Type text and press Enter. Use /addword <word> to save a personal word.";
+        "Type text and press Enter. Commands: /addword <word>, /words, /stats";
 
     private void UpdateSuggestions(string input)
     {
@@ -89,75 +89,13 @@ public class ConsoleSpellChecker
                     break;
 
                 case ConsoleKey.Enter:
-                    if (input.StartsWith("/addword ", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Console.WriteLine();
-
-                        if (!_context.IsAuthenticated || _context.UserId == null)
-                        {
-                            Console.WriteLine("You need to be logged in to save a personal word.");
-                            input = "";
-                            _suggestionDisplay.HideSuggestions();
-                            break;
-                        }
-
-                        string rawWord = input.Substring("/addword".Length).Trim();
-
-                        if (string.IsNullOrWhiteSpace(rawWord) || rawWord.Contains(' '))
-                        {
-                            Console.WriteLine("Usage: /addword <word>");
-                            input = "";
-                            _suggestionDisplay.HideSuggestions();
-                            break;
-                        }
-
-                        string normalized = rawWord.ToLowerInvariant();
-
-                        Word word;
-                        try
-                        {
-                            word = new Word(_spellcheckService.Alphabet, normalized);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-                            input = "";
-                            _suggestionDisplay.HideSuggestions();
-                            break;
-                        }
-
-                        bool persisted = _authService.AddWord(_context.UserId.Value, normalized);
-                        if (!persisted)
-                        {
-                            Console.WriteLine($"Word '{normalized}' was not saved.");
-                            input = "";
-                            _suggestionDisplay.HideSuggestions();
-                            break;
-                        }
-
-                        try
-                        {
-                            _context.Tree.Add(word);
-                        }
-                        catch
-                        {
-                            // already exists is okay
-                        }
-
-                        bool existsNow = _spellcheckService.IsCorrect(word);
-
-                        if (existsNow)
-                            Console.WriteLine($"Saved '{normalized}' successfully.");
-                        else
-                            Console.WriteLine($"Saved '{normalized}', but active-tree verification failed.");
-
-                        input = "";
-                        _suggestionDisplay.HideSuggestions();
+                    if (TryHandleCommand(ref input))
                         break;
-                    }
 
                     if (_suggestionDisplay.IsCurrentlyVisible())
+                    {
                         _suggestionDisplay.AutoCompleteCurrentlySelectedSuggestion(ref input);
+                    }
                     else
                     {
                         Console.WriteLine();
@@ -201,6 +139,18 @@ public class ConsoleSpellChecker
             Console.WriteLine("Usage: /addword <word>");
             input = "";
             _suggestionDisplay.HideSuggestions();
+            return true;
+        }
+
+        if (trimmed.Equals("/words", StringComparison.OrdinalIgnoreCase))
+        {
+            HandleWordsCommand(ref input);
+            return true;
+        }
+
+        if (trimmed.Equals("/stats", StringComparison.OrdinalIgnoreCase))
+        {
+            HandleStatsCommand(ref input);
             return true;
         }
 
@@ -282,6 +232,67 @@ public class ConsoleSpellChecker
         else
         {
             Console.WriteLine($"Saved '{normalized}', but verification in the active tree failed.");
+        }
+
+        input = "";
+        _suggestionDisplay.HideSuggestions();
+    }
+
+    private void HandleWordsCommand(ref string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+        {
+            Console.WriteLine("You need to be logged in to view your words.");
+            input = "";
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        var words = _authService.GetWords(_context.UserId.Value);
+
+        if (words.Count == 0)
+        {
+            Console.WriteLine("No saved words found.");
+            input = "";
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        Console.WriteLine("Saved words:");
+        foreach (var item in words.OrderBy(w => w.Word, StringComparer.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"- {item.Word}");
+        }
+
+        input = "";
+        _suggestionDisplay.HideSuggestions();
+    }
+
+    private void HandleStatsCommand(ref string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+        {
+            Console.WriteLine("You need to be logged in to view your stats.");
+            input = "";
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        var stats = _authService.GetStats(_context.UserId.Value);
+
+        if (stats.Count == 0)
+        {
+            Console.WriteLine("No stats found.");
+            input = "";
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        Console.WriteLine("Word stats:");
+        foreach (var item in stats)
+        {
+            Console.WriteLine(
+                $"- {item.Word} | used {item.UsageCount} time(s) | last used {item.LastUsedAt:yyyy-MM-dd HH:mm:ss}");
         }
 
         input = "";
