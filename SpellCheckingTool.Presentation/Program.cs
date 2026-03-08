@@ -36,9 +36,12 @@ public class Program
 
         IPersistenceService persistenceService = new FilePersistenceService();
 
-        IDictionaryLoader dictionaryLoader = new DictionaryLoader(persistenceService);
+        var dictionaryLoader = new DictionaryLoader(persistenceService);
+        IDefaultDictionaryProvider defaultDictionaryProvider =
+            new DefaultDictionaryLoader(dictionaryLoader);
 
-        var defaultDictionaryLoader = new DefaultDictionaryLoader(dictionaryLoader);
+        IUserSpellcheckContextFactory spellcheckContextFactory =
+            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService);
 
         UserController.Configure(userService);
 
@@ -59,18 +62,7 @@ public class Program
         {
             new Thread(() =>
             {
-                // Load dictionary once for the client
-                var tree = defaultDictionaryLoader.LoadDefaultDictionary();
-
-                // Infrastructure suggestion implementation
-                ISuggestionService suggestionService =
-                    new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
-
-                // Application use-case
-                ISpellcheckService spellcheckService =
-                    new SpellcheckService(tree, suggestionService);
-
-                ClientApp.StartClient(serverPort, spellcheckService);
+                ClientApp.StartClient(serverPort, spellcheckContextFactory);
             }).Start();
         }
     }

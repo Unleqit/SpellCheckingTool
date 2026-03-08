@@ -4,7 +4,7 @@ using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Infrastructure.Dictionary;
 
-public class DefaultDictionaryLoader
+public class DefaultDictionaryLoader : IDefaultDictionaryProvider
 {
     private readonly IDictionaryLoader loader;
 
@@ -15,7 +15,6 @@ public class DefaultDictionaryLoader
 
     public WordTree LoadDefaultDictionary()
     {
-        // Infrastructure owns file system layout
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
         string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.json");
