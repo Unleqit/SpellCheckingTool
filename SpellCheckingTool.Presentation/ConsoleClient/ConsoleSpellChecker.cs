@@ -1,4 +1,4 @@
-using SpellCheckingTool.Application.Spellcheck;
+﻿using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
 
@@ -14,8 +14,25 @@ public class ConsoleSpellChecker
     private readonly SuggestionUseCase _suggestionUseCase;
     private readonly ClientAuthService _authService;
 
+    private const int MaxDisplayedStats = 5; //this should be moved later to user parameters/einstellungen
+
     private const string WelcomeMessage =
         "Type text and press Enter. Commands: /addword <word>, /words, /stats";
+
+    public ConsoleSpellChecker(
+        UserSpellcheckContext context,
+        SuggestionUseCase suggestionUseCase,
+        ProcessManager processManager,
+        ISuggestionDisplay suggestionWindow,
+        ClientAuthService authService)
+    {
+        _context = context;
+        _spellcheckService = context.SpellcheckService;
+        _suggestionUseCase = suggestionUseCase;
+        _processManager = processManager;
+        _suggestionDisplay = suggestionWindow;
+        _authService = authService;
+    }
 
     private void UpdateSuggestions(string input)
     {
@@ -34,21 +51,6 @@ public class ConsoleSpellChecker
         var viewModel = _suggestionUseCase.Execute(input);
 
         _suggestionDisplay.Show(viewModel);
-    }
-
-    public ConsoleSpellChecker(
-        UserSpellcheckContext context,
-        SuggestionUseCase suggestionUseCase,
-        ProcessManager processManager,
-        ISuggestionDisplay suggestionWindow,
-        ClientAuthService authService)
-    {
-        _context = context;
-        _spellcheckService = context.SpellcheckService;
-        _suggestionUseCase = suggestionUseCase;
-        _processManager = processManager;
-        _suggestionDisplay = suggestionWindow;
-        _authService = authService;
     }
 
     public void Run()
@@ -78,6 +80,7 @@ public class ConsoleSpellChecker
                     if (input.Length == 0)
                         break;
 
+                    _suggestionDisplay.HideSuggestions();
                     input = input.Substring(0, input.Length - 1);
 
                     if (Console.CursorLeft > 0)
@@ -85,6 +88,14 @@ public class ConsoleSpellChecker
                         Console.Write("\b \b");
                     }
 
+                    UpdateSuggestions(input);
+                    break;
+
+                case ConsoleKey.Spacebar:
+                    input += c;
+                    Console.Write(c);
+
+                    TrackLastCompletedWordOnSpace(input);
                     UpdateSuggestions(input);
                     break;
 
@@ -98,6 +109,7 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
+                        TrackFinalWordOnEnter(input);
                         Console.WriteLine();
                         _processManager.SendInput(input);
                         input = "";
@@ -137,8 +149,7 @@ public class ConsoleSpellChecker
         if (trimmed.Equals("/addword", StringComparison.OrdinalIgnoreCase))
         {
             Console.WriteLine("Usage: /addword <word>");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return true;
         }
 
@@ -155,8 +166,7 @@ public class ConsoleSpellChecker
         }
 
         Console.WriteLine($"Unknown command: {trimmed}");
-        input = "";
-        _suggestionDisplay.HideSuggestions();
+        ResetInput(ref input);
         return true;
     }
 
@@ -165,8 +175,7 @@ public class ConsoleSpellChecker
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to save a personal word.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
@@ -175,20 +184,18 @@ public class ConsoleSpellChecker
         if (string.IsNullOrWhiteSpace(rawWord))
         {
             Console.WriteLine("Usage: /addword <word>");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
         if (rawWord.Contains(' '))
         {
             Console.WriteLine("Please enter exactly one word.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
-        string normalized = rawWord.Trim().ToLowerInvariant();
+        string normalized = rawWord.ToLowerInvariant();
 
         Word word;
         try
@@ -198,8 +205,7 @@ public class ConsoleSpellChecker
         catch (Exception ex)
         {
             Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
@@ -207,8 +213,7 @@ public class ConsoleSpellChecker
         if (!persisted)
         {
             Console.WriteLine($"Word '{normalized}' was not saved.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
@@ -218,24 +223,17 @@ public class ConsoleSpellChecker
         }
         catch
         {
-            // If Add throws because it already exists, persistence already succeeded.
-            // We continue to the verification step below.
+            // already exists in active tree
         }
 
         bool existsInActiveTree = _spellcheckService.IsCorrect(word);
 
         if (existsInActiveTree)
-        {
             Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
-            Console.WriteLine("Verification passed: the word is valid in the active tree now.");
-        }
         else
-        {
             Console.WriteLine($"Saved '{normalized}', but verification in the active tree failed.");
-        }
 
-        input = "";
-        _suggestionDisplay.HideSuggestions();
+        ResetInput(ref input);
     }
 
     private void HandleWordsCommand(ref string input)
@@ -243,8 +241,7 @@ public class ConsoleSpellChecker
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to view your words.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
@@ -253,19 +250,17 @@ public class ConsoleSpellChecker
         if (words.Count == 0)
         {
             Console.WriteLine("No saved words found.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
-        Console.WriteLine("Saved words:");
+        Console.WriteLine("Personal dictionary:");
         foreach (var item in words.OrderBy(w => w.Word, StringComparer.OrdinalIgnoreCase))
         {
             Console.WriteLine($"- {item.Word}");
         }
 
-        input = "";
-        _suggestionDisplay.HideSuggestions();
+        ResetInput(ref input);
     }
 
     private void HandleStatsCommand(ref string input)
@@ -273,8 +268,7 @@ public class ConsoleSpellChecker
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to view your stats.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
@@ -283,18 +277,98 @@ public class ConsoleSpellChecker
         if (stats.Count == 0)
         {
             Console.WriteLine("No stats found.");
-            input = "";
-            _suggestionDisplay.HideSuggestions();
+            ResetInput(ref input);
             return;
         }
 
-        Console.WriteLine("Word stats:");
-        foreach (var item in stats)
+        var topStats = stats
+            .OrderByDescending(s => s.UsageCount)
+            .ThenBy(s => s.Word, StringComparer.OrdinalIgnoreCase)
+            .Take(MaxDisplayedStats)
+            .ToList();
+
+        Console.WriteLine();
+        Console.WriteLine("Top used words:");
+        Console.WriteLine("────────────────────────────────────────────");
+        Console.WriteLine($"{"Word",-15} {"Count",-7} {"Last Used"}");
+        Console.WriteLine("────────────────────────────────────────────");
+
+        foreach (var item in topStats)
         {
             Console.WriteLine(
-                $"- {item.Word} | used {item.UsageCount} time(s) | last used {item.LastUsedAt:yyyy-MM-dd HH:mm:ss}");
+                $"{item.Word,-15} {item.UsageCount,-7} {item.LastUsedAt:yyyy-MM-dd HH:mm:ss}");
         }
 
+        Console.WriteLine("────────────────────────────────────────────");
+        Console.WriteLine($"Showing top {topStats.Count} of {stats.Count} tracked words.");
+        Console.WriteLine();
+
+        ResetInput(ref input);
+    }
+
+    private void TrackLastCompletedWordOnSpace(string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        // If input ends with a space, the completed word is the token before that space.
+        var tokens = input
+            .TrimEnd()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (tokens.Length == 0)
+            return;
+
+        string lastCompletedToken = tokens[^1].Trim().ToLowerInvariant();
+        TrackSingleWord(lastCompletedToken);
+    }
+
+    private void TrackFinalWordOnEnter(string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        var tokens = input
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (tokens.Length == 0)
+            return;
+
+        string lastToken = tokens[^1].Trim().ToLowerInvariant();
+        TrackSingleWord(lastToken);
+    }
+
+    private void TrackSingleWord(string token)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(token))
+            return;
+
+        try
+        {
+            var word = new Word(_spellcheckService.Alphabet, token);
+
+            if (_spellcheckService.IsCorrect(word))
+            {
+                _authService.TrackWordUsage(_context.UserId.Value, token);
+            }
+        }
+        catch
+        {
+            // ignore invalid tokens
+        }
+    }
+
+    private void ResetInput(ref string input)
+    {
         input = "";
         _suggestionDisplay.HideSuggestions();
     }

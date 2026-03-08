@@ -31,7 +31,7 @@ public class Program
         IAlphabet alphabet = new LatinAlphabet();
 
         var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
-        var userService = new UserService(store, store);
+        var userService = new UserService(store, store, store);
 
         IPersistenceService persistenceService = new FilePersistenceService();
 
@@ -49,7 +49,7 @@ public class Program
         //define logging middleware for server (like in Express.js)
         server.Use((context, next) =>
         {
-            Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
+            //((Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
             next();
         });
 

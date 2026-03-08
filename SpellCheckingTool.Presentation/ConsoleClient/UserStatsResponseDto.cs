@@ -2,5 +2,5 @@
 public class UserStatsResponseDto
 {
     public Guid UserId { get; set; }
-    public List<UserWordDto> Stats { get; set; } = new();
+    public List<UserWordStatDto> Stats { get; set; } = new();
 }

@@ -83,6 +83,15 @@ public class ClientAuthService
         }
     }
 
+    public bool TrackWordUsage(Guid userId, string word)
+    {
+        return PostSuccess("/api/v1/users/words/track", new
+        {
+            userId,
+            word
+        });
+    }
+
     private AuthSession? HandleAuth(string username, bool isRegister)
     {
         Console.Write(isRegister ? "Choose a password: " : "Password: ");
@@ -195,7 +204,7 @@ public class ClientAuthService
             return Convert.ToHexString(hash);
         }
 
-    public IReadOnlyList<UserWordDto> GetWords(Guid userId)
+    public IReadOnlyList<UserDictionaryWordDto> GetWords(Guid userId)
     {
         var payload = new { userId };
         string requestJson = JsonConvert.SerializeObject(payload);
@@ -211,20 +220,20 @@ public class ClientAuthService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Could not load words: {response.StatusCode}");
-                return Array.Empty<UserWordDto>();
+                return Array.Empty<UserDictionaryWordDto>();
             }
 
             var json = JsonConvert.DeserializeObject<UserWordsFileResponseDto>(responseBody);
-            return json?.Words?.ToList() ?? new List<UserWordDto>();
+            return json?.Words?.ToList() ?? new List<UserDictionaryWordDto>();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading words: {ex.Message}");
-            return Array.Empty<UserWordDto>();
+            return Array.Empty<UserDictionaryWordDto>();
         }
     }
 
-    public IReadOnlyList<UserWordDto> GetStats(Guid userId)
+    public IReadOnlyList<UserWordStatDto> GetStats(Guid userId)
     {
         var payload = new { userId };
         string requestJson = JsonConvert.SerializeObject(payload);
@@ -240,16 +249,42 @@ public class ClientAuthService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Could not load stats: {response.StatusCode}");
-                return Array.Empty<UserWordDto>();
+                return Array.Empty<UserWordStatDto>();
             }
 
             var json = JsonConvert.DeserializeObject<UserStatsResponseDto>(responseBody);
-            return json?.Stats?.ToList() ?? new List<UserWordDto>();
+            return json?.Stats?.ToList() ?? new List<UserWordStatDto>();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading stats: {ex.Message}");
-            return Array.Empty<UserWordDto>();
+            return Array.Empty<UserWordStatDto>();
+        }
+    }
+    private bool PostSuccess(string relativeUrl, object payload)
+    {
+        string requestJson = JsonConvert.SerializeObject(payload);
+        var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        string url = $"{_backendUrl}{relativeUrl}";
+
+        try
+        {
+            var response = _httpClient.PostAsync(url, content).Result;
+            string responseBody = response.Content.ReadAsStringAsync().Result;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Request failed: {response.StatusCode}");
+                return false;
+            }
+
+            var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
+            return json?.Success == true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Request error: {ex.Message}");
+            return false;
         }
     }
 }

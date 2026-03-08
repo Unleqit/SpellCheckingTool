@@ -102,6 +102,24 @@ public static class UserController
         WriteJson(context, 200, new { success = true });
     }
 
+    [HttpPost("/api/v1/users/words/track")]
+    public static void TrackWordUsage(
+        HttpListenerContext context,
+        [FromBody] Guid userId,
+        [FromBody] string word)
+    {
+        EnsureConfigured();
+
+        var result = _service!.TrackWordUsage(userId, word);
+        if (!result.Success)
+        {
+            WriteError(context, 404, result.ErrorMessage ?? "Could not track word usage.");
+            return;
+        }
+
+        WriteJson(context, 200, new { success = true });
+    }
+
     [HttpPost("/api/v1/users/words/file")]
     public static void GetWordsFile(
         HttpListenerContext context,
@@ -109,21 +127,22 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.GetStatsRaw(userId);
+        var result = _service!.GetCustomWords(userId);
         if (!result.Success || result.Value == null)
         {
-            WriteError(context, 404, result.ErrorMessage ?? "No words found for this user.");
+            WriteError(context, 404, result.ErrorMessage ?? "No personal dictionary words found for this user.");
             return;
         }
+
+        var ordered = result.Value
+            .OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase);
 
         WriteJson(context, 200, new
         {
             userId,
-            words = result.Value.Select(s => new
+            words = ordered.Select(w => new
             {
-                word = s.Word.ToString(),
-                usageCount = s.UsageCount,
-                lastUsedAt = s.LastUsedAt
+                word = w.ToString()
             })
         });
     }
@@ -144,7 +163,7 @@ public static class UserController
 
         var ordered = result.Value
             .OrderByDescending(s => s.UsageCount)
-            .ThenBy(s => s.Word.ToString());
+            .ThenBy(s => s.Word.ToString(), StringComparer.OrdinalIgnoreCase);
 
         WriteJson(context, 200, new
         {

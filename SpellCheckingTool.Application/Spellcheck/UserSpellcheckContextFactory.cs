@@ -32,18 +32,18 @@ public sealed class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
 
-        var statsResult = _userService.GetStatsRaw(userId);
-        if (statsResult.Success && statsResult.Value != null)
+        var customWordsResult = _userService.GetCustomWords(userId);
+        if (customWordsResult.Success && customWordsResult.Value != null)
         {
-            foreach (var stat in statsResult.Value)
+            foreach (var word in customWordsResult.Value)
             {
                 try
                 {
-                    tree.Add(stat.Word);
+                    tree.Add(word);
                 }
                 catch
                 {
-                    // Ignore corrupt/invalid persisted entries and continue.
+
                 }
             }
         }

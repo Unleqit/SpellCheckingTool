@@ -2,5 +2,5 @@
 public class UserWordsFileResponseDto
 {
     public Guid UserId { get; set; }
-    public List<UserWordDto> Words { get; set; } = new();
+    public List<UserDictionaryWordDto> Words { get; set; } = new();
 }
