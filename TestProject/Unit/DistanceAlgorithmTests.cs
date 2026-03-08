@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Infrastructure.Suggestions;
+using SpellCheckingTool.Application.Suggestion;
 
 namespace TestProject.Unit;
 
