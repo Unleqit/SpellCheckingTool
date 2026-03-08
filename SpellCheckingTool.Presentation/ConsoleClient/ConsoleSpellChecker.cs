@@ -75,10 +75,16 @@ public class ConsoleSpellChecker
 
                 case ConsoleKey.Backspace:
                 case (ConsoleKey)127:
-                    if (input == "")
+                    if (input.Length == 0)
                         break;
 
                     input = input.Substring(0, input.Length - 1);
+
+                    if (Console.CursorLeft > 0)
+                    {
+                        Console.Write("\b \b");
+                    }
+
                     UpdateSuggestions(input);
                     break;
 
@@ -86,7 +92,65 @@ public class ConsoleSpellChecker
                     if (input.StartsWith("/addword ", StringComparison.OrdinalIgnoreCase))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("Command interception works.");
+
+                        if (!_context.IsAuthenticated || _context.UserId == null)
+                        {
+                            Console.WriteLine("You need to be logged in to save a personal word.");
+                            input = "";
+                            _suggestionDisplay.HideSuggestions();
+                            break;
+                        }
+
+                        string rawWord = input.Substring("/addword".Length).Trim();
+
+                        if (string.IsNullOrWhiteSpace(rawWord) || rawWord.Contains(' '))
+                        {
+                            Console.WriteLine("Usage: /addword <word>");
+                            input = "";
+                            _suggestionDisplay.HideSuggestions();
+                            break;
+                        }
+
+                        string normalized = rawWord.ToLowerInvariant();
+
+                        Word word;
+                        try
+                        {
+                            word = new Word(_spellcheckService.Alphabet, normalized);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
+                            input = "";
+                            _suggestionDisplay.HideSuggestions();
+                            break;
+                        }
+
+                        bool persisted = _authService.AddWord(_context.UserId.Value, normalized);
+                        if (!persisted)
+                        {
+                            Console.WriteLine($"Word '{normalized}' was not saved.");
+                            input = "";
+                            _suggestionDisplay.HideSuggestions();
+                            break;
+                        }
+
+                        try
+                        {
+                            _context.Tree.Add(word);
+                        }
+                        catch
+                        {
+                            // already exists is okay
+                        }
+
+                        bool existsNow = _spellcheckService.IsCorrect(word);
+
+                        if (existsNow)
+                            Console.WriteLine($"Saved '{normalized}' successfully.");
+                        else
+                            Console.WriteLine($"Saved '{normalized}', but active-tree verification failed.");
+
                         input = "";
                         _suggestionDisplay.HideSuggestions();
                         break;
