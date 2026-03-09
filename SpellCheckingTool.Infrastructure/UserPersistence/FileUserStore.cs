@@ -291,6 +291,31 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         }
     }
 
+    public bool RemoveWord(Guid userId, string word)
+    {
+        lock (_lock)
+        {
+            if (!_users.ContainsKey(userId))
+                throw new KeyNotFoundException("User not found.");
+
+            if (!_userCustomDictionary.TryGetValue(userId, out var words))
+                return false;
+
+            var normalized = word.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return false;
+
+            bool removed = words.Remove(normalized);
+
+            if (removed)
+            {
+                SaveCustomDictionary();
+            }
+
+            return removed;
+        }
+    }
+
     public IReadOnlyCollection<Word> GetWords(Guid userId)
     {
         lock (_lock)

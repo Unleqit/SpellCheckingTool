@@ -41,7 +41,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(context, authService, processManager);
+        StartSpellChecker(context, authService, processManager, spellcheckContextFactory);
     }
 
     private static ProcessManager StartProcessManager()
@@ -52,9 +52,10 @@ public class Client
     }
 
     private static void StartSpellChecker(
-        UserSpellcheckContext context,
-        ClientAuthService authService,
-        ProcessManager processManager)
+    UserSpellcheckContext context,
+    ClientAuthService authService,
+    ProcessManager processManager,
+    IUserSpellcheckContextFactory spellcheckContextFactory)
     {
         var suggestionUseCase = new SuggestionUseCase(context.SpellcheckService)
         {
@@ -81,7 +82,8 @@ public class Client
             suggestionUseCase,
             processManager,
             suggestionWindow,
-            authService);
+            authService,
+            spellcheckContextFactory);
 
         consoleSpellChecker.Run();
     }

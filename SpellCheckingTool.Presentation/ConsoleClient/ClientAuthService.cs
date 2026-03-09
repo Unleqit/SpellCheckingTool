@@ -83,6 +83,15 @@ public class ClientAuthService
         }
     }
 
+    public bool DeleteWord(Guid userId, string word)
+    {
+        return PostSuccess("/api/v1/users/words/delete", new
+        {
+            userId,
+            word
+        });
+    }
+
     public bool TrackWordUsage(Guid userId, string word)
     {
         return PostSuccess("/api/v1/users/words/track", new

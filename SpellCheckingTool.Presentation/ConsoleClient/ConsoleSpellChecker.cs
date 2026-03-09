@@ -8,23 +8,25 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 public class ConsoleSpellChecker
 {
     private readonly UserSpellcheckContext _context;
-    private readonly ISpellcheckService _spellcheckService;
     private readonly ProcessManager _processManager;
     private readonly ISuggestionDisplay _suggestionDisplay;
-    private readonly SuggestionUseCase _suggestionUseCase;
     private readonly ClientAuthService _authService;
+    private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
+    private ISpellcheckService _spellcheckService;
+    private SuggestionUseCase _suggestionUseCase;
 
     private const int MaxDisplayedStats = 5; //this should be moved later to user parameters/einstellungen
 
     private const string WelcomeMessage =
-        "Type text and press Enter. Commands: /addword <word>, /words, /stats";
+    "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats";
 
     public ConsoleSpellChecker(
-        UserSpellcheckContext context,
-        SuggestionUseCase suggestionUseCase,
-        ProcessManager processManager,
-        ISuggestionDisplay suggestionWindow,
-        ClientAuthService authService)
+    UserSpellcheckContext context,
+    SuggestionUseCase suggestionUseCase,
+    ProcessManager processManager,
+    ISuggestionDisplay suggestionWindow,
+    ClientAuthService authService,
+    IUserSpellcheckContextFactory spellcheckContextFactory)
     {
         _context = context;
         _spellcheckService = context.SpellcheckService;
@@ -32,6 +34,7 @@ public class ConsoleSpellChecker
         _processManager = processManager;
         _suggestionDisplay = suggestionWindow;
         _authService = authService;
+        _spellcheckContextFactory = spellcheckContextFactory;
     }
 
     private void UpdateSuggestions(string input)
@@ -53,6 +56,25 @@ public class ConsoleSpellChecker
         _suggestionDisplay.Show(viewModel);
     }
 
+    private void RebuildActiveTreeAfterDictionaryChange()
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null || string.IsNullOrWhiteSpace(_context.Username))
+            return;
+
+        var refreshed = _spellcheckContextFactory.CreateForUser(_context.UserId.Value, _context.Username);
+
+        _context.Tree = refreshed.Tree;
+        _context.SpellcheckService = refreshed.SpellcheckService;
+        _spellcheckService = refreshed.SpellcheckService;
+
+        _suggestionUseCase = new SuggestionUseCase(_spellcheckService)
+        {
+            MaxSuggestions = 5,
+            MaxDistance = 3
+        };
+
+        _suggestionDisplay.HideSuggestions();
+    }
     public void Run()
     {
         Console.WriteLine(WelcomeMessage);
@@ -153,6 +175,19 @@ public class ConsoleSpellChecker
             return true;
         }
 
+        if (trimmed.StartsWith("/delword ", StringComparison.OrdinalIgnoreCase))
+        {
+            HandleDeleteWordCommand(trimmed, ref input);
+            return true;
+        }
+
+        if (trimmed.Equals("/delword", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("Usage: /delword <word>");
+            ResetInput(ref input);
+            return true;
+        }
+
         if (trimmed.Equals("/words", StringComparison.OrdinalIgnoreCase))
         {
             HandleWordsCommand(ref input);
@@ -219,7 +254,7 @@ public class ConsoleSpellChecker
 
         try
         {
-            _context.Tree.Add(word);
+            RebuildActiveTreeAfterDictionaryChange();
         }
         catch
         {
@@ -232,6 +267,64 @@ public class ConsoleSpellChecker
             Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
         else
             Console.WriteLine($"Saved '{normalized}', but verification in the active tree failed.");
+
+        ResetInput(ref input);
+    }
+
+    private void HandleDeleteWordCommand(string command, ref string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+        {
+            Console.WriteLine("You need to be logged in to delete a personal word.");
+            ResetInput(ref input);
+            return;
+        }
+
+        string rawWord = command.Substring("/delword".Length).Trim();
+
+        if (string.IsNullOrWhiteSpace(rawWord))
+        {
+            Console.WriteLine("Usage: /delword <word>");
+            ResetInput(ref input);
+            return;
+        }
+
+        if (rawWord.Contains(' '))
+        {
+            Console.WriteLine("Please enter exactly one word.");
+            ResetInput(ref input);
+            return;
+        }
+
+        string normalized = rawWord.ToLowerInvariant();
+
+        bool deleted = _authService.DeleteWord(_context.UserId.Value, normalized);
+        if (!deleted)
+        {
+            Console.WriteLine($"Word '{normalized}' was not found in your personal dictionary.");
+            ResetInput(ref input);
+            return;
+        }
+
+        // Remove it from the active tree for this session too.
+        RebuildActiveTreeAfterDictionaryChange();
+
+        Word word;
+        bool stillValid;
+        try
+        {
+            word = new Word(_spellcheckService.Alphabet, normalized);
+            stillValid = _spellcheckService.IsCorrect(word);
+        }
+        catch
+        {
+            stillValid = false;
+        }
+
+        if (stillValid)
+            Console.WriteLine($"Deleted '{normalized}' from your personal dictionary, but it is still valid via the default dictionary.");
+        else
+            Console.WriteLine($"Deleted '{normalized}' from your personal dictionary.");
 
         ResetInput(ref input);
     }

@@ -6,8 +6,8 @@ public sealed class UserSpellcheckContext
 {
     public Guid? UserId { get; }
     public string? Username { get; }
-    public WordTree Tree { get; }
-    public ISpellcheckService SpellcheckService { get; }
+    public WordTree Tree { get; set; }
+    public ISpellcheckService SpellcheckService { get; set; }
 
     public bool IsAuthenticated => UserId.HasValue;
 

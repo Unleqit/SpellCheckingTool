@@ -102,6 +102,24 @@ public static class UserController
         WriteJson(context, 200, new { success = true });
     }
 
+    [HttpPost("/api/v1/users/words/delete")]
+    public static void DeleteWord(
+    HttpListenerContext context,
+    [FromBody] Guid userId,
+    [FromBody] string word)
+    {
+        EnsureConfigured();
+
+        var result = _service!.RemoveWord(userId, word);
+        if (!result.Success)
+        {
+            WriteError(context, 404, result.ErrorMessage ?? "Could not delete word.");
+            return;
+        }
+
+        WriteJson(context, 200, new { success = true });
+    }
+
     [HttpPost("/api/v1/users/words/track")]
     public static void TrackWordUsage(
         HttpListenerContext context,

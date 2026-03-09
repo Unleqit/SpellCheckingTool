@@ -69,6 +69,22 @@ public class UserService
         return OperationResult<bool>.Ok(true);
     }
 
+    public OperationResult<bool> RemoveWord(Guid userId, string word)
+    {
+        if (_userRepo.GetById(userId) == null)
+            return OperationResult<bool>.Fail("User not found.");
+
+        if (string.IsNullOrWhiteSpace(word))
+            return OperationResult<bool>.Fail("Word is required.");
+
+        bool removed = _customDictionaryRepo.RemoveWord(userId, word);
+
+        if (!removed)
+            return OperationResult<bool>.Fail("Word not found in personal dictionary.");
+
+        return OperationResult<bool>.Ok(true);
+    }
+
     public OperationResult<bool> TrackWordUsage(Guid userId, string word)
     {
         if (_userRepo.GetById(userId) == null)
@@ -97,11 +113,5 @@ public class UserService
 
         var stats = _wordStatsRepo.GetWordStats(userId);
         return OperationResult<IReadOnlyCollection<WordStatistic>>.Ok(stats);
-    }
-
-    //to be deleted
-    public OperationResult<IReadOnlyCollection<WordStatistic>> GetStatsRaw(Guid userId)
-    {
-        return GetStats(userId);
     }
 }
