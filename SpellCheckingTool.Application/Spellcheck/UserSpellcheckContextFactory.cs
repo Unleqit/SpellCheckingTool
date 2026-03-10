@@ -43,7 +43,7 @@ public sealed class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
                 }
                 catch
                 {
-
+                    Console.WriteLine($"Error occurred while adding word {word} to the tree");
                 }
             }
         }
@@ -57,7 +57,7 @@ public sealed class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             spellcheckService: spellcheckService);
     }
 
-    private static ISpellcheckService BuildSpellcheckService(WordTree tree)
+    private static SpellcheckService BuildSpellcheckService(WordTree tree)
     {
         ISuggestionService suggestionService =
             new SuggestionService(tree, new LevenshteinDistanceAlgorithm());

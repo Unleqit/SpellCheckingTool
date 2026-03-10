@@ -76,4 +76,21 @@ namespace SpellCheckingTool.Domain.WordTree;
             }
             return words.ToArray();
         }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Word other && word.SequenceEqual(other.word);
     }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+
+        foreach (char c in word)
+        {
+            hash.Add(c);
+        }
+
+        return hash.ToHashCode();
+    }
+}

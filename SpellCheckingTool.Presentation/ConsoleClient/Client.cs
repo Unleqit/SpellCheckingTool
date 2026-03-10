@@ -27,7 +27,7 @@ public class Client
         }
         else
         {
-            Console.WriteLine("Skipping authentication.\n");
+            Console.WriteLine("Skipping authentication." + Environment.NewLine);
             context = spellcheckContextFactory.CreateAnonymous();
         }
 

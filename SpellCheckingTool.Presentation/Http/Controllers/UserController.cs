@@ -7,7 +7,7 @@ namespace SpellCheckingTool.Presentation.Http.Controllers;
 
 public static class UserController
 {
-    private static UserService? _service;
+    private static UserService _service = null!;
 
     /// <summary>
     /// Called once during startup from Program.cs to inject dependencies.
@@ -47,7 +47,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.Register(username, hashedPassword);
+        var result = _service.Register(username, hashedPassword);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 400, result.ErrorMessage ?? "Registration failed.");
@@ -70,7 +70,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.Login(username, hashedPassword);
+        var result = _service.Login(username, hashedPassword);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 401, result.ErrorMessage ?? "Login failed.");
@@ -92,7 +92,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.AddWord(userId, word);
+        var result = _service.AddWord(userId, word);
         if (!result.Success)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not add word.");
@@ -110,7 +110,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.RemoveWord(userId, word);
+        var result = _service.RemoveWord(userId, word);
         if (!result.Success)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not delete word.");
@@ -128,7 +128,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.TrackWordUsage(userId, word);
+        var result = _service.TrackWordUsage(userId, word);
         if (!result.Success)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not track word usage.");
@@ -145,7 +145,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.GetCustomWords(userId);
+        var result = _service.GetCustomWords(userId);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 404, result.ErrorMessage ?? "No personal dictionary words found for this user.");
@@ -172,7 +172,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.GetStats(userId);
+        var result = _service.GetStats(userId);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not get stats.");

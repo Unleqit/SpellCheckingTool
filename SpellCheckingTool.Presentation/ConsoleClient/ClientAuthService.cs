@@ -73,8 +73,16 @@ public class ClientAuthService
                 return false;
             }
 
-            var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
-            return json?.Success == true;
+            try
+            {
+                var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
+                return json?.Success ?? false;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Could not parse success response: {ex.Message}");
+                return false;
+            }
         }
         catch (Exception ex)
         {
@@ -85,7 +93,7 @@ public class ClientAuthService
 
     public bool DeleteWord(Guid userId, string word)
     {
-        return PostSuccess("/api/v1/users/words/delete", new
+        return Post("/api/v1/users/words/delete", new
         {
             userId,
             word
@@ -94,7 +102,7 @@ public class ClientAuthService
 
     public bool TrackWordUsage(Guid userId, string word)
     {
-        return PostSuccess("/api/v1/users/words/track", new
+        return Post("/api/v1/users/words/track", new
         {
             userId,
             word
@@ -270,7 +278,7 @@ public class ClientAuthService
             return Array.Empty<UserWordStatDto>();
         }
     }
-    private bool PostSuccess(string relativeUrl, object payload)
+    private bool Post(string relativeUrl, object payload)
     {
         string requestJson = JsonConvert.SerializeObject(payload);
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");

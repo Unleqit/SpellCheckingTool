@@ -5,7 +5,7 @@ using SpellCheckingTool.Domain.WordTree;
 
 namespace TestProject.Fakes;
 
-public sealed class SpyWordDataRepository :
+public class SpyWordDataRepository :
     IUserWordStatsRepository,
     IUserCustomDictionaryRepository
 {
@@ -14,7 +14,7 @@ public sealed class SpyWordDataRepository :
     private readonly Dictionary<Guid, Dictionary<string, WordStatistic>> _stats =
         new();
 
-    private readonly Dictionary<Guid, HashSet<string>> _customWords =
+    private readonly Dictionary<Guid, HashSet<Word>> _customWords =
         new();
 
     public int IncrementWordCallCount { get; private set; }
@@ -35,14 +35,29 @@ public sealed class SpyWordDataRepository :
         _alphabet = alphabet;
     }
 
+    private string? Normalize(string word)
+    {
+        var normalized = word.Trim().ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
+
+    private Word? NormalizeAndValidateWord(string word)
+    {
+        var normalized = Normalize(word);
+        if (normalized is null)
+            return null;
+
+        return new Word(_alphabet, normalized);
+    }
+
     public void IncrementWord(Guid userId, string word)
     {
         IncrementWordCallCount++;
         LastIncrementUserId = userId;
         LastIncrementWord = word;
 
-        var normalized = word.Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(normalized))
+        var normalized = Normalize(word);
+        if (normalized is null)
             return;
 
         if (!_stats.TryGetValue(userId, out var userStats))
@@ -74,19 +89,17 @@ public sealed class SpyWordDataRepository :
         LastAddedCustomUserId = userId;
         LastAddedCustomWord = word;
 
-        var normalized = word.Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(normalized))
+        var wordObj = NormalizeAndValidateWord(word);
+        if (wordObj is null)
             return;
-
-        _ = new Word(_alphabet, normalized);
 
         if (!_customWords.TryGetValue(userId, out var words))
         {
-            words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            words = new HashSet<Word>();
             _customWords[userId] = words;
         }
 
-        words.Add(normalized);
+        words.Add(wordObj);
     }
 
     public bool RemoveWord(Guid userId, string word)
@@ -98,8 +111,11 @@ public sealed class SpyWordDataRepository :
         if (!_customWords.TryGetValue(userId, out var words))
             return false;
 
-        var normalized = word.Trim().ToLowerInvariant();
-        return words.Remove(normalized);
+        var wordObj = NormalizeAndValidateWord(word);
+        if (wordObj is null)
+            return false;
+
+        return words.Remove(wordObj);
     }
 
     public IReadOnlyCollection<Word> GetWords(Guid userId)
@@ -107,7 +123,10 @@ public sealed class SpyWordDataRepository :
         if (!_customWords.TryGetValue(userId, out var words))
             return Array.Empty<Word>();
 
-        return words.Select(w => new Word(_alphabet, w)).ToList().AsReadOnly();
+        return words
+            .OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase)
+            .ToList()
+            .AsReadOnly();
     }
 
     public void SeedCustomWord(Guid userId, string word)

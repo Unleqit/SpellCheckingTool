@@ -3,7 +3,7 @@ using SpellCheckingTool.Domain.Users;
 
 namespace TestProject.Fakes;
 
-public sealed class FakeUserRepository : IUserRepository
+public class FakeUserRepository : IUserRepository
 {
     private readonly Dictionary<Guid, User> _usersById = new();
     private readonly Dictionary<string, User> _usersByName =

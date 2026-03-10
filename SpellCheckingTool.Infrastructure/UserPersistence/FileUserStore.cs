@@ -9,7 +9,6 @@ namespace SpellCheckingTool.Infrastructure.UserPersistence;
 
 public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCustomDictionaryRepository
 {
-#pragma warning disable IL2026, IL3050
     private readonly string _usersFilePath;
     private readonly string _wordStatsFilePath;
     private readonly string _customDictionaryFilePath;
@@ -18,7 +17,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
     private Dictionary<Guid, User> _users = new();
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats = new();
-    private Dictionary<Guid, HashSet<string>> _userCustomDictionary = new();
+    private Dictionary<Guid, HashSet<Word>> _userCustomDictionary = new();
 
 
     public FileUserStore(string baseDirectory, IAlphabet alphabet)
@@ -96,7 +95,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
     {
         if (!File.Exists(_customDictionaryFilePath))
         {
-            _userCustomDictionary = new Dictionary<Guid, HashSet<string>>();
+            _userCustomDictionary = new Dictionary<Guid, HashSet<Word>>();
             return;
         }
 
@@ -105,11 +104,11 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
             JsonConvert.DeserializeObject<Dictionary<Guid, List<string>>>(json)
             ?? new Dictionary<Guid, List<string>>();
 
-        var result = new Dictionary<Guid, HashSet<string>>();
+        var result = new Dictionary<Guid, HashSet<Word>>();
 
         foreach (var userEntry in storage)
         {
-            var words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var words = new HashSet<Word>();
 
             foreach (var raw in userEntry.Value)
             {
@@ -119,11 +118,11 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
                 try
                 {
-                    _ = new Word(_alphabet, normalized);
-                    words.Add(normalized);
+                    words.Add(new Word(_alphabet, normalized));
                 }
                 catch
                 {
+                    // optional logging
                 }
             }
 
@@ -162,6 +161,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         var storage = _userCustomDictionary.ToDictionary(
             userEntry => userEntry.Key,
             userEntry => userEntry.Value
+                .Select(w => w.ToString())
                 .OrderBy(w => w, StringComparer.OrdinalIgnoreCase)
                 .ToList());
 
@@ -207,7 +207,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
                 _userWordStats[user.Id] = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
 
             if (!_userCustomDictionary.ContainsKey(user.Id))
-                _userCustomDictionary[user.Id] = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                _userCustomDictionary[user.Id] = new HashSet<Word>();
 
             SaveUsers();
             SaveWordStats();
@@ -267,6 +267,17 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
     #region IUserCustomDictionaryRepository
 
+    private string? NormalizeAndValidate(string word)
+    {
+        var normalized = word.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(normalized))
+            return null;
+
+        _ = new Word(_alphabet, normalized);
+        return normalized;
+    }
+
     public void AddWord(Guid userId, string word)
     {
         lock (_lock)
@@ -276,7 +287,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
             if (!_userCustomDictionary.TryGetValue(userId, out var words))
             {
-                words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                words = new HashSet<Word>();
                 _userCustomDictionary[userId] = words;
             }
 
@@ -284,9 +295,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
             if (string.IsNullOrWhiteSpace(normalized))
                 return;
 
-            _ = new Word(_alphabet, normalized); // validation
-            words.Add(normalized);
-
+            words.Add(new Word(_alphabet, normalized));
             SaveCustomDictionary();
         }
     }
@@ -305,7 +314,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
             if (string.IsNullOrWhiteSpace(normalized))
                 return false;
 
-            bool removed = words.Remove(normalized);
+            bool removed = words.Remove(new Word(_alphabet, normalized));
 
             if (removed)
             {
@@ -324,8 +333,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
                 return Array.Empty<Word>();
 
             return words
-                .OrderBy(w => w, StringComparer.OrdinalIgnoreCase)
-                .Select(w => new Word(_alphabet, w))
+                .OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase)
                 .ToList()
                 .AsReadOnly();
         }
@@ -348,5 +356,4 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
     }
 
     #endregion
-#pragma warning restore IL2026, IL3050
 }
