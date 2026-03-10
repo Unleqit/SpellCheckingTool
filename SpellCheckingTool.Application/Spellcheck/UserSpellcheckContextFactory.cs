@@ -3,7 +3,7 @@ using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Application.Dictionary;
-public sealed class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
+public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
 {
     private readonly IDefaultDictionaryProvider _defaultDictionaryProvider;
     private readonly UserService _userService;
