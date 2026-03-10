@@ -295,8 +295,16 @@ public class ClientAuthService
                 return false;
             }
 
-            var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
-            return json?.Success == true;
+            try
+            {
+                var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
+                return json?.Success ?? false;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Could not parse success response: {ex.Message}");
+                return false;
+            }
         }
         catch (Exception ex)
         {
