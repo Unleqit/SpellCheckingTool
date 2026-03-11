@@ -1,18 +1,24 @@
 ﻿using SpellCheckingTool.Application.Common;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
+using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Application.Users;
 
 public class UserService
 {
     private readonly IUserRepository _userRepo;
-    private readonly IUserWordStatsRepository _wordRepo;
+    private readonly IUserWordStatsRepository _wordStatsRepo;
+    private readonly IUserCustomDictionaryRepository _customDictionaryRepo;
 
-    public UserService(IUserRepository userRepo, IUserWordStatsRepository wordRepo)
+    public UserService(
+    IUserRepository userRepo,
+    IUserWordStatsRepository wordStatsRepo,
+    IUserCustomDictionaryRepository customDictionaryRepo)
     {
         _userRepo = userRepo;
-        _wordRepo = wordRepo;
+        _wordStatsRepo = wordStatsRepo;
+        _customDictionaryRepo = customDictionaryRepo;
     }
 
     public OperationResult<User> Register(string username, string hashedPassword)
@@ -47,13 +53,57 @@ public class UserService
         return OperationResult<User>.Ok(user);
     }
 
+    /// <summary>
+    /// Adds a word to the user's personal dictionary only.
+    /// This is separate from usage statistics.
+    /// </summary>
     public OperationResult<bool> AddWord(Guid userId, string word)
     {
         if (_userRepo.GetById(userId) == null)
             return OperationResult<bool>.Fail("User not found.");
 
-        _wordRepo.IncrementWord(userId, word);
+        if (string.IsNullOrWhiteSpace(word))
+            return OperationResult<bool>.Fail("Word is required.");
+
+        _customDictionaryRepo.AddWord(userId, word);
         return OperationResult<bool>.Ok(true);
+    }
+
+    public OperationResult<bool> RemoveWord(Guid userId, string word)
+    {
+        if (_userRepo.GetById(userId) == null)
+            return OperationResult<bool>.Fail("User not found.");
+
+        if (string.IsNullOrWhiteSpace(word))
+            return OperationResult<bool>.Fail("Word is required.");
+
+        bool removed = _customDictionaryRepo.RemoveWord(userId, word);
+
+        if (!removed)
+            return OperationResult<bool>.Fail("Word not found in personal dictionary.");
+
+        return OperationResult<bool>.Ok(true);
+    }
+
+    public OperationResult<bool> TrackWordUsage(Guid userId, string word)
+    {
+        if (_userRepo.GetById(userId) == null)
+            return OperationResult<bool>.Fail("User not found.");
+
+        if (string.IsNullOrWhiteSpace(word))
+            return OperationResult<bool>.Fail("Word is required.");
+
+        _wordStatsRepo.IncrementWord(userId, word);
+        return OperationResult<bool>.Ok(true);
+    }
+
+    public OperationResult<IReadOnlyCollection<Word>> GetCustomWords(Guid userId)
+    {
+        if (_userRepo.GetById(userId) == null)
+            return OperationResult<IReadOnlyCollection<Word>>.Fail("User not found.");
+
+        var words = _customDictionaryRepo.GetWords(userId);
+        return OperationResult<IReadOnlyCollection<Word>>.Ok(words);
     }
 
     public OperationResult<IReadOnlyCollection<WordStatistic>> GetStats(Guid userId)
@@ -61,16 +111,7 @@ public class UserService
         if (_userRepo.GetById(userId) == null)
             return OperationResult<IReadOnlyCollection<WordStatistic>>.Fail("User not found.");
 
-        var stats = _wordRepo.GetWordStats(userId);
+        var stats = _wordStatsRepo.GetWordStats(userId);
         return OperationResult<IReadOnlyCollection<WordStatistic>>.Ok(stats);
-    }
-
-    /// <summary>
-    /// Returns the raw (unsorted) word stats for a user.
-    /// This replaces Presentation reaching into an Infrastructure store directly.
-    /// </summary>
-    public OperationResult<IReadOnlyCollection<WordStatistic>> GetStatsRaw(Guid userId)
-    {
-        return GetStats(userId);
     }
 }

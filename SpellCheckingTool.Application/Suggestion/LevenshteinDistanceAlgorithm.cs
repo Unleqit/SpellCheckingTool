@@ -1,8 +1,7 @@
-﻿using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain.WordTree;
 using System.Runtime.CompilerServices;
 
-namespace SpellCheckingTool.Infrastructure.Suggestions;
+namespace SpellCheckingTool.Application.Suggestion;
 
 public class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
 {
@@ -57,7 +56,7 @@ public class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
             {
                 deletionCost = _prev[j] + 1;
                 insertionCost = _current[j - 1] + 1;
-                substitutionCost = _prev[j - 1] + ((wordA[i - 1] == wordB[j - 1]) ? 0 : 1);
+                substitutionCost = _prev[j - 1] + (wordA[i - 1] == wordB[j - 1] ? 0 : 1);
 
                 minimalCost = deletionCost < insertionCost ? deletionCost : insertionCost;
                 _current[j] = minimalCost < substitutionCost ? minimalCost : substitutionCost;

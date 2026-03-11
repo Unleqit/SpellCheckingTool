@@ -1,7 +1,6 @@
-﻿using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Infrastructure.Suggestions;
+namespace SpellCheckingTool.Application.Suggestion;
 
 public class SuggestionService : ISuggestionService
 {
@@ -13,7 +12,7 @@ public class SuggestionService : ISuggestionService
     {
         this.tree = tree;
         this.distanceAlgorithm = distanceAlgorithm;
-        this.traversal = new LeftToRightWordTreeTraversal(tree);
+        traversal = new LeftToRightWordTreeTraversal(tree);
     }
 
     /// <summary>
@@ -35,12 +34,12 @@ public class SuggestionService : ISuggestionService
 
         // keep track of the worst distance value in result list
         int worstDistanceValueInResults =
-            maxAllowedDistance < (tree.WordBufferLength - 1)
-                ? (maxAllowedDistance + 1)
+            maxAllowedDistance < tree.WordBufferLength - 1
+                ? maxAllowedDistance + 1
                 : tree.WordBufferLength;
 
         // traverse tree
-        traversal.WalkTree((Word word) =>
+        traversal.WalkTree((word) =>
         {
             distanceToInputWord = distanceAlgorithm.GetDistance(input, word);
 

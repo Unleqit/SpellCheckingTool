@@ -5,12 +5,11 @@ using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Infrastructure.Suggestions;
+using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Http.Controllers;
 using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Presentation.Servers;
 using SpellCheckingTool.Infrastructure.Executables;
 
@@ -32,13 +31,16 @@ public class Program
         IAlphabet alphabet = new LatinAlphabet();
 
         var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
-        var userService = new UserService(store, store);
+        var userService = new UserService(store, store, store);
 
         IPersistenceService persistenceService = new FilePersistenceService();
 
-        IDictionaryLoader dictionaryLoader = new DictionaryLoader(persistenceService);
+        var dictionaryLoader = new DictionaryLoader(persistenceService);
+        IDefaultDictionaryProvider defaultDictionaryProvider =
+            new DefaultDictionaryLoader(dictionaryLoader);
 
-        var defaultDictionaryLoader = new DefaultDictionaryLoader(dictionaryLoader);
+        IUserSpellcheckContextFactory spellcheckContextFactory =
+            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService);
 
         UserController.Configure(userService);
 
@@ -47,7 +49,7 @@ public class Program
         //define logging middleware for server (like in Express.js)
         server.Use((context, next) =>
         {
-            Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
+            //((Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
             next();
         });
 
@@ -59,18 +61,7 @@ public class Program
         {
             new Thread(() =>
             {
-                // Load dictionary once for the client
-                var tree = defaultDictionaryLoader.LoadDefaultDictionary();
-
-                // Infrastructure suggestion implementation
-                ISuggestionService suggestionService =
-                    new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
-
-                // Application use-case
-                ISpellcheckService spellcheckService =
-                    new SpellcheckService(tree, suggestionService);
-
-                ClientApp.StartClient(serverPort, spellcheckService);
+                ClientApp.StartClient(serverPort, spellcheckContextFactory);
             }).Start();
         }
     }

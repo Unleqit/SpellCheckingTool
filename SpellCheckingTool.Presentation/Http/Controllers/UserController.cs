@@ -7,7 +7,7 @@ namespace SpellCheckingTool.Presentation.Http.Controllers;
 
 public static class UserController
 {
-    private static UserService? _service;
+    private static UserService _service = null!;
 
     /// <summary>
     /// Called once during startup from Program.cs to inject dependencies.
@@ -47,7 +47,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.Register(username, hashedPassword);
+        var result = _service.Register(username, hashedPassword);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 400, result.ErrorMessage ?? "Registration failed.");
@@ -70,7 +70,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.Login(username, hashedPassword);
+        var result = _service.Login(username, hashedPassword);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 401, result.ErrorMessage ?? "Login failed.");
@@ -92,10 +92,46 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.AddWord(userId, word);
+        var result = _service.AddWord(userId, word);
         if (!result.Success)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not add word.");
+            return;
+        }
+
+        WriteJson(context, 200, new { success = true });
+    }
+
+    [HttpPost("/api/v1/users/words/delete")]
+    public static void DeleteWord(
+    HttpListenerContext context,
+    [FromBody] Guid userId,
+    [FromBody] string word)
+    {
+        EnsureConfigured();
+
+        var result = _service.RemoveWord(userId, word);
+        if (!result.Success)
+        {
+            WriteError(context, 404, result.ErrorMessage ?? "Could not delete word.");
+            return;
+        }
+
+        WriteJson(context, 200, new { success = true });
+    }
+
+    [HttpPost("/api/v1/users/words/track")]
+    public static void TrackWordUsage(
+        HttpListenerContext context,
+        [FromBody] Guid userId,
+        [FromBody] string word)
+    {
+        EnsureConfigured();
+
+        var result = _service.TrackWordUsage(userId, word);
+        if (!result.Success)
+        {
+            WriteError(context, 404, result.ErrorMessage ?? "Could not track word usage.");
             return;
         }
 
@@ -109,21 +145,22 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.GetStatsRaw(userId);
+        var result = _service.GetCustomWords(userId);
         if (!result.Success || result.Value == null)
         {
-            WriteError(context, 404, result.ErrorMessage ?? "No words found for this user.");
+            WriteError(context, 404, result.ErrorMessage ?? "No personal dictionary words found for this user.");
             return;
         }
+
+        var ordered = result.Value
+            .OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase);
 
         WriteJson(context, 200, new
         {
             userId,
-            words = result.Value.Select(s => new
+            words = ordered.Select(w => new
             {
-                word = s.Word.ToString(),
-                usageCount = s.UsageCount,
-                lastUsedAt = s.LastUsedAt
+                word = w.ToString()
             })
         });
     }
@@ -135,7 +172,7 @@ public static class UserController
     {
         EnsureConfigured();
 
-        var result = _service!.GetStats(userId);
+        var result = _service.GetStats(userId);
         if (!result.Success || result.Value == null)
         {
             WriteError(context, 404, result.ErrorMessage ?? "Could not get stats.");
@@ -144,7 +181,7 @@ public static class UserController
 
         var ordered = result.Value
             .OrderByDescending(s => s.UsageCount)
-            .ThenBy(s => s.Word.ToString());
+            .ThenBy(s => s.Word.ToString(), StringComparer.OrdinalIgnoreCase);
 
         WriteJson(context, 200, new
         {
