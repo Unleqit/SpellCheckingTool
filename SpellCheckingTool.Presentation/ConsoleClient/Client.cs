@@ -5,7 +5,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static void StartClient(int port, ISpellcheckService spellcheckService)
+    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory)
     {
         string backendUrl = $"http://localhost:{port}";
 
@@ -14,18 +14,34 @@ public class Client
         Console.Write("Do you want to log in? (y/n): ");
         string input = Console.ReadLine()?.Trim().ToLower() ?? "";
 
+        UserSpellcheckContext context;
+
         if (input.Contains('y'))
         {
-            authService.RunAuthenticationFlow();
+            var session = authService.RunAuthenticationFlow();
             Console.WriteLine();
+
+            context = session != null && session.IsAuthenticated
+                ? spellcheckContextFactory.CreateForUser(session.UserId, session.Username)
+                : spellcheckContextFactory.CreateAnonymous();
         }
         else
         {
-            Console.WriteLine("Skipping authentication...\n");
+            Console.WriteLine("Skipping authentication." + Environment.NewLine);
+            context = spellcheckContextFactory.CreateAnonymous();
+        }
+
+        if (context.IsAuthenticated)
+        {
+            Console.WriteLine($"Loaded spellcheck context for '{context.Username}'.");
+        }
+        else
+        {
+            Console.WriteLine("Loaded default spellcheck context.");
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(spellcheckService, processManager);
+        StartSpellChecker(context, authService, processManager, spellcheckContextFactory);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -35,9 +51,9 @@ public class Client
         return processManager;
     }
 
-    private static void StartSpellChecker(ISpellcheckService spellcheckService, ShellProcessManager processManager)
+    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory)
     {
-        var suggestionUseCase = new SuggestionUseCase(spellcheckService)
+        var suggestionUseCase = new SuggestionUseCase(context.SpellcheckService)
         {
             MaxSuggestions = 5,
             MaxDistance = 3
@@ -58,10 +74,12 @@ public class Client
         };
 
         var consoleSpellChecker = new ConsoleSpellChecker(
-            spellcheckService,
+            context,
             suggestionUseCase,
             processManager,
-            suggestionWindow);
+            suggestionWindow,
+            authService,
+            spellcheckContextFactory);
 
         consoleSpellChecker.Run();
     }

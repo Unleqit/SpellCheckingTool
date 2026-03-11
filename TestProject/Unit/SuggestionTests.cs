@@ -4,7 +4,7 @@ using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Infrastructure.Suggestions;
+using SpellCheckingTool.Application.Suggestion;
 
 namespace TestProject.Unit;
 

@@ -1,13 +1,12 @@
-using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 public class ShellProcessManager
 {
     private readonly Process _process;
     public int CurrentShellOffset { get; private set; }
+    private const string marker = "DONTPRINTTHIS";
 
     public ShellProcessManager()
     {
@@ -27,7 +26,7 @@ public class ShellProcessManager
 
         _process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
         {
-            if (e.Data != null)
+            if (e.Data != null && !e.Data.Contains(marker))
                 Console.WriteLine(e.Data);
         };
 
@@ -40,7 +39,6 @@ public class ShellProcessManager
                 Console.ResetColor();
             }
         };
-
     }
 
     public void Start()
@@ -49,12 +47,42 @@ public class ShellProcessManager
         _process.StandardInput.AutoFlush = true;
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
+        KeepTrackOfCurrentWorkingDir();
     }
+
+    private string currentWorkingDir = "";
 
     public void SendInput(string input)
     {
         _process.StandardInput.WriteLine(input);
+        KeepTrackOfCurrentWorkingDir();
     }
+
+    //wasted_hours = 5
+    private void KeepTrackOfCurrentWorkingDir()
+    {
+        string timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        string markerWithTimeStamp = $"{marker}{timestamp}";
+        string command = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"echo %cd%{markerWithTimeStamp}" : $"echo \"$(pwd){markerWithTimeStamp}\"";
+
+        string workingDir = "";
+        DataReceivedEventHandler handler = (object sender, DataReceivedEventArgs e) =>
+        {
+            if (e.Data != null && e.Data.Contains(markerWithTimeStamp))
+                workingDir = e.Data.Replace(markerWithTimeStamp, "");
+        };
+
+        _process.OutputDataReceived += handler;
+
+        _process.StandardInput.WriteLine(command);
+
+        while (workingDir == "")
+            Thread.Sleep(1);
+
+        currentWorkingDir = workingDir;
+        _process.OutputDataReceived -= handler;
+    }
+
 
     public string GetCurrentConsolePrompt()
     {
@@ -68,7 +96,8 @@ public class ShellProcessManager
             Arguments = command,
             RedirectStandardOutput = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            WorkingDirectory = currentWorkingDir
         };
 
 #pragma warning disable CS8600
