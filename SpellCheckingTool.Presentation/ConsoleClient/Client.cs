@@ -28,14 +28,14 @@ public class Client
         StartSpellChecker(spellcheckService, processManager);
     }
 
-    private static ProcessManager StartProcessManager()
+    private static ShellProcessManager StartProcessManager()
     {
-        var processManager = new ProcessManager();
+        var processManager = new ShellProcessManager();
         processManager.Start();
         return processManager;
     }
 
-    private static void StartSpellChecker(ISpellcheckService spellcheckService, ProcessManager processManager)
+    private static void StartSpellChecker(ISpellcheckService spellcheckService, ShellProcessManager processManager)
     {
         var suggestionUseCase = new SuggestionUseCase(spellcheckService)
         {

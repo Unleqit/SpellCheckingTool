@@ -1,14 +1,15 @@
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class ConsoleSpellChecker
 {
-    private readonly ISpellcheckService _spellcheckService;
-    private readonly ProcessManager _processManager;
+    private readonly ShellProcessManager _processManager;
     private readonly ISuggestionDisplay _suggestionDisplay;
     private readonly SuggestionUseCase _suggestionUseCase;
 
@@ -16,13 +17,9 @@ public class ConsoleSpellChecker
 
     private void UpdateSuggestions(string input)
     {
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            _suggestionDisplay.HideSuggestions();
-            return;
-        }
-
+        
         var viewModel = _suggestionUseCase.Execute(input);
+        viewModel.Offset = _processManager.CurrentShellOffset;
 
         _suggestionDisplay.Show(viewModel);
     }
@@ -30,18 +27,20 @@ public class ConsoleSpellChecker
     public ConsoleSpellChecker(
         ISpellcheckService spellcheckService,
         SuggestionUseCase suggestionUseCase,
-        ProcessManager processManager,
+        ShellProcessManager processManager,
         ISuggestionDisplay suggestionWindow)
     {
-        _spellcheckService = spellcheckService;
         _suggestionUseCase = suggestionUseCase;
         _processManager = processManager;
         _suggestionDisplay = suggestionWindow;
-    }
+    }    
+
     public void Run()
     {
         Console.WriteLine(WelcomeMessage);
         string input = "";
+
+        Console.Write(_processManager.GetCurrentConsolePrompt());
 
         while (true)
         {
@@ -76,6 +75,9 @@ public class ConsoleSpellChecker
                     {
                         Console.WriteLine();
                         _processManager.SendInput(input);
+
+                        Console.Write(_processManager.GetCurrentConsolePrompt());
+
                         input = "";
                     }
                     break;

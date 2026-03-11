@@ -15,6 +15,7 @@ public class SuggestionWindow : ISuggestionDisplay
 
     private bool suggestionsShown = false;
     private readonly ConsoleSizeChecker consoleSizeChecker;
+    private int offset = 0;
 
     int horizontalPaddingSz;
     public int HorizontalPaddingSz
@@ -66,6 +67,7 @@ public class SuggestionWindow : ISuggestionDisplay
         return input.LastIndexOf(' ') + 1;
     }
 
+
     public void Show(SuggestionViewModel viewModel)
     {
         HideSuggestions();
@@ -73,35 +75,34 @@ public class SuggestionWindow : ISuggestionDisplay
         currentSuggestions = viewModel.Suggestions;
         currentlySelectedLine = 0;
 
-        ColorWord(viewModel.CurrentWord, viewModel.StartIndex, viewModel.IsCorrect);
+        offset = viewModel.Offset;
+        ColorWord(viewModel.CurrentWord, viewModel.StartIndex, viewModel.IsCorrect, offset);
 
-        if (currentSuggestions.Count > 0)
-        {
+        if (viewModel.CurrentWord.ToString().Length > 0)
             ShowSuggestions();
-        }
     }
 
 
-    void ReplaceWord(Word lastWord, int startIndexOfCurrentLastWord)
+    void ReplaceWord(Word lastWord, int startIndexOfCurrentLastWord, int offset = 0)
     {
-        int lengthOfWordToBeReplaced = Console.CursorLeft;
-        Console.CursorLeft = startIndexOfCurrentLastWord;
+        int lengthOfWordToBeReplaced = Console.CursorLeft - offset;
+        Console.CursorLeft = offset + startIndexOfCurrentLastWord;
 
         Console.Write(lastWord);
 
         if (lengthOfWordToBeReplaced - lastWord.Length > 0)
         {
             Console.Write(new string(' ', lengthOfWordToBeReplaced - lastWord.Length));
-            Console.CursorLeft = startIndexOfCurrentLastWord + lastWord.Length;
+            Console.CursorLeft = offset + startIndexOfCurrentLastWord + lastWord.Length;
         }
     }
 
-    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord, bool isCorrect)
+    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord, bool isCorrect, int offset = 0)
     {
         Console.BackgroundColor = isCorrect ? ValidWordBackColor : InvalidWordBackColor;
         Console.ForegroundColor = isCorrect ? ValidWordForeColor : InvalidWordForeColor;
 
-        ReplaceWord(lastWord, startIndexOfCurrentLastWord);
+        ReplaceWord(lastWord, startIndexOfCurrentLastWord, offset);
 
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
@@ -220,12 +221,12 @@ public class SuggestionWindow : ISuggestionDisplay
         HideSuggestions();
 
         int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
-        Console.CursorLeft = startIndexOfCurrentLastWord;
+        Console.CursorLeft = offset + startIndexOfCurrentLastWord;
 
         Console.ForegroundColor = ValidWordForeColor;
         Console.BackgroundColor = ValidWordBackColor;
 
-        ReplaceWord(selectedSuggestion, startIndexOfCurrentLastWord);
+        ReplaceWord(selectedSuggestion, startIndexOfCurrentLastWord, offset);
 
         Console.ForegroundColor = originalForeColor;
         Console.BackgroundColor = originalBackColor;

@@ -14,6 +14,7 @@ public class SuggestionViewModel
     public IReadOnlyList<Word> Suggestions { get; }
 
     public int StartIndex { get; }
+    public int Offset { get; set; }
 
     public SuggestionViewModel(
         Word currentWord,
