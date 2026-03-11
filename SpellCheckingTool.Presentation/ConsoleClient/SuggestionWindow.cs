@@ -220,7 +220,6 @@ public class SuggestionWindow : ISuggestionDisplay
         HideSuggestions();
 
         int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
-        Console.CursorLeft = startIndexOfCurrentLastWord;
 
         Console.ForegroundColor = ValidWordForeColor;
         Console.BackgroundColor = ValidWordBackColor;
