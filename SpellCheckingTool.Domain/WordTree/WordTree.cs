@@ -116,7 +116,7 @@ public class WordTree : IWordTree
         for (posInWord = 0; posInWord < word.Length; ++posInWord)
         {
             posInAlphabet = alphabet.GetCharPositionInArray(word[posInWord]);
-            if (current.Nodes[posInAlphabet] == null)
+            if (posInAlphabet < 0 || current.Nodes[posInAlphabet] == null)
                 return false;
 
             current = current.Nodes[posInAlphabet];
