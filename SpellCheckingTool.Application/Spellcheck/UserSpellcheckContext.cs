@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Application.Spellcheck;
 
@@ -9,17 +10,21 @@ public sealed class UserSpellcheckContext
     public WordTree Tree { get; set; }
     public ISpellcheckService SpellcheckService { get; set; }
 
+    public UserSettings Settings { get; }
+
     public bool IsAuthenticated => UserId.HasValue;
 
     public UserSpellcheckContext(
         Guid? userId,
         string? username,
         WordTree tree,
-        ISpellcheckService spellcheckService)
+        ISpellcheckService spellcheckService,
+        UserSettings settings)
     {
         UserId = userId;
         Username = username;
         Tree = tree;
         SpellcheckService = spellcheckService;
+        Settings = settings;
     }
 }

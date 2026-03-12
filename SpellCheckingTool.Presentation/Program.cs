@@ -40,7 +40,7 @@ public class Program
             new DefaultDictionaryLoader(dictionaryLoader);
 
         IUserSpellcheckContextFactory spellcheckContextFactory =
-            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService);
+            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, store);
 
         UserController.Configure(userService);
 
