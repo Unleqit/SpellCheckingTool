@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
@@ -155,11 +156,12 @@ public class FileUserStore :
 
             var settings = new JsonSerializerSettings
             {
-                MissingMemberHandling = MissingMemberHandling.Ignore
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                Converters = { new StringEnumConverter() }
             };
 
             _userSettings =
-                JsonConvert.DeserializeObject<Dictionary<Guid, UserSettings>>(json)
+                JsonConvert.DeserializeObject<Dictionary<Guid, UserSettings>>(json, settings)
                 ?? new Dictionary<Guid, UserSettings>();
         }
         catch
@@ -170,7 +172,13 @@ public class FileUserStore :
 
     private void SaveUsers()
         {
-            var json = JsonConvert.SerializeObject(_users, Formatting.Indented);
+        var settings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            Converters = { new StringEnumConverter() }
+        };
+
+        var json = JsonConvert.SerializeObject(_users, settings);
             File.WriteAllText(_usersFilePath, json);
         }
 
@@ -207,7 +215,13 @@ public class FileUserStore :
 
     private void SaveUserSettings()
     {
-        var json = JsonConvert.SerializeObject(_userSettings, Formatting.Indented);
+        var settings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented,
+            Converters = { new StringEnumConverter() }
+        };
+
+        var json = JsonConvert.SerializeObject(_userSettings, settings);
         File.WriteAllText(_userSettingsFilePath, json);
     }
 
