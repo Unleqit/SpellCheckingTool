@@ -12,8 +12,7 @@ namespace SpellCheckingTool.Infrastructure.UserPersistence;
 public class FileUserStore :
     IUserRepository,
     IUserWordStatsRepository,
-    IUserCustomDictionaryRepository,
-    IUserSettingsRepository
+    IUserCustomDictionaryRepository
 
 {
     private readonly string _usersFilePath;
@@ -21,14 +20,13 @@ public class FileUserStore :
     private readonly string _customDictionaryFilePath;
     private readonly object _lock = new();
     private readonly IAlphabet _alphabet;
-    private readonly string _userSettingsFilePath;
+    private readonly IUserSettingsRepository _userSettingsRepository;
 
     private Dictionary<Guid, User> _users = new();
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats = new();
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary = new();
-    private Dictionary<Guid, UserSettings> _userSettings = new();
 
-    public FileUserStore(string baseDirectory, IAlphabet alphabet)
+    public FileUserStore(string baseDirectory, IAlphabet alphabet, IUserSettingsRepository userSettingsRepository)
     {
         _alphabet = alphabet;
 
@@ -37,12 +35,11 @@ public class FileUserStore :
         _usersFilePath = Path.Combine(baseDirectory, "users.json");
         _wordStatsFilePath = Path.Combine(baseDirectory, "wordstats.json");
         _customDictionaryFilePath = Path.Combine(baseDirectory, "userdictionary.json");
-        _userSettingsFilePath = Path.Combine(baseDirectory, "usersettings.json");
+        _userSettingsRepository = userSettingsRepository;
 
         LoadUsers();
         LoadWordStats();
         LoadCustomDictionary();
-        LoadUserSettings();
     }
 
     #region Load / Save
@@ -142,43 +139,10 @@ public class FileUserStore :
         _userCustomDictionary = result;
     }
 
-    private void LoadUserSettings()
-    {
-        if (!File.Exists(_userSettingsFilePath))
-        {
-            _userSettings = new Dictionary<Guid, UserSettings>();
-            return;
-        }
-
-        try
-        {
-            var json = File.ReadAllText(_userSettingsFilePath);
-
-            var settings = new JsonSerializerSettings
-            {
-                MissingMemberHandling = MissingMemberHandling.Ignore,
-                Converters = { new StringEnumConverter() }
-            };
-
-            _userSettings =
-                JsonConvert.DeserializeObject<Dictionary<Guid, UserSettings>>(json, settings)
-                ?? new Dictionary<Guid, UserSettings>();
-        }
-        catch
-        {
-            _userSettings = new Dictionary<Guid, UserSettings>();
-        }
-    }
-
     private void SaveUsers()
         {
-        var settings = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            Converters = { new StringEnumConverter() }
-        };
-
-        var json = JsonConvert.SerializeObject(_users, settings);
+        var json = JsonConvert.SerializeObject(_users, Formatting.Indented);
+ 
             File.WriteAllText(_usersFilePath, json);
         }
 
@@ -212,19 +176,6 @@ public class FileUserStore :
         var json = JsonConvert.SerializeObject(storage, Formatting.Indented);
         File.WriteAllText(_customDictionaryFilePath, json);
     }
-
-    private void SaveUserSettings()
-    {
-        var settings = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            Converters = { new StringEnumConverter() }
-        };
-
-        var json = JsonConvert.SerializeObject(_userSettings, settings);
-        File.WriteAllText(_userSettingsFilePath, json);
-    }
-
     #endregion
 
     #region IUserRepository
@@ -265,13 +216,11 @@ public class FileUserStore :
             if (!_userCustomDictionary.ContainsKey(user.Id))
                 _userCustomDictionary[user.Id] = new HashSet<Word>();
 
-            if (!_userSettings.ContainsKey(user.Id))
-                _userSettings[user.Id] = UserSettings.Default;
-
             SaveUsers();
             SaveWordStats();
             SaveCustomDictionary();
-            SaveUserSettings();
+
+            _userSettingsRepository.SetSettings(user.Id, UserSettings.Default);
         }
     }
 
@@ -399,19 +348,6 @@ public class FileUserStore :
         }
     }
 
-    #endregion
-
-    #region UserSettingsRepository
-    public UserSettings GetSettings(Guid userId)
-    {
-        lock (_lock)
-        {
-            if (_userSettings.TryGetValue(userId, out var settings))
-                return settings ?? UserSettings.Default;
-
-            return UserSettings.Default;
-        }
-    }
     #endregion
 
     #region Optional raw stats view

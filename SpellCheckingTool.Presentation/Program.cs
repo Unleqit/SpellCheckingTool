@@ -7,6 +7,7 @@ using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Http.Controllers;
 using SpellCheckingTool.Application.Persistence;
@@ -30,7 +31,8 @@ public class Program
 
         IAlphabet inputAlphabet = new UTF16Alphabet();
 
-        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), inputAlphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(Path.Combine(AppContext.BaseDirectory, "data"));
+        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), inputAlphabet, userSettingsRepository);
         var userService = new UserService(store, store, store);
 
         IPersistenceService persistenceService = new FilePersistenceService();
@@ -40,7 +42,7 @@ public class Program
             new DefaultDictionaryLoader(dictionaryLoader);
 
         IUserSpellcheckContextFactory spellcheckContextFactory =
-            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, store, inputAlphabet);
+            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, userSettingsRepository, inputAlphabet);
 
         UserController.Configure(userService);
 
