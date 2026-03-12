@@ -1,24 +1,31 @@
 ﻿using Newtonsoft.Json;
+using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Domain.Users;
 
 namespace SpellCheckingTool.Infrastructure.UserPersistence;
 
-public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCustomDictionaryRepository
+public class FileUserStore :
+    IUserRepository,
+    IUserWordStatsRepository,
+    IUserCustomDictionaryRepository,
+    IUserSettingsRepository
+
 {
     private readonly string _usersFilePath;
     private readonly string _wordStatsFilePath;
     private readonly string _customDictionaryFilePath;
     private readonly object _lock = new();
     private readonly IAlphabet _alphabet;
+    private readonly string _userSettingsFilePath;
 
     private Dictionary<Guid, User> _users = new();
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats = new();
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary = new();
-
+    private Dictionary<Guid, UserSettings> _userSettings = new();
 
     public FileUserStore(string baseDirectory, IAlphabet alphabet)
     {
@@ -29,10 +36,12 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         _usersFilePath = Path.Combine(baseDirectory, "users.json");
         _wordStatsFilePath = Path.Combine(baseDirectory, "wordstats.json");
         _customDictionaryFilePath = Path.Combine(baseDirectory, "userdictionary.json");
+        _userSettingsFilePath = Path.Combine(baseDirectory, "usersettings.json");
 
         LoadUsers();
         LoadWordStats();
         LoadCustomDictionary();
+        LoadUserSettings();
     }
 
     #region Load / Save
@@ -132,6 +141,33 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         _userCustomDictionary = result;
     }
 
+    private void LoadUserSettings()
+    {
+        if (!File.Exists(_userSettingsFilePath))
+        {
+            _userSettings = new Dictionary<Guid, UserSettings>();
+            return;
+        }
+
+        try
+        {
+            var json = File.ReadAllText(_userSettingsFilePath);
+
+            var settings = new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Ignore
+            };
+
+            _userSettings =
+                JsonConvert.DeserializeObject<Dictionary<Guid, UserSettings>>(json)
+                ?? new Dictionary<Guid, UserSettings>();
+        }
+        catch
+        {
+            _userSettings = new Dictionary<Guid, UserSettings>();
+        }
+    }
+
     private void SaveUsers()
         {
             var json = JsonConvert.SerializeObject(_users, Formatting.Indented);
@@ -167,6 +203,12 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
         var json = JsonConvert.SerializeObject(storage, Formatting.Indented);
         File.WriteAllText(_customDictionaryFilePath, json);
+    }
+
+    private void SaveUserSettings()
+    {
+        var json = JsonConvert.SerializeObject(_userSettings, Formatting.Indented);
+        File.WriteAllText(_userSettingsFilePath, json);
     }
 
     #endregion
@@ -209,9 +251,13 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
             if (!_userCustomDictionary.ContainsKey(user.Id))
                 _userCustomDictionary[user.Id] = new HashSet<Word>();
 
+            if (!_userSettings.ContainsKey(user.Id))
+                _userSettings[user.Id] = UserSettings.Default;
+
             SaveUsers();
             SaveWordStats();
             SaveCustomDictionary();
+            SaveUserSettings();
         }
     }
 
@@ -339,6 +385,19 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         }
     }
 
+    #endregion
+
+    #region UserSettingsRepository
+    public UserSettings GetSettings(Guid userId)
+    {
+        lock (_lock)
+        {
+            if (_userSettings.TryGetValue(userId, out var settings))
+                return settings ?? UserSettings.Default;
+
+            return UserSettings.Default;
+        }
+    }
     #endregion
 
     #region Optional raw stats view

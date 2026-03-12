@@ -53,24 +53,26 @@ public class Client
 
     private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory)
     {
+        var settings = context.Settings;
+
         var suggestionUseCase = new SuggestionUseCase(context.SpellcheckService)
         {
-            MaxSuggestions = 5,
-            MaxDistance = 3
+            MaxSuggestions = settings.MaxSuggestions,
+            MaxDistance = settings.MaxDistance
         };
 
         var suggestionWindow = new SuggestionWindow()
         {
-            SuggestionBackColor = ConsoleColor.Red,
-            SuggestionForeColor = ConsoleColor.White,
-            CurrentlySelectedSuggestionBackColor = ConsoleColor.Yellow,
-            CurrentlySelectedSuggestionForeColor = ConsoleColor.Cyan,
-            ValidWordBackColor = Console.BackgroundColor,
-            ValidWordForeColor = ConsoleColor.Green,
-            InvalidWordBackColor = Console.BackgroundColor,
-            InvalidWordForeColor = ConsoleColor.Red,
-            CurrentlySelectedLine = 0,
-            HorizontalPaddingSz = 3
+            SuggestionBackColor = settings.SuggestionBackColor,
+            SuggestionForeColor = settings.SuggestionForeColor,
+            CurrentlySelectedSuggestionBackColor = settings.SelectedSuggestionBackColor,
+            CurrentlySelectedSuggestionForeColor = settings.SelectedSuggestionForeColor,
+            ValidWordBackColor = settings.ValidWordBackColor,
+            ValidWordForeColor = settings.ValidWordForeColor,
+            InvalidWordBackColor = settings.InvalidWordBackColor,
+            InvalidWordForeColor = settings.InvalidWordForeColor,
+            HorizontalPaddingSz = settings.HorizontalPadding,
+            CurrentlySelectedLine = 0
         };
 
         var consoleSpellChecker = new ConsoleSpellChecker(

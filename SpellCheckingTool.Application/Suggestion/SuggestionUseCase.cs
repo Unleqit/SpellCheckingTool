@@ -15,11 +15,9 @@ namespace SpellCheckingTool.Application.Suggestion
     public int MaxSuggestions { get; set; }
     public int MaxDistance { get; set; }
 
-        public SuggestionUseCase(ISpellcheckService spellcheckService, int maxSuggestions = 5, int maxDistance =2)
+        public SuggestionUseCase(ISpellcheckService spellcheckService)
         {
             _spellcheckService = spellcheckService;
-            MaxSuggestions = maxSuggestions;
-            MaxDistance = maxDistance;
         }
 
         public SuggestionViewModel Execute(string input)
