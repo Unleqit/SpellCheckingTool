@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Application.Spellcheck;
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -233,10 +234,13 @@ public class ConsoleUserCommandHandler
             return;
         }
 
+        var userSettings = _context.Settings;
+        int maxDisplayedStats = userSettings.MaxDisplayedStats;
+
         var topStats = stats
             .OrderByDescending(s => s.UsageCount)
             .ThenBy(s => s.Word, StringComparer.OrdinalIgnoreCase)
-            .Take(MaxDisplayedStats)
+            .Take(maxDisplayedStats)
             .ToList();
 
         Console.WriteLine();

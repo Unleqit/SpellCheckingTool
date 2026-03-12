@@ -13,6 +13,8 @@ namespace SpellCheckingTool.Application.Settings
 
         public int HorizontalPadding { get; set; }
 
+        public int MaxDisplayedStats { get; set; }
+
         public ConsoleColor ValidWordForeColor { get; set; }
         public ConsoleColor ValidWordBackColor { get; set; }
 
@@ -30,6 +32,7 @@ namespace SpellCheckingTool.Application.Settings
             MaxSuggestions = 5,
             MaxDistance = 3,
             HorizontalPadding = 3,
+            MaxDisplayedStats = 5,
             ValidWordForeColor = ConsoleColor.Green,
             ValidWordBackColor = Console.BackgroundColor,
             InvalidWordForeColor = ConsoleColor.Red,
