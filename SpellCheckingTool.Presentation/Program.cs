@@ -31,8 +31,16 @@ public class Program
 
         IAlphabet inputAlphabet = new UTF16Alphabet();
 
-        var userSettingsRepository = new FileUserSettingsRepository(Path.Combine(AppContext.BaseDirectory, "data"));
-        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), inputAlphabet, userSettingsRepository);
+        var basePath = Path.Combine(AppContext.BaseDirectory, "data");
+
+        var userSettingsRepository = new FileUserSettingsRepository(
+            Path.Combine(
+            basePath, "UserSettings")
+            );
+        var store = new FileUserStore(Path.Combine(
+            AppContext.BaseDirectory, "data"),
+            inputAlphabet, userSettingsRepository
+            );
         var userService = new UserService(store, store, store);
 
         IPersistenceService persistenceService = new FilePersistenceService();

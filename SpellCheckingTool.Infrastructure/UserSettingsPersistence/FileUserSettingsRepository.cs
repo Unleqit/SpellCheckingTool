@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Domain.Users;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,75 +10,67 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
 {
     public class FileUserSettingsRepository : IUserSettingsRepository
     {
-        private readonly string _userSettingsFilePath;
+        private readonly string _baseDirectory;
         private readonly object _lock = new();
-        private Dictionary<Guid, UserSettings> _userSettings = new();
 
         public FileUserSettingsRepository(string baseDirectory)
         {
             Directory.CreateDirectory(baseDirectory);
-            _userSettingsFilePath = Path.Combine(baseDirectory, "usersettings.json");
-            LoadUserSettings();
+            _baseDirectory = baseDirectory;
         }
 
-        private void LoadUserSettings()
+        public UserSettings GetSettings(string username)
         {
-            if (!File.Exists(_userSettingsFilePath))
+            lock (_lock)
             {
-                _userSettings = new Dictionary<Guid, UserSettings>();
-                return;
-            }
+                var filePath = GetUserSettingsFilePath(username);
 
-            try
-            {
-                var json = File.ReadAllText(_userSettingsFilePath);
+                if (!File.Exists(filePath))
+                    return UserSettings.Default;
 
-                var settings = new JsonSerializerSettings
+                try
                 {
-                    MissingMemberHandling = MissingMemberHandling.Ignore,
+                    var json = File.ReadAllText(filePath);
+
+                    var settings = new JsonSerializerSettings
+                    {
+                        MissingMemberHandling = MissingMemberHandling.Ignore,
+                        Converters = { new StringEnumConverter() }
+                    };
+
+                    return JsonConvert.DeserializeObject<UserSettings>(json, settings)
+                           ?? UserSettings.Default;
+                }
+                catch
+                {
+                    return UserSettings.Default;
+                }
+            }
+        }
+
+        public void SetSettings(string username, UserSettings settings)
+        {
+            lock (_lock)
+            {
+                var filePath = GetUserSettingsFilePath(username);
+
+                var serializerSettings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented,
                     Converters = { new StringEnumConverter() }
                 };
 
-                _userSettings =
-                    JsonConvert.DeserializeObject<Dictionary<Guid, UserSettings>>(json, settings)
-                    ?? new Dictionary<Guid, UserSettings>();
-            }
-            catch
-            {
-                _userSettings = new Dictionary<Guid, UserSettings>();
+                var json = JsonConvert.SerializeObject(settings, serializerSettings);
+                File.WriteAllText(filePath, json);
             }
         }
 
-        private void SaveUserSettings()
+        private string GetUserSettingsFilePath(string username)
         {
-            var settings = new JsonSerializerSettings
-            {
-                Formatting = Formatting.Indented,
-                Converters = { new StringEnumConverter() }
-            };
+            foreach (var c in Path.GetInvalidFileNameChars())
+                username = username.Replace(c, '_');
 
-            var json = JsonConvert.SerializeObject(_userSettings, settings);
-            File.WriteAllText(_userSettingsFilePath, json);
-        }
-
-        public UserSettings GetSettings(Guid userId)
-        {
-            lock (_lock)
-            {
-                if (_userSettings.TryGetValue(userId, out var settings))
-                    return settings ?? UserSettings.Default;
-
-                return UserSettings.Default;
-            }
-        }
-
-        public void SetSettings(Guid userId, UserSettings settings)
-        {
-            lock (_lock)
-            {
-                _userSettings[userId] = settings;
-                SaveUserSettings();
-            }
+            return Path.Combine(_baseDirectory, $"usersettings_{username}.json");
         }
     }
 }

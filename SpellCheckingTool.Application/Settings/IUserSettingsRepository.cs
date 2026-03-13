@@ -8,7 +8,7 @@ namespace SpellCheckingTool.Application.Settings
 {
     public interface IUserSettingsRepository
     {
-        UserSettings GetSettings(Guid userId);
-        void SetSettings(Guid id, UserSettings @default);
+        UserSettings GetSettings(string username);
+        void SetSettings(string username, UserSettings settings);
     }
 }
