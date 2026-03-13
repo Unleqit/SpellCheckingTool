@@ -37,7 +37,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
 
-        var settings = _settingsRepository.GetSettings(userId);
+        var settings = _settingsRepository.GetSettings(username);
 
         var customWordsResult = _userService.GetCustomWords(userId);
         if (customWordsResult.Success && customWordsResult.Value != null)

@@ -220,7 +220,7 @@ public class FileUserStore :
             SaveWordStats();
             SaveCustomDictionary();
 
-            _userSettingsRepository.SetSettings(user.Id, UserSettings.Default);
+            _userSettingsRepository.SetSettings(user.Username, UserSettings.Default);
         }
     }
 
