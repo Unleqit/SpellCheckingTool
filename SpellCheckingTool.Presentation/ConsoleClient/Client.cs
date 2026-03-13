@@ -44,18 +44,14 @@ public class Client
         StartSpellChecker(context, authService, processManager, spellcheckContextFactory);
     }
 
-    private static ProcessManager StartProcessManager()
+    private static ShellProcessManager StartProcessManager()
     {
-        var processManager = new ProcessManager();
+        var processManager = new ShellProcessManager();
         processManager.Start();
         return processManager;
     }
 
-    private static void StartSpellChecker(
-    UserSpellcheckContext context,
-    ClientAuthService authService,
-    ProcessManager processManager,
-    IUserSpellcheckContextFactory spellcheckContextFactory)
+    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory)
     {
         var suggestionUseCase = new SuggestionUseCase(context.SpellcheckService)
         {

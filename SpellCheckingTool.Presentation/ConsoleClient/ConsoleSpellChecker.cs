@@ -6,8 +6,8 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class ConsoleSpellChecker
 {
+    private readonly ShellProcessManager _processManager;
     private readonly UserSpellcheckContext _context;
-    private readonly ProcessManager _processManager;
     private readonly ISuggestionDisplay _suggestionDisplay;
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
@@ -21,7 +21,7 @@ public class ConsoleSpellChecker
     public ConsoleSpellChecker(
         UserSpellcheckContext context,
         SuggestionUseCase suggestionUseCase,
-        ProcessManager processManager,
+        ShellProcessManager processManager,
         ISuggestionDisplay suggestionWindow,
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory)
@@ -42,20 +42,20 @@ public class ConsoleSpellChecker
 
     private void UpdateSuggestions(string input)
     {
-        if (string.IsNullOrWhiteSpace(input) || input.StartsWith("/"))
-        {
-            _suggestionDisplay.HideSuggestions();
+        if (input.StartsWith("/"))
             return;
-        }
 
         var viewModel = _suggestionUseCase.Execute(input);
+        viewModel.Offset = _processManager.CurrentShellOffset;
         _suggestionDisplay.Show(viewModel);
     }
-
+    
     public void Run()
     {
         Console.WriteLine(WelcomeMessage);
         string input = "";
+
+        Console.Write(_processManager.GetCurrentConsolePrompt());
 
         while (true)
         {
@@ -101,6 +101,7 @@ public class ConsoleSpellChecker
                     if (_commandHandler.TryHandleCommand(ref input))
                     {
                         RefreshSpellcheckState();
+                        Console.Write(_processManager.GetCurrentConsolePrompt());
                         break;
                     }
 
@@ -113,6 +114,7 @@ public class ConsoleSpellChecker
                         TrackFinalWordOnEnter(input);
                         Console.WriteLine();
                         _processManager.SendInput(input);
+                        Console.Write(_processManager.GetCurrentConsolePrompt());
                         input = "";
                     }
                     break;
