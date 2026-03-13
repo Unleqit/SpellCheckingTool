@@ -28,9 +28,9 @@ public class Program
         bool startHeadless = false;
 
 
-        IAlphabet alphabet = new LatinAlphabet();
+        IAlphabet inputAlphabet = new UTF16Alphabet();
 
-        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), alphabet);
+        var store = new FileUserStore(Path.Combine(AppContext.BaseDirectory, "data"), inputAlphabet);
         var userService = new UserService(store, store, store);
 
         IPersistenceService persistenceService = new FilePersistenceService();
@@ -40,7 +40,7 @@ public class Program
             new DefaultDictionaryLoader(dictionaryLoader);
 
         IUserSpellcheckContextFactory spellcheckContextFactory =
-            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService);
+            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, inputAlphabet);
 
         UserController.Configure(userService);
 

@@ -3,23 +3,24 @@ using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Domain.Alphabet;
 public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
 {
     private readonly IDefaultDictionaryProvider _defaultDictionaryProvider;
     private readonly UserService _userService;
+    private readonly IAlphabet _inputAlphabet;
 
-    public UserSpellcheckContextFactory(
-    IDefaultDictionaryProvider defaultDictionaryProvider,
-    UserService userService)
+    public UserSpellcheckContextFactory(IDefaultDictionaryProvider defaultDictionaryProvider, UserService userService, IAlphabet inputAlphabet)
     {
         _defaultDictionaryProvider = defaultDictionaryProvider;
         _userService = userService;
+        _inputAlphabet = inputAlphabet;
     }
 
     public UserSpellcheckContext CreateAnonymous()
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
-        var spellcheckService = BuildSpellcheckService(tree);
+        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet);
 
         return new UserSpellcheckContext(
             userId: null,
@@ -48,7 +49,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             }
         }
 
-        var spellcheckService = BuildSpellcheckService(tree);
+        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet);
 
         return new UserSpellcheckContext(
             userId: userId,
@@ -57,11 +58,11 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             spellcheckService: spellcheckService);
     }
 
-    private static SpellcheckService BuildSpellcheckService(WordTree tree)
+    private static SpellcheckService BuildSpellcheckService(WordTree tree, IAlphabet inputAlphabet)
     {
         ISuggestionService suggestionService =
             new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
 
-        return new SpellcheckService(tree, suggestionService);
+        return new SpellcheckService(tree, suggestionService, inputAlphabet);
     }
 }

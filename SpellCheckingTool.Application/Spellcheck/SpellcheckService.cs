@@ -8,14 +8,16 @@ public class SpellcheckService : ISpellcheckService
 {
     private readonly WordTree tree;
     private readonly ISuggestionService suggestionService;
+    private readonly IAlphabet inputAlphabet;
 
-    public SpellcheckService(WordTree tree, ISuggestionService suggestionService)
+    public SpellcheckService(WordTree tree, ISuggestionService suggestionService, IAlphabet inputAlphabet)
     {
         this.tree = tree;
         this.suggestionService = suggestionService;
+        this.inputAlphabet = inputAlphabet;
     }
 
-    public IAlphabet Alphabet => tree.Alphabet;
+    public IAlphabet Alphabet => inputAlphabet;
 
     public bool IsCorrect(Word word)
     {
