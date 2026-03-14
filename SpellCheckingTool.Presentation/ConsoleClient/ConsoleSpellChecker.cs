@@ -107,7 +107,7 @@ public class ConsoleSpellChecker
 
                     if (_suggestionDisplay.IsCurrentlyVisible())
                     {
-                        _suggestionDisplay.AutoCompleteCurrentlySelectedSuggestion(ref input);
+                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + _suggestionDisplay.CompleteCurrentlySelectedSuggestion().ToString();
                     }
                     else
                     {

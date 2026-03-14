@@ -59,6 +59,7 @@ public class Client
             MaxDistance = 3
         };
 
+        /*
         var suggestionWindow = new SuggestionWindow()
         {
             SuggestionBackColor = ConsoleColor.Red,
@@ -71,13 +72,15 @@ public class Client
             InvalidWordForeColor = ConsoleColor.Red,
             CurrentlySelectedLine = 0,
             HorizontalPaddingSz = 3
-        };
+        }; */
+
+        var suggestionDisplay = new SuggestionDisplay();
 
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,
             suggestionUseCase,
             processManager,
-            suggestionWindow,
+            suggestionDisplay,
             authService,
             spellcheckContextFactory);
 

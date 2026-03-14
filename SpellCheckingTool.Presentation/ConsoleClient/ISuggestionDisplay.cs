@@ -1,5 +1,6 @@
 ﻿
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -7,9 +8,8 @@ public interface ISuggestionDisplay
 {
     void Show(SuggestionViewModel model);
     void HideSuggestions();
-    void AutoCompleteCurrentlySelectedSuggestion(ref string input);
+    Word CompleteCurrentlySelectedSuggestion();
     void SelectPreviousSuggestion();
     void SelectNextSuggestion();
     bool IsCurrentlyVisible();
 }
-delegate void WordTreeWordBufferLengthChangedEventHandler(object sender, int newSize);

@@ -2,6 +2,7 @@
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
+using System.Drawing;
 using System.Reflection;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -70,9 +71,10 @@ public class SuggestionWindow : ISuggestionDisplay
         return input.LastIndexOf(' ') + 1;
     }
 
-
+    private SuggestionViewModel currentSuggestionViewModel;
     public void Show(SuggestionViewModel viewModel)
     {
+        this.currentSuggestionViewModel = viewModel;
         HideSuggestions();
 
         currentSuggestions = viewModel.Suggestions;
@@ -155,6 +157,8 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.Write(new string(' ', rightFill + horizontalPaddingSz));
     }
 
+    private bool linebreak = false;
+
     void ShowSuggestions()
     {
         if (currentSuggestions.Count == 0)
@@ -171,6 +175,31 @@ public class SuggestionWindow : ISuggestionDisplay
             return;
 
         int displayWidth = GetDisplayWidth(currentSuggestions, suggestionWindowHeight);
+
+        //check if newline is required
+        int oldLeft = Console.CursorLeft;
+        if ((Console.CursorLeft + 2 * horizontalPaddingSz + (currentSuggestions.Count() == 0 ? 0 : currentSuggestions.Max((item) => item.Length))) > Console.WindowWidth)
+        {
+            //remove beginning of currently typed word in old line
+            Console.CursorLeft -= oldWord.Length + 1;
+            Console.Write(new string(' ', oldWord.Length + 1));
+
+            //write current word to new line and show suggestions for it
+            Console.CursorTop++;
+            Console.CursorLeft = currentSuggestionViewModel.CurrentWord.Length;
+            wordTopInConsole = Console.CursorTop;
+            wordLeftInConsole = Console.CursorLeft;
+            offset = 0;
+
+            if (!linebreak)
+            {
+                linebreak = true;
+                ColorWord(currentSuggestionViewModel.CurrentWord, currentSuggestionViewModel.CurrentWord, 0, currentSuggestionViewModel.IsCorrect);
+            }
+            else
+                return;
+        }
+
 
         for (int j = 0; j < suggestionWindowHeight; ++j)
         {
@@ -218,15 +247,16 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.SetCursorPosition(cursorLeft, wordTopInConsole);
     }
 
-    public void AutoCompleteCurrentlySelectedSuggestion(ref string input)
+    public Word CompleteCurrentlySelectedSuggestion()
     {
         Word? selectedSuggestion = CurrentlySelectedSuggestion;
 
-        if (selectedSuggestion == null) return;
+        if (selectedSuggestion == null) 
+            return Word.Empty;
 
         HideSuggestions();
 
-        int startIndexOfCurrentLastWord = GetStartIndexOfCurrentWord(input);
+        int startIndexOfCurrentLastWord = currentSuggestionViewModel.StartIndex;
         Console.CursorLeft = offset + startIndexOfCurrentLastWord;
 
         Console.ForegroundColor = ValidWordForeColor;
@@ -237,7 +267,7 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.ForegroundColor = originalForeColor;
         Console.BackgroundColor = originalBackColor;
 
-        input = input.Substring(0, startIndexOfCurrentLastWord) + selectedSuggestion;
+        return selectedSuggestion;
     }
 
     public void SelectNextSuggestion()
