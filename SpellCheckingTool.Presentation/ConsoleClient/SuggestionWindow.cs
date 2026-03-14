@@ -1,5 +1,6 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using System.Reflection;
 
@@ -55,6 +56,8 @@ public class SuggestionWindow : ISuggestionDisplay
          }
      }
 
+    private Word oldWord = new Word(new CustomAlphabet(new char[] { ' ' }), "");
+
     public SuggestionWindow()
     {
         originalForeColor = Console.ForegroundColor;
@@ -76,33 +79,36 @@ public class SuggestionWindow : ISuggestionDisplay
         currentlySelectedLine = 0;
 
         offset = viewModel.Offset;
-        ColorWord(viewModel.CurrentWord, viewModel.StartIndex, viewModel.IsCorrect, offset);
+        ColorWord(viewModel.CurrentWord, this.oldWord, viewModel.StartIndex, viewModel.IsCorrect, offset);
 
         if (viewModel.CurrentWord.ToString().Length > 0)
-            ShowSuggestions();
-    }
-
-
-    void ReplaceWord(Word lastWord, int startIndexOfCurrentLastWord, int offset = 0)
-    {
-        int lengthOfWordToBeReplaced = Console.CursorLeft - offset;
-        Console.CursorLeft = offset + startIndexOfCurrentLastWord;
-
-        Console.Write(lastWord);
-
-        if (lengthOfWordToBeReplaced - lastWord.Length > 0)
         {
-            Console.Write(new string(' ', lengthOfWordToBeReplaced - lastWord.Length));
-            Console.CursorLeft = offset + startIndexOfCurrentLastWord + lastWord.Length;
+            ShowSuggestions();
+            oldWord = viewModel.CurrentWord;
         }
     }
 
-    void ColorWord(Word lastWord, int startIndexOfCurrentLastWord, bool isCorrect, int offset = 0)
+    void ReplaceWord(Word wordToReplace, Word oldWord, int oldWordStartIndex, int shellOffset = 0)
+    {
+        int lengthOfWordToBeReplaced = Console.CursorLeft - shellOffset;
+        Console.CursorLeft = shellOffset + oldWordStartIndex;
+
+        Console.Write(wordToReplace);
+
+        int difference = oldWord.Length - wordToReplace.Length;
+        if (difference > 0)
+        {
+            Console.Write(new string(' ', difference));
+            Console.CursorLeft -= difference;
+        }
+    }
+
+    void ColorWord(Word lastWord, Word oldWord, int startIndexOfCurrentLastWord, bool isCorrect, int offset = 0)
     {
         Console.BackgroundColor = isCorrect ? ValidWordBackColor : InvalidWordBackColor;
         Console.ForegroundColor = isCorrect ? ValidWordForeColor : InvalidWordForeColor;
 
-        ReplaceWord(lastWord, startIndexOfCurrentLastWord, offset);
+        ReplaceWord(lastWord, oldWord, startIndexOfCurrentLastWord, offset);
 
         Console.BackgroundColor = originalBackColor;
         Console.ForegroundColor = originalForeColor;
@@ -226,7 +232,7 @@ public class SuggestionWindow : ISuggestionDisplay
         Console.ForegroundColor = ValidWordForeColor;
         Console.BackgroundColor = ValidWordBackColor;
 
-        ReplaceWord(selectedSuggestion, startIndexOfCurrentLastWord, offset);
+        ReplaceWord(selectedSuggestion, oldWord, startIndexOfCurrentLastWord, offset);
 
         Console.ForegroundColor = originalForeColor;
         Console.BackgroundColor = originalBackColor;
