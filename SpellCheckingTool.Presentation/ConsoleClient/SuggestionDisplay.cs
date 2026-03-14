@@ -1,4 +1,6 @@
-﻿using SpellCheckingTool.Application.Suggestion;
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient
@@ -8,11 +10,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
         internal struct IndexedWord
         {
             public int startIndex;
+            public int line;
             public Word word;
 
-            public IndexedWord(int startIndex, Word word)
+            public IndexedWord(int startIndex, int line, Word word)
             {
                 this.startIndex = startIndex;
+                this.line = line;
                 this.word = word;
             }
         }
@@ -25,13 +29,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
         private bool lastWordCompleted;
         private int horizontalPaddingSz;
 
-        public SuggestionDisplay()
+        public SuggestionDisplay(UserSettings settings)
         {
             this.suggestionViewModel = new SuggestionViewModel(Word.Empty, false, [], 0);
             this.selectedSuggestionLine = 0;
             this.suggestionsShown = false;
             this.allIndexedWords = new List<IndexedWord>();
-            this.allIndexedWords.Add(new IndexedWord(0, Word.Empty));
+            this.allIndexedWords.Add(new IndexedWord(0, Console.CursorTop, Word.Empty));
             this.currentIndexedWord = new IndexedWord();
             this.lastWordCompleted = true;
             this.horizontalPaddingSz = 0;
@@ -44,7 +48,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 
             //update data structure
             if (this.lastWordCompleted)
-                this.currentIndexedWord = new IndexedWord(this.allIndexedWords.Last().startIndex + this.allIndexedWords.Last().word.Length, model.CurrentWord);
+                this.currentIndexedWord = new IndexedWord(this.allIndexedWords.Last().startIndex + this.allIndexedWords.Last().word.Length, Console.CursorTop, model.CurrentWord);
             else
                 this.currentIndexedWord.word = model.CurrentWord;
 
@@ -61,7 +65,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             this.lastWordCompleted = true;
             int currentWordStartIndex = currentIndexedWord.startIndex;
             int currentWordLength = currentIndexedWord.word.Length;
-            this.currentIndexedWord = new IndexedWord(currentWordStartIndex + currentWordLength, Word.Empty);
+            this.currentIndexedWord = new IndexedWord(currentWordStartIndex + currentWordLength, Console.CursorTop, Word.Empty);
 
             return completion;
         }
@@ -113,19 +117,20 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 
 
 
-        private void WriteSuggestionLines(Word suggestion, int suggestionPopupWindowWidth)
+        private void WriteSuggestionLines(int suggestionPopupWindowWidth)
         {
-            for (int j = 0; j < suggestionWindowHeight; ++j)
+            if (this.suggestionViewModel == null || this.suggestionViewModel.Suggestions == null)
+                return;
+
+            for (int j = 0; j < this.suggestionViewModel.Suggestions.Count(); ++j)
             {
-                Console.SetCursorPosition(wordLeftInConsole, Console.CursorTop + 1);
-                Console.BackgroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionBackColor : SuggestionBackColor;
-                Console.ForegroundColor = (j == currentlySelectedLine) ? CurrentlySelectedSuggestionForeColor : SuggestionForeColor;
+                Console.SetCursorPosition(currentIndexedWord.startIndex + , Console.CursorTop + 1);
+                Console.BackgroundColor = (j == this.selectedSuggestionLine) ? CurrentlySelectedSuggestionBackColor : this.selectedSuggestionLine;
+                Console.ForegroundColor = (j == this.selectedSuggestionLine) ? CurrentlySelectedSuggestionForeColor : this.selectedSuggestionLine;
 
                 WriteSuggestionLine(currentSuggestions[j], displayWidth);
             }
         }
-
-        
 
         private void WriteSuggestionLine(Word suggestion, int suggestionPopupWindowWidth)
         {

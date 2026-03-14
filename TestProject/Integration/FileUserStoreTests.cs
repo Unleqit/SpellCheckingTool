@@ -2,6 +2,7 @@
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 
 namespace TestProject.Unit;
 
@@ -37,10 +38,11 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store1 = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store1 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store1.Add(user);
 
-        var store2 = new FileUserStore(_testDirectory, _alphabet);
+        var store2 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         var loaded = store2.GetById(user.Id);
 
         Assert.IsNotNull(loaded);
@@ -54,7 +56,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "Armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         var loaded = store.GetByUsername("armin");
@@ -68,7 +71,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         Assert.ThrowsException<InvalidOperationException>(() => store.Add(user));
@@ -80,7 +84,8 @@ public class FileUserStoreTests
         var user1 = new User(Guid.NewGuid(), "armin", "HASH1", DateTime.UtcNow);
         var user2 = new User(Guid.NewGuid(), "Armin", "HASH2", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user1);
 
         Assert.ThrowsException<InvalidOperationException>(() => store.Add(user2));
@@ -91,11 +96,12 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store1 = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store1 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store1.Add(user);
         store1.AddWord(user.Id, "salam");
 
-        var store2 = new FileUserStore(_testDirectory, _alphabet);
+        var store2 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         var words = store2.GetWords(user.Id).Select(w => w.ToString()).ToList();
 
         CollectionAssert.Contains(words, "salam");
@@ -106,7 +112,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
         store.AddWord(user.Id, "SaLaM");
 
@@ -121,7 +128,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
         store.AddWord(user.Id, "salam");
         store.AddWord(user.Id, "SALAM");
@@ -137,7 +145,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
         store.AddWord(user.Id, "salam");
 
@@ -153,12 +162,13 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store1 = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store1 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store1.Add(user);
         store1.AddWord(user.Id, "salam");
         store1.RemoveWord(user.Id, "salam");
 
-        var store2 = new FileUserStore(_testDirectory, _alphabet);
+        var store2 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         var words = store2.GetWords(user.Id).Select(w => w.ToString()).ToList();
 
         Assert.AreEqual(0, words.Count);
@@ -169,7 +179,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         bool removed = store.RemoveWord(user.Id, "missing");
@@ -182,7 +193,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
         store.IncrementWord(user.Id, "hello");
         store.IncrementWord(user.Id, "hello");
@@ -199,13 +211,14 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store1 = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store1 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store1.Add(user);
         store1.IncrementWord(user.Id, "hello");
         store1.IncrementWord(user.Id, "hello");
         store1.IncrementWord(user.Id, "world");
 
-        var store2 = new FileUserStore(_testDirectory, _alphabet);
+        var store2 = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         var stats = store2.GetWordStats(user.Id)
             .OrderBy(s => s.Word.ToString())
             .ToList();
@@ -224,7 +237,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
         store.IncrementWord(user.Id, "HeLLo");
         store.IncrementWord(user.Id, "hello");
@@ -241,7 +255,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         store.AddWord(user.Id, "salam");
@@ -265,7 +280,8 @@ public class FileUserStoreTests
         var user1 = new User(Guid.NewGuid(), "armin", "HASH1", DateTime.UtcNow);
         var user2 = new User(Guid.NewGuid(), "zeynep", "HASH2", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user1);
         store.Add(user2);
 
@@ -288,7 +304,8 @@ public class FileUserStoreTests
         var user1 = new User(Guid.NewGuid(), "armin", "HASH1", DateTime.UtcNow);
         var user2 = new User(Guid.NewGuid(), "zeynep", "HASH2", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user1);
         store.Add(user2);
 
@@ -311,7 +328,8 @@ public class FileUserStoreTests
     [TestMethod]
     public void AddCustomWord_ForUnknownUser_ShouldThrowError()
     {
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
         Assert.ThrowsException<KeyNotFoundException>(() =>
             store.AddWord(Guid.NewGuid(), "salam"));
@@ -320,7 +338,8 @@ public class FileUserStoreTests
     [TestMethod]
     public void RemoveCustomWord_ForUnknownUser_ShouldThrowError()
     {
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
         Assert.ThrowsException<KeyNotFoundException>(() =>
             store.RemoveWord(Guid.NewGuid(), "salam"));
@@ -329,7 +348,8 @@ public class FileUserStoreTests
     [TestMethod]
     public void IncrementWord_ForUnknownUser_ShouldThrowError()
     {
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
         Assert.ThrowsException<KeyNotFoundException>(() =>
             store.IncrementWord(Guid.NewGuid(), "hello"));
@@ -340,7 +360,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         Assert.ThrowsException<Exception>(() => store.AddWord(user.Id, "hello!"));
@@ -351,7 +372,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         Assert.ThrowsException<Exception>(() => store.IncrementWord(user.Id, "hello!"));
@@ -362,7 +384,8 @@ public class FileUserStoreTests
     {
         var user = new User(Guid.NewGuid(), "armin", "HASH", DateTime.UtcNow);
 
-        var store = new FileUserStore(_testDirectory, _alphabet);
+        var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
+        var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
         var words = store.GetWords(user.Id);
