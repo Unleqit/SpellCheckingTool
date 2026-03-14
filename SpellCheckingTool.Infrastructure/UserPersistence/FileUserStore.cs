@@ -1,26 +1,32 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Domain.Users;
 
 namespace SpellCheckingTool.Infrastructure.UserPersistence;
 
-public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCustomDictionaryRepository
+public class FileUserStore :
+    IUserRepository,
+    IUserWordStatsRepository,
+    IUserCustomDictionaryRepository
+
 {
     private readonly string _usersFilePath;
     private readonly string _wordStatsFilePath;
     private readonly string _customDictionaryFilePath;
     private readonly object _lock = new();
     private readonly IAlphabet _alphabet;
+    private readonly IUserSettingsRepository _userSettingsRepository;
 
     private Dictionary<Guid, User> _users = new();
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats = new();
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary = new();
 
-
-    public FileUserStore(string baseDirectory, IAlphabet alphabet)
+    public FileUserStore(string baseDirectory, IAlphabet alphabet, IUserSettingsRepository userSettingsRepository)
     {
         _alphabet = alphabet;
 
@@ -29,6 +35,7 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         _usersFilePath = Path.Combine(baseDirectory, "users.json");
         _wordStatsFilePath = Path.Combine(baseDirectory, "wordstats.json");
         _customDictionaryFilePath = Path.Combine(baseDirectory, "userdictionary.json");
+        _userSettingsRepository = userSettingsRepository;
 
         LoadUsers();
         LoadWordStats();
@@ -134,7 +141,8 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
 
     private void SaveUsers()
         {
-            var json = JsonConvert.SerializeObject(_users, Formatting.Indented);
+        var json = JsonConvert.SerializeObject(_users, Formatting.Indented);
+ 
             File.WriteAllText(_usersFilePath, json);
         }
 
@@ -168,7 +176,6 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
         var json = JsonConvert.SerializeObject(storage, Formatting.Indented);
         File.WriteAllText(_customDictionaryFilePath, json);
     }
-
     #endregion
 
     #region IUserRepository
@@ -212,6 +219,8 @@ public class FileUserStore : IUserRepository, IUserWordStatsRepository, IUserCus
             SaveUsers();
             SaveWordStats();
             SaveCustomDictionary();
+
+            _userSettingsRepository.SetSettings(user.Username, UserSettings.Default);
         }
     }
 
