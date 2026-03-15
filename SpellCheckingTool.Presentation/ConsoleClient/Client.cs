@@ -60,37 +60,8 @@ public class Client
             MaxSuggestions = settings.MaxSuggestions,
             MaxDistance = settings.MaxDistance
         };
-
-        /*
-        var suggestionWindow = new SuggestionWindow()
-        {
-<<<<<<< HEAD
-            SuggestionBackColor = ConsoleColor.Red,
-            SuggestionForeColor = ConsoleColor.White,
-            CurrentlySelectedSuggestionBackColor = ConsoleColor.Yellow,
-            CurrentlySelectedSuggestionForeColor = ConsoleColor.Cyan,
-            ValidWordBackColor = Console.BackgroundColor,
-            ValidWordForeColor = ConsoleColor.Green,
-            InvalidWordBackColor = Console.BackgroundColor,
-            InvalidWordForeColor = ConsoleColor.Red,
-            CurrentlySelectedLine = 0,
-            HorizontalPaddingSz = 3
-        }; */
-
-        var suggestionDisplay = new SuggestionDisplay();
-=======
-            SuggestionBackColor = settings.SuggestionBackColor,
-            SuggestionForeColor = settings.SuggestionForeColor,
-            CurrentlySelectedSuggestionBackColor = settings.SelectedSuggestionBackColor,
-            CurrentlySelectedSuggestionForeColor = settings.SelectedSuggestionForeColor,
-            ValidWordBackColor = settings.ValidWordBackColor,
-            ValidWordForeColor = settings.ValidWordForeColor,
-            InvalidWordBackColor = settings.InvalidWordBackColor,
-            InvalidWordForeColor = settings.InvalidWordForeColor,
-            HorizontalPaddingSz = settings.HorizontalPadding,
-            CurrentlySelectedLine = 0
-        };
->>>>>>> origin/main
+        
+        var suggestionDisplay = new SuggestionDisplay(settings);
 
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,

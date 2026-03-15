@@ -6,10 +6,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public interface ISuggestionDisplay
 {
-    void Show(SuggestionViewModel model);
+    void ShowSuggestions(SuggestionViewModel model);
     void HideSuggestions();
     Word CompleteCurrentlySelectedSuggestion();
     void SelectPreviousSuggestion();
     void SelectNextSuggestion();
     bool IsCurrentlyVisible();
+    void NextWord();
+    void PreviousWord();
+    void Initialize(int shellPromptLength);
 }

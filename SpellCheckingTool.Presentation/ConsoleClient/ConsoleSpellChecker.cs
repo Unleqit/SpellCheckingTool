@@ -46,8 +46,7 @@ public class ConsoleSpellChecker
             return;
 
         var viewModel = _suggestionUseCase.Execute(input);
-        viewModel.Offset = _processManager.CurrentShellOffset;
-        _suggestionDisplay.Show(viewModel);
+        _suggestionDisplay.ShowSuggestions(viewModel);
     }
     
     public void Run()
@@ -55,7 +54,9 @@ public class ConsoleSpellChecker
         Console.WriteLine(WelcomeMessage);
         string input = "";
 
-        Console.Write(_processManager.GetCurrentConsolePrompt());
+        string shellPrompt = _processManager.GetCurrentConsolePrompt();
+        Console.Write(shellPrompt);
+        _suggestionDisplay.Initialize(shellPrompt.Length);
 
         while (true)
         {
@@ -70,6 +71,7 @@ public class ConsoleSpellChecker
 
                     input += c;
                     Console.Write(c);
+
                     UpdateSuggestions(input);
                     break;
 
@@ -78,13 +80,14 @@ public class ConsoleSpellChecker
                     if (input.Length == 0)
                         break;
 
+                    if (input.EndsWith(' '))
+                        _suggestionDisplay.PreviousWord();
+
                     _suggestionDisplay.HideSuggestions();
                     input = input[..^1];
 
                     if (Console.CursorLeft > 0)
-                    {
                         Console.Write("\b \b");
-                    }
 
                     UpdateSuggestions(input);
                     break;
@@ -93,12 +96,15 @@ public class ConsoleSpellChecker
                     input += c;
                     Console.Write(c);
 
+                    _suggestionDisplay.HideSuggestions();
+                    _suggestionDisplay.NextWord();
+
                     TrackLastCompletedWordOnSpace(input);
                     UpdateSuggestions(input);
                     break;
 
                 case ConsoleKey.Enter:
-                    if (_commandHandler.TryHandleCommand(ref input))
+                    if (_commandHandler.TryHandleCommand(input))
                     {
                         RefreshSpellcheckState();
                         Console.Write(_processManager.GetCurrentConsolePrompt());
@@ -107,14 +113,20 @@ public class ConsoleSpellChecker
 
                     if (_suggestionDisplay.IsCurrentlyVisible())
                     {
-                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + _suggestionDisplay.CompleteCurrentlySelectedSuggestion().ToString();
+                        Word completion = _suggestionDisplay.CompleteCurrentlySelectedSuggestion();
+                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + completion;
                     }
                     else
                     {
-                        TrackFinalWordOnEnter(input);
+                        TrackFinalWordOnEnter(input.Trim());
+
                         Console.WriteLine();
                         _processManager.SendInput(input);
-                        Console.Write(_processManager.GetCurrentConsolePrompt());
+
+                        shellPrompt = _processManager.GetCurrentConsolePrompt();
+                        Console.Write(shellPrompt);
+                        _suggestionDisplay.Initialize(shellPrompt.Length);
+
                         input = "";
                     }
                     break;

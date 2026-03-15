@@ -27,7 +27,7 @@ public class ConsoleUserCommandHandler
         _spellcheckContextFactory = spellcheckContextFactory;
     }
 
-    public bool TryHandleCommand(ref string input)
+    public bool TryHandleCommand(string input)
     {
         string trimmed = input.Trim();
 
