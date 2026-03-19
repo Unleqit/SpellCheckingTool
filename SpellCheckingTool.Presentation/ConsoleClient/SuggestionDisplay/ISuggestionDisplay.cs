@@ -1,15 +1,18 @@
 ﻿
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public interface ISuggestionDisplay
 {
-    void Show(SuggestionViewModel model);
+    void ShowSuggestions(SuggestionViewModel model);
     void HideSuggestions();
-    void AutoCompleteCurrentlySelectedSuggestion(ref string input);
+    Word CompleteCurrentlySelectedSuggestion();
     void SelectPreviousSuggestion();
     void SelectNextSuggestion();
     bool IsCurrentlyVisible();
+    void NextWord();
+    void PreviousWord();
+    void Initialize(int shellPromptLength);
 }
-delegate void WordTreeWordBufferLengthChangedEventHandler(object sender, int newSize);

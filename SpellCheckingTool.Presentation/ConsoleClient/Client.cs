@@ -60,26 +60,14 @@ public class Client
             MaxSuggestions = settings.MaxSuggestions,
             MaxDistance = settings.MaxDistance
         };
-
-        var suggestionWindow = new SuggestionWindow()
-        {
-            SuggestionBackColor = settings.SuggestionBackColor,
-            SuggestionForeColor = settings.SuggestionForeColor,
-            CurrentlySelectedSuggestionBackColor = settings.SelectedSuggestionBackColor,
-            CurrentlySelectedSuggestionForeColor = settings.SelectedSuggestionForeColor,
-            ValidWordBackColor = settings.ValidWordBackColor,
-            ValidWordForeColor = settings.ValidWordForeColor,
-            InvalidWordBackColor = settings.InvalidWordBackColor,
-            InvalidWordForeColor = settings.InvalidWordForeColor,
-            HorizontalPaddingSz = settings.HorizontalPadding,
-            CurrentlySelectedLine = 0
-        };
+        
+        var suggestionDisplay = new SuggestionDisplay(settings);
 
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,
             suggestionUseCase,
             processManager,
-            suggestionWindow,
+            suggestionDisplay,
             authService,
             spellcheckContextFactory);
 

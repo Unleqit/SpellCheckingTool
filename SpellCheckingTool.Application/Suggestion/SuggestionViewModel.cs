@@ -13,9 +13,6 @@ public class SuggestionViewModel
     public bool IsCorrect { get; }
     public IReadOnlyList<Word> Suggestions { get; }
 
-    public int StartIndex { get; }
-    public int Offset { get; set; }
-
     public SuggestionViewModel(
         Word currentWord,
         bool isCorrect,
@@ -25,6 +22,5 @@ public class SuggestionViewModel
         CurrentWord = currentWord;
         IsCorrect = isCorrect;
         Suggestions = suggestions;
-        StartIndex = startIndex;
     }
 }

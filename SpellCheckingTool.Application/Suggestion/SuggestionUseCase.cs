@@ -29,11 +29,12 @@ namespace SpellCheckingTool.Application.Suggestion
             Word word = new Word(_spellcheckService.Alphabet, wordString);
 
             bool isCorrect = _spellcheckService.IsCorrect(word);
-
             var suggestions =
                 _spellcheckService
                     .GetSuggestions(word, MaxSuggestions, MaxDistance)
                     .GetSuggestionArray();
+
+            
 
             return new SuggestionViewModel(
                 word,
