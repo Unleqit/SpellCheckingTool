@@ -1,18 +1,20 @@
-﻿using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
-using SpellCheckingTool.Application.Dictionary;
+﻿using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
+using SpellCheckingTool.Infrastructure.Executables;
 using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
-using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Http.Controllers;
-using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Servers;
-using SpellCheckingTool.Infrastructure.Executables;
+using System.Net;
+using System.Net.Sockets;
+using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
 
 namespace SpellCheckingTool.Presentation;
 
@@ -24,10 +26,8 @@ public class Program
         Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
         Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
 
-        //TODO: make these passable as command line arguments
-        int serverPort = 12345;
-        bool startHeadless = false;
-
+        int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
+        bool startHeadless = args.Contains("--headless");
 
         IAlphabet inputAlphabet = new UTF16Alphabet();
 
@@ -74,5 +74,29 @@ public class Program
                 ClientApp.StartClient(serverPort, spellcheckContextFactory);
             }).Start();
         }
+        else
+        {
+            Console.WriteLine("Headless mode active. Press Ctrl+C to terminate.");
+            // Im Headless-Modus müssen wir verhindern, dass sich die App sofort beendet
+            Thread.Sleep(Timeout.Infinite);
+        }
+    }
+    private static int? ParsePortFromArgs(string[] args)
+    {
+        var portArg = args.FirstOrDefault(a => a.StartsWith("--port="));
+        if (portArg != null && int.TryParse(portArg.Split('=')[1], out int port))
+        {
+            return port;
+        }
+        return null;
+    }
+
+    private static int GetFreePort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
     }
 }
