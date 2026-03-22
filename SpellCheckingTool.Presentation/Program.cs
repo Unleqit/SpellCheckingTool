@@ -8,7 +8,6 @@ using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
-using SpellCheckingTool.Presentation.Composition;
 using SpellCheckingTool.Presentation.ConsoleClient;
 using SpellCheckingTool.Presentation.Http.Controllers;
 using SpellCheckingTool.Presentation.Http.Servers;
@@ -20,6 +19,7 @@ namespace SpellCheckingTool.Presentation;
 
 public class Program
 {
+
     static void Main(string[] args)
     {
        PrintLicense();
@@ -29,9 +29,7 @@ public class Program
 
         var cts = SetupShutdownHandling();
 
-        var factory = new ApplicationFactory();
-        var userService = factory.CreateUserService();
-        var spellcheckFactory = factory.CreateSpellcheckFactory(userService);
+        var (userService, spellcheckFactory) = BuildApplication();
 
         var server = ServerFactory.Create(userService);
         server.Start(serverPort);
@@ -47,13 +45,10 @@ public class Program
             Console.WriteLine("Headless mode active. Press Ctrl+C to terminate.");
         }
 
-        Console.WriteLine("Warte auf Shutdown-Signal...");
         cts.Token.WaitHandle.WaitOne();
 
-        Console.WriteLine("Signal erhalten. Stoppe Server...");
         server.Stop();
 
-        Console.WriteLine("Server gestoppt. Warte auf Client-Thread...");
         if (clientThread?.IsAlive == true)
             clientThread.Join();
     }
@@ -96,5 +91,35 @@ public class Program
         };
 
         return cts;
+    }
+
+    private static (UserService, IUserSpellcheckContextFactory) BuildApplication()
+    {
+        var inputAlphabet = new UTF16Alphabet();
+        var basePath = Path.Combine(AppContext.BaseDirectory, "data");
+
+        var userSettingsRepository = new FileUserSettingsRepository(
+            Path.Combine(basePath, "UserSettings"));
+
+        var userStore = new FileUserStore(
+            basePath,
+            inputAlphabet,
+            userSettingsRepository
+        );
+
+        var persistenceService = new FilePersistenceService();
+        var dictionaryLoader = new DictionaryLoader(persistenceService);
+        var defaultDictionaryProvider = new DefaultDictionaryLoader(dictionaryLoader);
+
+        var userService = new UserService(userStore, userStore, userStore);
+
+        var spellcheckFactory = new UserSpellcheckContextFactory(
+            defaultDictionaryProvider,
+            userService,
+            userSettingsRepository,
+            inputAlphabet
+        );
+
+        return (userService, spellcheckFactory);
     }
 }
