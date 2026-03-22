@@ -5,16 +5,16 @@ using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
-using SpellCheckingTool.Infrastructure.Executables;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
+using SpellCheckingTool.Presentation.Composition;
+using SpellCheckingTool.Presentation.ConsoleClient;
 using SpellCheckingTool.Presentation.Http.Controllers;
 using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Servers;
 using System.Net;
 using System.Net.Sockets;
-using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
 
 namespace SpellCheckingTool.Presentation;
 
@@ -22,64 +22,48 @@ public class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
-        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
-        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
+       PrintLicense();
 
         int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
         bool startHeadless = args.Contains("--headless");
 
-        IAlphabet inputAlphabet = new UTF16Alphabet();
+        var cts = SetupShutdownHandling();
 
-        var basePath = Path.Combine(AppContext.BaseDirectory, "data");
+        var factory = new ApplicationFactory();
+        var userService = factory.CreateUserService();
+        var spellcheckFactory = factory.CreateSpellcheckFactory(userService);
 
-        var userSettingsRepository = new FileUserSettingsRepository(
-            Path.Combine(
-            basePath, "UserSettings")
-            );
-        var store = new FileUserStore(Path.Combine(
-            AppContext.BaseDirectory, "data"),
-            inputAlphabet, userSettingsRepository
-            );
-        var userService = new UserService(store, store, store);
-
-        IPersistenceService persistenceService = new FilePersistenceService();
-
-        var dictionaryLoader = new DictionaryLoader(persistenceService);
-        IDefaultDictionaryProvider defaultDictionaryProvider =
-            new DefaultDictionaryLoader(dictionaryLoader);
-
-        IUserSpellcheckContextFactory spellcheckContextFactory =
-            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, userSettingsRepository, inputAlphabet);
-
-        UserController.Configure(userService);
-
-        Server server = new Server();
-
-        //define logging middleware for server (like in Express.js)
-        server.Use((context, next) =>
-        {
-            //((Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
-            next();
-        });
-
-        //start the server on a desired port
+        var server = ServerFactory.Create(userService);
         server.Start(serverPort);
 
-        //start CLI 'frontend' and connect it to the backend, if desired
+        Thread? clientThread = null;
+
         if (!startHeadless)
         {
-            new Thread(() =>
-            {
-                ClientApp.StartClient(serverPort, spellcheckContextFactory);
-            }).Start();
+            clientThread = ClientRunner.Start(serverPort, spellcheckFactory, cts);
         }
         else
         {
             Console.WriteLine("Headless mode active. Press Ctrl+C to terminate.");
-            // Im Headless-Modus müssen wir verhindern, dass sich die App sofort beendet
-            Thread.Sleep(Timeout.Infinite);
         }
+
+        Console.WriteLine("Warte auf Shutdown-Signal...");
+        cts.Token.WaitHandle.WaitOne();
+
+        Console.WriteLine("Signal erhalten. Stoppe Server...");
+        server.Stop();
+
+        Console.WriteLine("Server gestoppt. Warte auf Client-Thread...");
+        if (clientThread?.IsAlive == true)
+            clientThread.Join();
+    }
+
+    private static void PrintLicense()
+    {
+        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
+        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
+        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
+
     }
     private static int? ParsePortFromArgs(string[] args)
     {
@@ -98,5 +82,19 @@ public class Program
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
         listener.Stop();
         return port;
+    }
+
+    private static CancellationTokenSource SetupShutdownHandling()
+    {
+        var cts = new CancellationTokenSource();
+
+        Console.CancelKeyPress += (s, e) =>
+        {
+            e.Cancel = true;
+            Console.WriteLine("Shutting down...");
+            cts.Cancel();
+        };
+
+        return cts;
     }
 }
