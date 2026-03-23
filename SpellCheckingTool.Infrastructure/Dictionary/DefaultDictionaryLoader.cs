@@ -1,6 +1,7 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.Dictionary.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure.Dictionary;
 
@@ -20,7 +21,7 @@ public class DefaultDictionaryLoader : IDefaultDictionaryProvider
         string path = Path.Combine(projectRoot, "TestProject", "Resources", "wordFile.json");
 
         if (!File.Exists(path))
-            throw new FileNotFoundException($"word file not found: {path}");
+            throw new DefaultDictionaryNotFoundException(path);
 
         var filePath = new FilePath(path);
         return loader.Load(filePath);

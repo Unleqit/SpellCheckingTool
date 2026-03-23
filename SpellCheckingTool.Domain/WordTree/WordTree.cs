@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 
 namespace SpellCheckingTool.Domain.WordTree;
 
@@ -101,9 +102,12 @@ public class WordTree : IWordTree
             Word wordObj = new Word(this.alphabet, word);
             return Contains(wordObj);
         }
-        catch (Exception)
+        catch (InvalidWordCharacterException)
         {
-            //The provided word string could not be parsed into a Word object with the alphabet of the tree, therefore it cannot be contained in the tree
+            return false;
+        }
+        catch (InvalidWordRangeException)
+        {
             return false;
         }
     }

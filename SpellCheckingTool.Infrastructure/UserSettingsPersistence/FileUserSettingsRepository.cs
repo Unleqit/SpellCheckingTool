@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Converters;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Domain.Users;
+using SpellCheckingTool.Infrastructure.UserSettingsPersistence.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,8 +42,14 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
                     return JsonConvert.DeserializeObject<UserSettings>(json, settings)
                            ?? UserSettings.Default;
                 }
-                catch
+                catch (IOException ex)
                 {
+                    Console.WriteLine(new UserSettingsReadException(username, ex).Message);
+                    return UserSettings.Default;
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine(new UserSettingsReadException(username, ex).Message);
                     return UserSettings.Default;
                 }
             }
@@ -61,7 +68,18 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
                 };
 
                 var json = JsonConvert.SerializeObject(settings, serializerSettings);
-                File.WriteAllText(filePath, json);
+                try
+                {
+                    File.WriteAllText(filePath, json);
+                }
+                catch (IOException ex)
+                {
+                    throw new UserSettingsWriteException(username, ex);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    throw new UserSettingsWriteException(username, ex);
+                }
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Presentation.Http.Servers;
+using SpellCheckingTool.Presentation.Servers.Exceptions;
 using System.Net;
 using System.Reflection;
 
@@ -56,9 +57,15 @@ public class Server
             listener.Stop();
             listener.Close();
         }
-        catch (Exception ex)
+        catch (HttpListenerException ex)
         {
-            Console.WriteLine($"[Server Stop] Listener shutdown error: {ex.Message}");
+            Console.WriteLine(new ServerShutdownException(
+                "The HTTP listener failed while shutting down.", ex).Message);
+        }
+        catch (ObjectDisposedException ex)
+        {
+            Console.WriteLine(new ServerShutdownException(
+                "The HTTP listener was already disposed during shutdown.", ex).Message);
         }
 
         try
@@ -66,9 +73,10 @@ public class Server
             if (requestThread.IsAlive)
                 requestThread.Join(TimeSpan.FromSeconds(2));
         }
-        catch (Exception ex)
+        catch (ThreadStateException ex)
         {
-            Console.WriteLine($"[Server Stop] Thread join error: {ex.Message}");
+            Console.WriteLine(new ServerShutdownException(
+                "The request thread was not in a valid state to join.", ex).Message);
         }
     }
 
@@ -95,9 +103,12 @@ public class Server
             {
                 context = listener.GetContext();
             }
-            catch
+            catch (HttpListenerException)
             {
-                // acquiring request context failed (server stopping)
+                break;
+            }
+            catch (ObjectDisposedException)
+            {
                 break;
             }
 

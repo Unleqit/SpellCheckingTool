@@ -2,6 +2,7 @@
 using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.FilePersistence.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence;
 
@@ -15,10 +16,10 @@ public class FilePersistenceService : IPersistenceService
         string path = filepath.Path;
 
         if (tree == null)
-            throw new Exception("Tree is unspecified");
+            throw new TreeNotSpecifiedException();
 
-        if (!path.EndsWith(".json"))
-            throw new Exception("File not supported");
+        if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            throw new UnsupportedFileFormatException(path);
 
         var walker = new LeftToRightWordTreeTraversal(tree);
 
@@ -47,27 +48,22 @@ public class FilePersistenceService : IPersistenceService
         string path = filepath.Path;
 
         if (!path.EndsWith(".json"))
-            throw new Exception("File not supported");
+            throw new UnsupportedFileFormatException(path);
 
         string json = File.ReadAllText(path);
 
         try
         {
             WordTreeDto dto = JsonConvert.DeserializeObject<WordTreeDto>(json);
-
             IAlphabet alphabet = new CustomAlphabet(dto.alphabet);
-
             WordTree tree = new WordTree(alphabet);
-
             Word[] parsedWords = Word.ParseWords(alphabet, dto.words);
-
             tree.Add(parsedWords);
-
             return tree;
         }
         catch
         {
-            throw new Exception("Failed to parse WordTree DTO");
+            throw new WordTreeDeserializationException(path);
         }
     }
 }

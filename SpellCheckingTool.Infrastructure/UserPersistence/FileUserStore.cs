@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
@@ -127,9 +128,10 @@ public class FileUserStore :
                 {
                     words.Add(new Word(_alphabet, normalized));
                 }
-                catch
+                catch (SpellCheckingToolException ex)
                 {
                     // optional logging
+                    Console.WriteLine($"Skipping invalid custom dictionary word '{normalized}': {ex.Message}");
                 }
             }
 
@@ -203,10 +205,10 @@ public class FileUserStore :
         lock (_lock)
         {
             if (_users.ContainsKey(user.Id))
-                throw new InvalidOperationException("User with this ID already exists.");
+                throw new DuplicateUserException(user.Id);
 
             if (_users.Values.Any(u => u.Username.Equals(user.Username, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Username already taken.");
+                throw new DuplicateUserException(user.Username);
 
             _users[user.Id] = user;
 
@@ -233,7 +235,7 @@ public class FileUserStore :
         lock (_lock)
         {
             if (!_users.ContainsKey(userId))
-                throw new KeyNotFoundException("User not found.");
+                throw new UserNotFoundDomainException(userId);
 
             if (!_userWordStats.TryGetValue(userId, out var words))
             {
@@ -292,7 +294,7 @@ public class FileUserStore :
         lock (_lock)
         {
             if (!_users.ContainsKey(userId))
-                throw new KeyNotFoundException("User not found.");
+                throw new UserNotFoundDomainException(userId);
 
             if (!_userCustomDictionary.TryGetValue(userId, out var words))
             {
@@ -314,7 +316,7 @@ public class FileUserStore :
         lock (_lock)
         {
             if (!_users.ContainsKey(userId))
-                throw new KeyNotFoundException("User not found.");
+                throw new UserNotFoundDomainException(userId);
 
             if (!_userCustomDictionary.TryGetValue(userId, out var words))
                 return false;

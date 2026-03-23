@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 
 namespace SpellCheckingTool.Domain.WordTree;
 public class Word
@@ -18,7 +19,7 @@ public class Word
         char[] alphabetChars = alphabet.GetChars();
 
         if (word.Any(c => !alphabetChars.Contains(c)))
-            throw new Exception("Word contains invalid characters");
+            throw new InvalidWordCharacterException();
     }
 
     private char[] GetLowerCaseArray(IEnumerable<char> word, int offset = 0, int length = -1)
@@ -29,10 +30,12 @@ public class Word
             length = passedWordLength;
 
         if (offset < 0 || (length >= 0 && offset + length > passedWordLength))
-            throw new Exception("Invalid offset specified");
+            throw new InvalidWordRangeException(
+            $"Invalid offset {offset} for input length {passedWordLength}.");
 
         if (length < 0 || (offset >= 0 && offset + length > passedWordLength))
-            throw new Exception("Invalid length specified");
+            throw new InvalidWordRangeException(
+            $"Invalid length {length} for offset {offset} and input length {passedWordLength}.");
 
         IEnumerable<char> substring = word.Skip(offset).Take(length);
         char[] lowerCaseWord = substring.Select((c) => char.ToLower(c)).ToArray();
@@ -67,9 +70,12 @@ public class Word
                 words.Add(word);
             }
 #pragma warning disable CS0168
-            catch (Exception e)
+            catch (InvalidWordCharacterException)
             {
-                //just skip this word and do not add it to the list
+                continue;
+            }
+            catch (InvalidWordRangeException)
+            {
                 continue;
             }
 #pragma warning restore CS0168

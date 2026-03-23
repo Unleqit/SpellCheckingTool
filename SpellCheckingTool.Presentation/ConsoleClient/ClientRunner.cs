@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,9 +17,14 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                 {
                     Client.StartClient(port, factory, cts.Token);
                 }
+                catch (OperationCanceledException)
+                {
+                    cts.Cancel();
+                }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Client crashed: {ex.Message}");
+                    var clientEx = new ClientExecutionException("The console client terminated unexpectedly.", ex);
+                    Console.WriteLine(clientEx.Message);
                     cts.Cancel();
                 }
             });

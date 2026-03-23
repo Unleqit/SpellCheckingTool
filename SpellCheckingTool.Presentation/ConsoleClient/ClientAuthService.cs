@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
+using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
 
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -80,7 +81,7 @@ public class ClientAuthService
             }
             catch (JsonException ex)
             {
-                Console.WriteLine($"Could not parse success response: {ex.Message}");
+                Console.WriteLine(new BackendResponseParseException("success response", ex).Message);
                 return false;
             }
         }
@@ -132,9 +133,22 @@ public class ClientAuthService
         {
             response = _httpClient.PostAsync(url, content).Result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Error connecting to backend: {ex.Message}");
+            Console.WriteLine(new BackendConnectionException(
+                $"Could not connect to backend at '{url}'.", ex).Message);
+            return null;
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine(new BackendConnectionException(
+                $"The request to '{url}' timed out.", ex).Message);
+            return null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine(new BackendConnectionException(
+                $"The HTTP request to '{url}' could not be started.", ex).Message);
             return null;
         }
 
@@ -302,13 +316,20 @@ public class ClientAuthService
             }
             catch (JsonException ex)
             {
-                Console.WriteLine($"Could not parse success response: {ex.Message}");
+                Console.WriteLine(new BackendResponseParseException("success response", ex).Message);
                 return false;
             }
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Request error: {ex.Message}");
+            Console.WriteLine(new BackendConnectionException(
+                $"Request to '{url}' failed.", ex).Message);
+            return false;
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine(new BackendConnectionException(
+                $"Request to '{url}' timed out.", ex).Message);
             return false;
         }
     }
