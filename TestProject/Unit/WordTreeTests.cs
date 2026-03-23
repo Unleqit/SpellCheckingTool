@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordTree;
 using System.Diagnostics;
 
@@ -33,7 +34,8 @@ public class WordTreeTests
         string rawWord = "test\n";
         IAlphabet alphabet = new LatinAlphabet();
 
-        Assert.ThrowsException<Exception>(() => new Word(alphabet, rawWord));
+        Assert.ThrowsException<InvalidWordCharacterException>(() =>
+            new Word(alphabet, rawWord));
     }
 
     [TestMethod]

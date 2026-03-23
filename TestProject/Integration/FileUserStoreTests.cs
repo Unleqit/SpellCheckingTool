@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
@@ -75,7 +76,7 @@ public class FileUserStoreTests
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
-        Assert.ThrowsException<InvalidOperationException>(() => store.Add(user));
+        Assert.ThrowsException<DuplicateUserException>(() => store.Add(user));
     }
 
     [TestMethod]
@@ -88,7 +89,7 @@ public class FileUserStoreTests
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user1);
 
-        Assert.ThrowsException<InvalidOperationException>(() => store.Add(user2));
+        Assert.ThrowsException<DuplicateUserException>(() => store.Add(user2));
     }
 
     [TestMethod]
@@ -331,7 +332,7 @@ public class FileUserStoreTests
         var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
-        Assert.ThrowsException<KeyNotFoundException>(() =>
+        Assert.ThrowsException<UserNotFoundDomainException>(() =>
             store.AddWord(Guid.NewGuid(), "salam"));
     }
 
@@ -341,7 +342,7 @@ public class FileUserStoreTests
         var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
-        Assert.ThrowsException<KeyNotFoundException>(() =>
+        Assert.ThrowsException<UserNotFoundDomainException>(() =>
             store.RemoveWord(Guid.NewGuid(), "salam"));
     }
 
@@ -351,7 +352,7 @@ public class FileUserStoreTests
         var userSettingsRepository = new FileUserSettingsRepository(_testDirectory);
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
 
-        Assert.ThrowsException<KeyNotFoundException>(() =>
+        Assert.ThrowsException<UserNotFoundDomainException>(() =>
             store.IncrementWord(Guid.NewGuid(), "hello"));
     }
 
@@ -364,7 +365,8 @@ public class FileUserStoreTests
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
-        Assert.ThrowsException<Exception>(() => store.AddWord(user.Id, "hello!"));
+        Assert.ThrowsException<InvalidWordCharacterException>(() =>
+            store.AddWord(user.Id, "hello!"));
     }
 
     [TestMethod]
@@ -376,7 +378,8 @@ public class FileUserStoreTests
         var store = new FileUserStore(_testDirectory, _alphabet, userSettingsRepository);
         store.Add(user);
 
-        Assert.ThrowsException<Exception>(() => store.IncrementWord(user.Id, "hello!"));
+        Assert.ThrowsException<InvalidWordCharacterException>(() =>
+            store.IncrementWord(user.Id, "hello!"));
     }
 
     [TestMethod]

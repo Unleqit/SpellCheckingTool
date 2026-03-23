@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 
 namespace TestProject.Unit;
 
@@ -62,7 +63,8 @@ public class AlphabetTests
     [TestMethod]
     public void CreateAlphabetWithDuplicateCharactersInArray_ShouldThrowError()
     {
-        Assert.ThrowsException<Exception>(() => new CustomAlphabet(new[] { 'a', 'b', 'c', 'c' }));
+        Assert.ThrowsException<DuplicateAlphabetCharacterException>(() =>
+            new CustomAlphabet(new[] { 'a', 'b', 'c', 'c' }));
     }
 
     [TestMethod]
