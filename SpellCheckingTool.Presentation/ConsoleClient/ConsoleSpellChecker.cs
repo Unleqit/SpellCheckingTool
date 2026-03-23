@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Application.Spellcheck;
+﻿using Newtonsoft.Json.Linq;
+using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
 
@@ -12,6 +13,7 @@ public class ConsoleSpellChecker
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
+    private readonly CancellationToken _token;
 
     private SuggestionUseCase _suggestionUseCase;
 
@@ -24,7 +26,8 @@ public class ConsoleSpellChecker
         ShellProcessManager processManager,
         ISuggestionDisplay suggestionWindow,
         ClientAuthService authService,
-        IUserSpellcheckContextFactory spellcheckContextFactory)
+        IUserSpellcheckContextFactory spellcheckContextFactory,
+        CancellationToken token)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -32,6 +35,7 @@ public class ConsoleSpellChecker
         _suggestionDisplay = suggestionWindow;
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
+        _token = token;
 
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
@@ -58,8 +62,14 @@ public class ConsoleSpellChecker
         Console.Write(shellPrompt);
         _suggestionDisplay.Initialize(shellPrompt.Length);
 
-        while (true)
+        while (!_token.IsCancellationRequested)
         {
+            if (!Console.KeyAvailable)
+            {
+                Thread.Sleep(50);
+                continue;
+            }
+
             ConsoleKeyInfo keyInfo = Console.ReadKey(true);
             char c = keyInfo.KeyChar;
 

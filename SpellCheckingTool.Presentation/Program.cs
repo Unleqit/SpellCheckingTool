@@ -1,78 +1,125 @@
-﻿using ClientApp = SpellCheckingTool.Presentation.ConsoleClient.Client;
-using SpellCheckingTool.Application.Dictionary;
+﻿using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
-using SpellCheckingTool.Presentation.Http.Servers;
+using SpellCheckingTool.Presentation.ConsoleClient;
 using SpellCheckingTool.Presentation.Http.Controllers;
-using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Presentation.Http.Servers;
 using SpellCheckingTool.Presentation.Servers;
-using SpellCheckingTool.Infrastructure.Executables;
+using System.Net;
+using System.Net.Sockets;
 
 namespace SpellCheckingTool.Presentation;
 
 public class Program
 {
+
     static void Main(string[] args)
+    {
+       PrintLicense();
+
+        int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
+        bool startHeadless = args.Contains("--headless");
+
+        var cts = SetupShutdownHandling();
+
+        var (userService, spellcheckFactory) = BuildApplication();
+
+        var server = ServerFactory.Create(userService);
+        server.Start(serverPort);
+
+        Thread? clientThread = null;
+
+        if (!startHeadless)
+        {
+            clientThread = ClientRunner.Start(serverPort, spellcheckFactory, cts);
+        }
+        else
+        {
+            Console.WriteLine("Headless mode active. Press Ctrl+C to terminate.");
+        }
+
+        cts.Token.WaitHandle.WaitOne();
+
+        server.Stop();
+
+        if (clientThread?.IsAlive == true)
+            clientThread.Join();
+    }
+
+    private static void PrintLicense()
     {
         Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
         Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
         Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
 
-        //TODO: make these passable as command line arguments
-        int serverPort = 12345;
-        bool startHeadless = false;
+    }
+    private static int? ParsePortFromArgs(string[] args)
+    {
+        var portArg = args.FirstOrDefault(a => a.StartsWith("--port="));
+        if (portArg != null && int.TryParse(portArg.Split('=')[1], out int port))
+        {
+            return port;
+        }
+        return null;
+    }
 
+    private static int GetFreePort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
 
-        IAlphabet inputAlphabet = new UTF16Alphabet();
+    private static CancellationTokenSource SetupShutdownHandling()
+    {
+        var cts = new CancellationTokenSource();
 
+        Console.CancelKeyPress += (s, e) =>
+        {
+            e.Cancel = true;
+            Console.WriteLine("Shutting down...");
+            cts.Cancel();
+        };
+
+        return cts;
+    }
+
+    private static (UserService, IUserSpellcheckContextFactory) BuildApplication()
+    {
+        var inputAlphabet = new UTF16Alphabet();
         var basePath = Path.Combine(AppContext.BaseDirectory, "data");
 
         var userSettingsRepository = new FileUserSettingsRepository(
-            Path.Combine(
-            basePath, "UserSettings")
-            );
-        var store = new FileUserStore(Path.Combine(
-            AppContext.BaseDirectory, "data"),
-            inputAlphabet, userSettingsRepository
-            );
-        var userService = new UserService(store, store, store);
+            Path.Combine(basePath, "UserSettings"));
 
-        IPersistenceService persistenceService = new FilePersistenceService();
+        var userStore = new FileUserStore(
+            basePath,
+            inputAlphabet,
+            userSettingsRepository
+        );
 
+        var persistenceService = new FilePersistenceService();
         var dictionaryLoader = new DictionaryLoader(persistenceService);
-        IDefaultDictionaryProvider defaultDictionaryProvider =
-            new DefaultDictionaryLoader(dictionaryLoader);
+        var defaultDictionaryProvider = new DefaultDictionaryLoader(dictionaryLoader);
 
-        IUserSpellcheckContextFactory spellcheckContextFactory =
-            new UserSpellcheckContextFactory(defaultDictionaryProvider, userService, userSettingsRepository, inputAlphabet);
+        var userService = new UserService(userStore, userStore, userStore);
 
-        UserController.Configure(userService);
+        var spellcheckFactory = new UserSpellcheckContextFactory(
+            defaultDictionaryProvider,
+            userService,
+            userSettingsRepository,
+            inputAlphabet
+        );
 
-        Server server = new Server();
-
-        //define logging middleware for server (like in Express.js)
-        server.Use((context, next) =>
-        {
-            //((Console.WriteLine($"[{DateTime.Now}] {context.Request.HttpMethod} {context.Request.RawUrl}");
-            next();
-        });
-
-        //start the server on a desired port
-        server.Start(serverPort);
-
-        //start CLI 'frontend' and connect it to the backend, if desired
-        if (!startHeadless)
-        {
-            new Thread(() =>
-            {
-                ClientApp.StartClient(serverPort, spellcheckContextFactory);
-            }).Start();
-        }
+        return (userService, spellcheckFactory);
     }
 }

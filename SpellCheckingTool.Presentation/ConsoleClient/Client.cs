@@ -5,7 +5,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory)
+    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, CancellationToken token)
     {
         string backendUrl = $"http://localhost:{port}";
 
@@ -41,7 +41,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(context, authService, processManager, spellcheckContextFactory);
+        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, token);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -51,7 +51,7 @@ public class Client
         return processManager;
     }
 
-    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory)
+    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, CancellationToken token)
     {
         var settings = context.Settings;
 
@@ -69,7 +69,8 @@ public class Client
             processManager,
             suggestionDisplay,
             authService,
-            spellcheckContextFactory);
+            spellcheckContextFactory,
+            token);
 
         consoleSpellChecker.Run();
     }
