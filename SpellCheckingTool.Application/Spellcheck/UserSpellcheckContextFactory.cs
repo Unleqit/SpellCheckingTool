@@ -1,11 +1,12 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
-using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
+using SpellCheckingTool.Domain.WordTree;
 public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
 {
     private readonly IDefaultDictionaryProvider _defaultDictionaryProvider;
@@ -53,9 +54,10 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
                 {
                     tree.Add(word);
                 }
-                catch
+                catch (SpellCheckingToolException ex)
                 {
-                    Console.WriteLine($"Error occurred while adding word {word} to the tree");
+                    Console.WriteLine(
+                        $"Could not add custom word '{word}' to the user's tree: {ex.Message}");
                 }
             }
         }

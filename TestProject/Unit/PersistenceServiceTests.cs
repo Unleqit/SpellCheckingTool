@@ -1,7 +1,9 @@
 ﻿using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Application.Persistence.Exceptions;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.FilePersistence;
+using SpellCheckingTool.Infrastructure.FilePersistence.Exceptions;
 
 namespace TestProject.Unit;
 
@@ -51,21 +53,25 @@ public class PersistenceServiceTests
     [TestMethod]
     public void CreateWordFilePathWithInvalidPath_ShouldThrowException()
     {
-        Assert.ThrowsException<Exception>(() => new FilePath(@"this/is/an/invalid/filepath"));
+        Assert.ThrowsException<InvalidFilePathException>(() =>
+            new FilePath(@"this/is/an/invalid/filepath"));
     }
 
     [TestMethod]
     public void CreateWordFilePathInDirectory_ShouldThrowException()
     {
-        Assert.ThrowsException<Exception>(() => new FilePath(Directory.GetCurrentDirectory() + @"\"));
+        Assert.ThrowsException<DirectoryPathProvidedException>(() =>
+            new FilePath(Directory.GetCurrentDirectory() + @"\"));
     }
 
     [TestMethod]
     public void SaveToNonJsonFile_ShouldThrowException()
     {
         var persistence = new FilePersistenceService();
-        Assert.ThrowsException<Exception>(() =>
-            persistence.Save(tree, new FilePath(Path.Combine(Directory.GetCurrentDirectory(), "thisIsNotAValidFileFormat.txt"))));
+        Assert.ThrowsException<UnsupportedFileFormatException>(() =>
+            persistence.Save(tree, new FilePath(Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "thisIsNotAValidFileFormat.txt"))));
     }
 
     [TestMethod]
@@ -82,13 +88,13 @@ public class PersistenceServiceTests
     [TestMethod]
     public void DeserializeTreeFromNonJsonFile_ShouldThrowException()
     {
-        // create invalid file
         string file = Path.Combine(Directory.GetCurrentDirectory(), "thisIsNotAValidFileFormat.txt");
         File.WriteAllText(file, "");
         Assert.IsTrue(File.Exists(file));
 
         var persistence = new FilePersistenceService();
-        Assert.ThrowsException<Exception>(() => persistence.Load(new FilePath(file)));
+        Assert.ThrowsException<UnsupportedFileFormatException>(() =>
+            persistence.Load(new FilePath(file)));
 
         File.Delete(file);
         Assert.IsFalse(File.Exists(file));

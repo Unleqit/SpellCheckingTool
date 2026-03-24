@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using SpellCheckingTool.Domain.Exceptions;
+using System.Text;
 
 namespace SpellCheckingTool.Domain.Alphabet;
 
@@ -14,9 +15,9 @@ namespace SpellCheckingTool.Domain.Alphabet;
         {
             //check for duplicates - lovely O(n^2) solution using LINQ
             if (chars.Distinct().Count() != chars.Length)
-                throw new Exception("Duplicate characters in alphabet array");
+                throw new DuplicateAlphabetCharacterException();
 
-            this.length = chars.Length;
+        this.length = chars.Length;
             this.chars = chars;
         }
 
@@ -59,9 +60,9 @@ namespace SpellCheckingTool.Domain.Alphabet;
 
             //Unicode, hence two bytes width for each char. C# has sizeof(char) = 2 defined usually.
             if (charArrayLength * sizeof(char) != serializedAlphabet.Length - sizeof(int))
-                throw new Exception("Invalid serialized alphabet");
+                throw new InvalidSerializedAlphabetException();
 
-            char[] chars = Encoding.Unicode.GetChars(serializedAlphabet, sizeof(int), charArrayLength * sizeof(char));
+        char[] chars = Encoding.Unicode.GetChars(serializedAlphabet, sizeof(int), charArrayLength * sizeof(char));
 
             return new CustomAlphabet(chars);
         }
