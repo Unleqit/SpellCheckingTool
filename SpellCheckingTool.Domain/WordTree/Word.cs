@@ -107,5 +107,21 @@ public class Word
             return new Word(new CustomAlphabet([]), "");
         } 
     }
+
+    public static bool operator ==(Word a, Word b)
+    {
+        if (ReferenceEquals(a, b))
+            return true;
+
+        if (a is null || b is null)
+            return false;
+
+        return a.ToString() == b.ToString();
+    }
+
+    public static bool operator !=(Word a, Word b)
+    {
+        return !(a == b);
+    }
 }
 

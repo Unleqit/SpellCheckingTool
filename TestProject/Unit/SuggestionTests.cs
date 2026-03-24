@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Application.Suggestion.SuggestionService;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.FilePersistence;
@@ -92,16 +93,15 @@ public class SuggestionTests
     }
 
     [TestMethod]
-    public void GetSuggestionForWordContainingDifferentAlphabet_ShouldStillReturnSomeSuggestions()
+    public void GetSuggestionForWordContainingDifferentAlphabet_ShouldReturnNoSuggestions()
     {
-        // This test is made robust: we only assert count + all are non-null.
         ISuggestionService service = new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
 
         CustomAlphabet partOfArabicAlphabet = new CustomAlphabet("تزنيت".ToCharArray().Distinct().ToArray());
         SuggestionResult result = service.GetSuggestionResult(new Word(partOfArabicAlphabet, "تزنيت"), 5, 999);
 
-        Assert.AreEqual(5, result.GetSuggestionCount());
-        Assert.IsTrue(result.GetSuggestionArray().All(w => w != null));
+        Assert.AreEqual(0, result.GetSuggestionCount());
+        Assert.IsTrue(result.GetSuggestionArray().All(w => w == null));
     }
 
     [TestMethod]

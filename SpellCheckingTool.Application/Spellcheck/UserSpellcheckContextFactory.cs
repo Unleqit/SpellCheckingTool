@@ -3,6 +3,7 @@ using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Application.Suggestion.SuggestionService;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
@@ -29,7 +30,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     public UserSpellcheckContext CreateAnonymous()
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
-        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet);
+        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, null);
 
         return new UserSpellcheckContext(
             userId: null,
@@ -62,7 +63,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             }
         }
 
-        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet);
+        var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, userId);
 
         return new UserSpellcheckContext(
             userId: userId,
@@ -72,10 +73,10 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             settings: settings);
     }
 
-    private static SpellcheckService BuildSpellcheckService(WordTree tree, IAlphabet inputAlphabet)
+    private static SpellcheckService BuildSpellcheckService(WordTree tree, IAlphabet inputAlphabet, UserService userService, Guid? guid)
     {
         ISuggestionService suggestionService =
-            new SuggestionService(tree, new LevenshteinDistanceAlgorithm());
+            new StatisticSuggestionService(tree, new LevenshteinDistanceAlgorithm(), userService, guid ?? Guid.Empty);
 
         return new SpellcheckService(tree, suggestionService, inputAlphabet);
     }
