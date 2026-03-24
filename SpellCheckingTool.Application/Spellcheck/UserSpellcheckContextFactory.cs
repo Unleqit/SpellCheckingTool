@@ -31,13 +31,14 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
         var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, null);
+        var settings = _settingsRepository.GetDefaultSettings();
 
         return new UserSpellcheckContext(
             userId: null,
             username: null,
             tree: tree,
             spellcheckService: spellcheckService,
-            settings: UserSettings.Default);
+            settings: settings);
     }
 
     public UserSpellcheckContext CreateForUser(Guid userId, string username)

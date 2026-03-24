@@ -18,6 +18,8 @@ namespace SpellCheckingTool.Application.Suggestion
         public SuggestionUseCase(ISpellcheckService spellcheckService)
         {
             _spellcheckService = spellcheckService;
+            MaxSuggestions = 5;
+            MaxDistance = 2;
         }
 
         public SuggestionViewModel Execute(string input)
