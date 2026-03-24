@@ -1,53 +1,42 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
+using System.Transactions;
 
 namespace SpellCheckingTool.Application.Suggestion;
 
-public class SuggestionService : ISuggestionService
+public abstract class SuggestionServiceBase : ISuggestionService
 {
-    private readonly WordTree tree;
     private readonly IDistanceAlgorithm distanceAlgorithm;
     private readonly LeftToRightWordTreeTraversal traversal;
 
-    public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm)
+
+    public SuggestionServiceBase(WordTree tree, IDistanceAlgorithm distanceAlgorithm)
     {
-        this.tree = tree;
         this.distanceAlgorithm = distanceAlgorithm;
-        traversal = new LeftToRightWordTreeTraversal(tree);
+        this.traversal = new LeftToRightWordTreeTraversal(tree);
     }
 
     /// <summary>
     /// Returns an object holding the best fit matches determined by the DistanceAlgorithm used in this instance.
     /// </summary>
-    public SuggestionResult GetSuggestionResult(
-        Word input,
-        int maxAmountOfSuggestionsToBeReturned = 3,
-        int maxAllowedDistance = 4)
+    public SuggestionResult GetSuggestionResult(Word input, int maxAmountOfSuggestionsToBeReturned = 3, int maxAllowedDistance = 4)
     {
         int maxSuggestions = Math.Clamp(maxAmountOfSuggestionsToBeReturned, 0, 20);
-
-        int distanceToInputWord = 0;
         int matchesCount = 0;
         int totalMatchesCount = 0;
         int indexOfMatchToBeReplacedNext = 0;
-
+        double normalizedDistance = 0;
+        double normalizedWorstDistanceValueInResults = 1;
         MatchResult[] matchResults = new MatchResult[maxSuggestions];
 
-        // keep track of the worst distance value in result list
-        int worstDistanceValueInResults =
-            maxAllowedDistance < tree.WordBufferLength - 1
-                ? maxAllowedDistance + 1
-                : tree.WordBufferLength;
+        Prewalk();
 
-        // traverse tree
         traversal.WalkTree((word) =>
         {
-            distanceToInputWord = distanceAlgorithm.GetDistance(input, word);
+            normalizedDistance = ComputeNormalizedDistance(input, word, distanceAlgorithm, maxAllowedDistance);
 
-            if (distanceToInputWord < worstDistanceValueInResults)
+            if (normalizedDistance >= 0 && normalizedDistance < normalizedWorstDistanceValueInResults)
             {
-                matchResults[indexOfMatchToBeReplacedNext] =
-                    new MatchResult(word, distanceToInputWord);
-
+                matchResults[indexOfMatchToBeReplacedNext] = new MatchResult(word, normalizedDistance);
                 totalMatchesCount++;
 
                 if (totalMatchesCount < maxSuggestions)
@@ -56,16 +45,10 @@ public class SuggestionService : ISuggestionService
                 }
                 else
                 {
-                    worstDistanceValueInResults = 0;
-
+                    normalizedWorstDistanceValueInResults = 0;
                     for (int i = 0; i < maxSuggestions; ++i)
-                    {
-                        if (matchResults[i].GetMatchDistance() > worstDistanceValueInResults)
-                        {
-                            indexOfMatchToBeReplacedNext = i;
-                            worstDistanceValueInResults = matchResults[i].GetMatchDistance();
-                        }
-                    }
+                        if (matchResults[i].GetMatchDistance() > normalizedWorstDistanceValueInResults)
+                            normalizedWorstDistanceValueInResults = matchResults[indexOfMatchToBeReplacedNext = i].GetMatchDistance();
                 }
             }
         });
@@ -74,13 +57,15 @@ public class SuggestionService : ISuggestionService
 
         SortMatches(matchResults, matchesCount);
 
-        Word[] matchedWords =
-            matchResults
-                .Where(result => result != null)
-                .Select(result => result.GetMatchedWord())
-                .ToArray();
-
+        Word[] matchedWords = matchResults.Where(entry => entry != null).Select(entry => entry.GetMatchedWord()).ToArray();
         return new SuggestionResult(matchedWords, matchesCount, totalMatchesCount);
+    }
+
+    protected abstract double ComputeNormalizedDistance(Word input, Word current, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance);
+
+    protected virtual void Prewalk()
+    {
+
     }
 
     /// <summary>
@@ -104,9 +89,9 @@ public class SuggestionService : ISuggestionService
     private class MatchResult
     {
         private readonly Word matchWord;
-        private readonly int distance;
+        private readonly double distance;
 
-        public MatchResult(Word matchWord, int distance)
+        public MatchResult(Word matchWord, double distance)
         {
             this.matchWord = matchWord;
             this.distance = distance;
@@ -117,7 +102,7 @@ public class SuggestionService : ISuggestionService
             return matchWord;
         }
 
-        public int GetMatchDistance()
+        public double GetMatchDistance()
         {
             return distance;
         }
