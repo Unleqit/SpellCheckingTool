@@ -87,10 +87,16 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
         {
             var filePath = Path.Combine(_baseDirectory, DefaultSettingsFileName);
 
-            var settings = LoadFromFile(filePath);
-
-            if (settings != null)
-                return settings;
+            try
+            {
+                var settings = LoadFromFile(filePath);
+                if (settings != null)
+                    return settings;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine(new DefaultUserSettingsReadException(ex).Message);
+            }
 
             var json = JsonConvert.SerializeObject(UserSettings.Default, JsonOptions);
             File.WriteAllText(filePath, json);

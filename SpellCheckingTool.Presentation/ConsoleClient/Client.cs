@@ -1,13 +1,12 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, CancellationToken token)
+    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token)
     {
         string backendUrl = $"http://localhost:{port}";
 
@@ -43,7 +42,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, token);
+        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -53,7 +52,7 @@ public class Client
         return processManager;
     }
 
-    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, CancellationToken token)
+    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token)
     {
         var settings = context.Settings;
 
@@ -64,8 +63,6 @@ public class Client
         };
         
         var suggestionDisplay = new SuggestionDisplay(settings);
-
-        IFileOpener fileOpener = new FileOpener();
 
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,

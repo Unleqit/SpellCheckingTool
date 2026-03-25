@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +10,17 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 {
     public static class ClientRunner
     {
-        public static Thread Start(int port, IUserSpellcheckContextFactory factory, CancellationTokenSource cts)
+        public static Thread Start(
+            int port,
+            IUserSpellcheckContextFactory factory,
+            IFileOpener fileOpener,
+            CancellationTokenSource cts)
         {
             var thread = new Thread(() =>
             {
                 try
                 {
-                    Client.StartClient(port, factory, cts.Token);
+                    Client.StartClient(port, factory, fileOpener, cts.Token);
                 }
                 catch (OperationCanceledException)
                 {
