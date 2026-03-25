@@ -1,5 +1,7 @@
-﻿using SpellCheckingTool.Application.Spellcheck;
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -63,6 +65,8 @@ public class Client
         
         var suggestionDisplay = new SuggestionDisplay(settings);
 
+        IFileOpener fileOpener = new FileOpener();
+
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,
             suggestionUseCase,
@@ -70,6 +74,7 @@ public class Client
             suggestionDisplay,
             authService,
             spellcheckContextFactory,
+            fileOpener,
             token);
 
         consoleSpellChecker.Run();

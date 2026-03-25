@@ -38,7 +38,8 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             username: null,
             tree: tree,
             spellcheckService: spellcheckService,
-            settings: settings);
+            settings: settings,
+            settingsRepository: _settingsRepository);
     }
 
     public UserSpellcheckContext CreateForUser(Guid userId, string username)
@@ -71,7 +72,8 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             username: username,
             tree: tree,
             spellcheckService: spellcheckService,
-            settings: settings);
+            settings: settings,
+            settingsRepository: _settingsRepository);
     }
 
     private static SpellcheckService BuildSpellcheckService(WordTree tree, IAlphabet inputAlphabet, UserService userService, Guid? guid)

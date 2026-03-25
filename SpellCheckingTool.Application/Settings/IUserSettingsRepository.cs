@@ -11,6 +11,6 @@ namespace SpellCheckingTool.Application.Settings
         UserSettings GetSettings(string username);
         UserSettings GetDefaultSettings();
         void SetSettings(string username, UserSettings settings);
-        
+        string GetUserSettingsFilePath(string? username);
     }
 }

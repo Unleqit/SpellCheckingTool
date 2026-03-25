@@ -106,9 +106,11 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
             var json = File.ReadAllText(filePath);
             return JsonConvert.DeserializeObject<UserSettings>(json, JsonOptions);
         }
-
-        public string GetUserSettingsFilePath(string username)
+        public string GetUserSettingsFilePath(string? username)
         {
+            if (string.IsNullOrWhiteSpace(username))
+                return Path.Combine(_baseDirectory, DefaultSettingsFileName);
+
             foreach (var c in Path.GetInvalidFileNameChars())
                 username = username.Replace(c, '_');
 

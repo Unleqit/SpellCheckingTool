@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
@@ -13,6 +14,7 @@ public class ConsoleSpellChecker
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
+    private readonly IFileOpener _fileOpener;
     private readonly CancellationToken _token;
 
     private SuggestionUseCase _suggestionUseCase;
@@ -27,6 +29,7 @@ public class ConsoleSpellChecker
         ISuggestionDisplay suggestionWindow,
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
+        IFileOpener fileOpener,
         CancellationToken token)
     {
         _context = context;
@@ -35,13 +38,15 @@ public class ConsoleSpellChecker
         _suggestionDisplay = suggestionWindow;
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
+        _fileOpener = fileOpener;
         _token = token;
 
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,
             _authService,
-            _spellcheckContextFactory);
+            _spellcheckContextFactory,
+            fileOpener);
     }
 
     private void UpdateSuggestions(string input)
