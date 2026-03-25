@@ -5,13 +5,14 @@ namespace SpellCheckingTool.Domain.WordTree;
 public class Word
 {
     char[] word;
+    string originalFormatting;
 
     public Word(IAlphabet alphabet, IEnumerable<char> word, int offset = 0, int length = -1)
     {
         char[] lowerCaseWord = GetLowerCaseArray(word, offset, length);
         this.CheckValidity(alphabet, lowerCaseWord);
         this.word = lowerCaseWord;
-
+        this.originalFormatting = new string(word.Skip(offset).Take(length == -1 ? word.Count() : length).ToArray());
     }
 
     private void CheckValidity(IAlphabet alphabet, char[] word)
@@ -56,6 +57,11 @@ public class Word
     public override string ToString()
     {
         return new string(word);
+    }
+
+    public string GetOriginalWordFormat()
+    {
+        return originalFormatting;
     }
 
     //convenience method

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.WordTree;
@@ -14,6 +15,7 @@ public class ConsoleSpellChecker
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly CancellationToken _token;
+    private readonly UserSettings _settings;
 
     private SuggestionUseCase _suggestionUseCase;
 
@@ -27,7 +29,8 @@ public class ConsoleSpellChecker
         ISuggestionDisplay suggestionWindow,
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
-        CancellationToken token)
+        CancellationToken token,
+        UserSettings settings)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -36,6 +39,7 @@ public class ConsoleSpellChecker
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _token = token;
+        _settings = settings;
 
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
@@ -124,7 +128,9 @@ public class ConsoleSpellChecker
                     if (_suggestionDisplay.IsCurrentlyVisible())
                     {
                         Word completion = _suggestionDisplay.CompleteCurrentlySelectedSuggestion();
-                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + completion;
+                        bool useCapitalization = this._settings.EnableCapitalizationInInput && this._settings.AdjustCapitalizationInSuggestions;
+                        string completionFormat = useCapitalization ? completion.GetOriginalWordFormat() : completion.ToString();
+                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + completionFormat;
                     }
                     else
                     {

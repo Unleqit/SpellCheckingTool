@@ -111,7 +111,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             currentTypedWord.word = currentWord;
 
             //show suggestion popup window
-            PopupWindowDisplayState result = popupWindow.Show(suggestions);
+            PopupWindowDisplayState result = popupWindow.Show(currentWord, suggestions);
             switch (result)
             {
                 case PopupWindowDisplayState.SUCCESS: 
@@ -161,7 +161,9 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             Console.BackgroundColor = backColor;
 
             Console.SetCursorPosition(oldWord.offset + oldWord.startIndex, oldWord.line);
-            Console.Write(newWord);
+
+            string printFormat = this.settings.EnableCapitalizationInInput ? newWord.GetOriginalWordFormat() : newWord.ToString();
+            Console.Write(printFormat);
 
             Console.ForegroundColor = oldFC;
             Console.BackgroundColor = oldBC;

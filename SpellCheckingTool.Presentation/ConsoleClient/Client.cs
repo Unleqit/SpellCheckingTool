@@ -70,7 +70,8 @@ public class Client
             suggestionDisplay,
             authService,
             spellcheckContextFactory,
-            token);
+            token,
+            settings);
 
         consoleSpellChecker.Run();
     }

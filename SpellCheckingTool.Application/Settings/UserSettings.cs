@@ -25,7 +25,10 @@ namespace SpellCheckingTool.Application.Settings
         public ConsoleColor SuggestionBackColor { get; set; } 
 
         public ConsoleColor SelectedSuggestionForeColor { get; set; } 
-        public ConsoleColor SelectedSuggestionBackColor { get; set; } 
+        public ConsoleColor SelectedSuggestionBackColor { get; set; }
+
+        public bool EnableCapitalizationInInput { get; set; }
+        public bool AdjustCapitalizationInSuggestions { get; set; }
 
         public static UserSettings Default => new UserSettings
         {
@@ -40,7 +43,9 @@ namespace SpellCheckingTool.Application.Settings
             SuggestionForeColor = ConsoleColor.White,
             SuggestionBackColor = ConsoleColor.Red,
             SelectedSuggestionForeColor = ConsoleColor.Cyan,
-            SelectedSuggestionBackColor = ConsoleColor.Yellow
+            SelectedSuggestionBackColor = ConsoleColor.Yellow,
+            EnableCapitalizationInInput = true,
+            AdjustCapitalizationInSuggestions = true
         };
     }
 }
