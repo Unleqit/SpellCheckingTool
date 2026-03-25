@@ -295,19 +295,24 @@ public class ConsoleUserCommandHandler
     {
         try
         {
+            var username = _context.Username ?? string.Empty;
+
             var path = _context.SettingsRepository.GetUserSettingsFilePath(
                 _context.Username);
 
             if (!File.Exists(path))
             {
-                Console.WriteLine("Settings file does not exist.");
-                ResetInput(ref input);
-                return;
+                var settingsToWrite = string.IsNullOrWhiteSpace(username)
+                    ? _context.SettingsRepository.GetDefaultSettings()
+                    : _context.Settings;
+
+                _context.SettingsRepository.SetSettings(username, settingsToWrite);
             }
 
             _fileOpener.Open(path);
 
-            Console.WriteLine($"Opened settings: {path}");
+            Console.WriteLine($"Settings opened: {path}");
+            Console.WriteLine("Note: Restart the application to apply changes.");
         }
         catch (Exception ex)
         {
