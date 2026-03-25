@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
 {
@@ -12,11 +14,18 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
     {
         public void Open(string filePath)
         {
-            Process.Start(new ProcessStartInfo
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                FileName = filePath,
-                UseShellExecute = true
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = filePath,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                Process.Start("nano", filePath);
+            }
         }
     }
 }
