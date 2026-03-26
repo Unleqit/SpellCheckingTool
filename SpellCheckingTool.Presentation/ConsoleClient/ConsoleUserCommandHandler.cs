@@ -1,6 +1,7 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
+using System.Diagnostics;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -10,6 +11,7 @@ public class ConsoleUserCommandHandler
     private readonly ISuggestionDisplay _suggestionDisplay;
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
+    private readonly IFileOpener _fileOpener;
 
     private const int MaxDisplayedStats = 5;
 
@@ -19,12 +21,14 @@ public class ConsoleUserCommandHandler
         UserSpellcheckContext context,
         ISuggestionDisplay suggestionDisplay,
         ClientAuthService authService,
-        IUserSpellcheckContextFactory spellcheckContextFactory)
+        IUserSpellcheckContextFactory spellcheckContextFactory,
+        IFileOpener fileOpener)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
+        _fileOpener = fileOpener;
     }
 
     public bool TryHandleCommand(string input)
@@ -41,7 +45,8 @@ public class ConsoleUserCommandHandler
             { "/addword", HandleAddWordCommand },
             { "/delword", HandleDeleteWordCommand },
             { "/words", HandleWordsCommandWrapper },
-            { "/stats", HandleStatsCommandWrapper }
+            { "/stats", HandleStatsCommandWrapper },
+            { "/settings", HandleSettingsCommandWrapper }
         };
 
         var commandName = trimmed.Split(' ', 2)[0];
@@ -65,6 +70,11 @@ public class ConsoleUserCommandHandler
     private void HandleStatsCommandWrapper(string command, ref string input)
     {
         HandleStatsCommand(ref input);
+    }
+
+    private void HandleSettingsCommandWrapper(string command, ref string input)
+    {
+        HandleSettingsCommand(ref input);
     }
 
     private void HandleAddWordCommand(string command, ref string input)
@@ -279,5 +289,36 @@ public class ConsoleUserCommandHandler
     {
         input = "";
         _suggestionDisplay.HideSuggestions();
+    }
+
+    private void HandleSettingsCommand(ref string input)
+    {
+        try
+        {
+            var username = _context.Username ?? string.Empty;
+
+            var path = _context.SettingsRepository.GetUserSettingsFilePath(
+                _context.Username);
+
+            if (!File.Exists(path))
+            {
+                var settingsToWrite = string.IsNullOrWhiteSpace(username)
+                    ? _context.SettingsRepository.GetDefaultSettings()
+                    : _context.Settings;
+
+                _context.SettingsRepository.SetSettings(username, settingsToWrite);
+            }
+
+            _fileOpener.Open(path);
+
+            Console.WriteLine($"Settings opened: {path}");
+            Console.WriteLine("Note: Restart the application to apply changes.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to open settings: {ex.Message}");
+        }
+
+        ResetInput(ref input);
     }
 }

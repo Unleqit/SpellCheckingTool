@@ -14,6 +14,7 @@ public class ConsoleSpellChecker
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
+    private readonly IFileOpener _fileOpener;
     private readonly CancellationToken _token;
     private readonly UserSettings _settings;
 
@@ -30,7 +31,8 @@ public class ConsoleSpellChecker
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
         CancellationToken token,
-        UserSettings settings)
+        UserSettings settings,
+        IFileOpener fileOpener)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -38,6 +40,7 @@ public class ConsoleSpellChecker
         _suggestionDisplay = suggestionWindow;
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
+        _fileOpener = fileOpener;
         _token = token;
         _settings = settings;
 
@@ -45,7 +48,8 @@ public class ConsoleSpellChecker
             _context,
             _suggestionDisplay,
             _authService,
-            _spellcheckContextFactory);
+            _spellcheckContextFactory,
+            fileOpener);
     }
 
     private void UpdateSuggestions(string input)

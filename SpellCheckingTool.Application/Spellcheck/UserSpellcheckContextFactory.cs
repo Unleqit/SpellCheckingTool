@@ -31,13 +31,15 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
         var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, null);
+        var settings = _settingsRepository.GetDefaultSettings();
 
         return new UserSpellcheckContext(
             userId: null,
             username: null,
             tree: tree,
             spellcheckService: spellcheckService,
-            settings: UserSettings.Default);
+            settings: settings,
+            settingsRepository: _settingsRepository);
     }
 
     public UserSpellcheckContext CreateForUser(Guid userId, string username)
@@ -70,7 +72,8 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
             username: username,
             tree: tree,
             spellcheckService: spellcheckService,
-            settings: settings);
+            settings: settings,
+            settingsRepository: _settingsRepository);
     }
 
     private static SpellcheckService BuildSpellcheckService(WordTree tree, IAlphabet inputAlphabet, UserService userService, Guid? guid)
