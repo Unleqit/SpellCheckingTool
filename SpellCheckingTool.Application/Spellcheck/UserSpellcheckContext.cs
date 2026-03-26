@@ -12,6 +12,8 @@ public sealed class UserSpellcheckContext
 
     public UserSettings Settings { get; }
 
+    public IUserSettingsRepository SettingsRepository { get; }
+
     public bool IsAuthenticated => UserId.HasValue;
 
     public UserSpellcheckContext(
@@ -19,12 +21,14 @@ public sealed class UserSpellcheckContext
         string? username,
         WordTree tree,
         ISpellcheckService spellcheckService,
-        UserSettings settings)
+        UserSettings settings,
+        IUserSettingsRepository settingsRepository)
     {
         UserId = userId;
         Username = username;
         Tree = tree;
         SpellcheckService = spellcheckService;
         Settings = settings;
+        SettingsRepository = settingsRepository;
     }
 }

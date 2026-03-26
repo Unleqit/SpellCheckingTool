@@ -2,7 +2,7 @@ FROM archlinux:latest
 
 WORKDIR /app
 
-RUN pacman -Syyu --noconfirm && pacman -S --noconfirm dotnet-sdk-8.0 git unzip tar curl
+RUN pacman -Syyu --noconfirm && pacman -S --noconfirm dotnet-sdk-8.0 git unzip tar curl nano
 
 COPY SpellCheckingTool.sln ./
 COPY SpellCheckingTool.Application/*.csproj ./SpellCheckingTool.Application/

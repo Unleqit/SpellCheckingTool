@@ -34,11 +34,13 @@ public class Program
         var server = ServerFactory.Create(userService);
         server.Start(serverPort);
 
+        var fileOpener = new FileOpener();
+
         Thread? clientThread = null;
 
         if (!startHeadless)
         {
-            clientThread = ClientRunner.Start(serverPort, spellcheckFactory, cts);
+            clientThread = ClientRunner.Start(serverPort, spellcheckFactory, fileOpener, cts);
         }
         else
         {
