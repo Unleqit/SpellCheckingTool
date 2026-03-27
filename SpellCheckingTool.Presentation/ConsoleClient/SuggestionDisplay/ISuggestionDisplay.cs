@@ -15,5 +15,4 @@ public interface ISuggestionDisplay
     void NextWord();
     void PreviousWord();
     void Initialize(int shellPromptLength);
-    void HighlightCurrentWord(Word word, bool isValid);
 }

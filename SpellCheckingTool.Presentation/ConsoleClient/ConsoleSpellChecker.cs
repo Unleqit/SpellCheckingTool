@@ -55,15 +55,13 @@ public class ConsoleSpellChecker
 
     private void UpdateSuggestions(string input)
     {
-        if (_commandHandler.IsExactCommandWord(input))
+        if (string.IsNullOrEmpty(input) || input.StartsWith("/"))
         {
-            _suggestionDisplay.HighlightCurrentWord(
-                new Word(new UTF16Alphabet(), input),
-                true);
+            _suggestionDisplay.HideSuggestions();
             return;
         }
 
-        if (string.IsNullOrEmpty(input) || input.EndsWith(' '))
+        if (input.EndsWith(' '))
         {
             _suggestionDisplay.HideSuggestions();
             return;

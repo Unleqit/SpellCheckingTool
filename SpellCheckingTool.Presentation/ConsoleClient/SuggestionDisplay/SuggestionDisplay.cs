@@ -199,21 +199,5 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             this.currentIndexedWord = prev;
             this.currentIndexedWord.offset = this.currentIndexedWord.line == this.shellPromptLine ? this.currentShellPromptLength : 0;
         }
-
-        public void HighlightCurrentWord(Word word, bool isValid)
-        {
-            popupWindow.Hide();
-
-            ConsoleColor foreColor = isValid
-                ? this.settings.ValidWordForeColor
-                : this.settings.InvalidWordForeColor;
-
-            ConsoleColor backColor = isValid
-                ? this.settings.ValidWordBackColor
-                : this.settings.InvalidWordBackColor;
-
-            ReplaceWord(this.currentIndexedWord, word, foreColor, backColor);
-            this.currentIndexedWord.word = word;
-        }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
-using System.Diagnostics;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -340,18 +339,6 @@ public class ConsoleUserCommandHandler
         }
 
         ResetInput(ref input);
-    }
-
-    public bool IsExactCommandWord(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input))
-            return false;
-
-        if (input.Contains(' '))
-            return false;
-
-        string commandWord = GetFirstToken(input);
-        return _commandHandlers.ContainsKey(commandWord);
     }
 
     private static string GetFirstToken(string input)
