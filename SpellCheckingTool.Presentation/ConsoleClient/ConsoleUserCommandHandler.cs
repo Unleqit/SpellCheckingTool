@@ -124,19 +124,42 @@ public class ConsoleUserCommandHandler
         try
         {
             RebuildActiveTreeAfterDictionaryChange();
+
+            if (!_context.SpellcheckService.IsCorrect(word))
+            {
+                _authService.DeleteWord(_context.UserId.Value, normalized);
+
+                try
+                {
+                    RebuildActiveTreeAfterDictionaryChange();
+                }
+                catch
+                {
+                }
+
+                Console.WriteLine($"Invalid word '{normalized}'.");
+                ResetInput(ref input);
+                return;
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine($"Word '{normalized}' already exists in the active tree.");
+            _authService.DeleteWord(_context.UserId.Value, normalized);
+
+            try
+            {
+                RebuildActiveTreeAfterDictionaryChange();
+            }
+            catch
+            {
+            }
+
+            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
+            ResetInput(ref input);
+            return;
         }
 
-        bool existsInActiveTree = _context.SpellcheckService.IsCorrect(word);
-
-        if (existsInActiveTree)
-            Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
-        else
-            Console.WriteLine($"Saved '{normalized}', but verification in the active tree failed.");
-
+        Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
         ResetInput(ref input);
     }
 
