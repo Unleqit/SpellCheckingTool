@@ -13,9 +13,9 @@ public class ConsoleUserCommandHandler
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly IFileOpener _fileOpener;
 
-    private const int MaxDisplayedStats = 5;
-
     private delegate void CommandHandler(string command, ref string input);
+
+    private readonly Dictionary<string, CommandHandler> _commandHandlers;
 
     public ConsoleUserCommandHandler(
         UserSpellcheckContext context,
@@ -29,36 +29,33 @@ public class ConsoleUserCommandHandler
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
+
+        _commandHandlers = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "/addword", HandleAddWordCommand },
+            { "/delword", HandleDeleteWordCommand },
+            { "/words", HandleWordsCommandWrapper },
+            { "/stats", HandleStatsCommandWrapper },
+            { "/settings", HandleSettingsCommandWrapper }
+        };
     }
 
     public bool TryHandleCommand(ref string input)
     {
-        string trimmed = input.Trim();
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
 
-        if (!trimmed.StartsWith("/"))
+        string trimmed = input.Trim();
+        string commandWord = GetFirstToken(trimmed);
+
+        if (!commandWord.StartsWith("/"))
+            return false;
+
+        if (!_commandHandlers.TryGetValue(commandWord, out var handler))
             return false;
 
         Console.WriteLine();
-
-        var commands = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "/addword", HandleAddWordCommand },
-        { "/delword", HandleDeleteWordCommand },
-        { "/words", HandleWordsCommandWrapper },
-        { "/stats", HandleStatsCommandWrapper },
-        { "/settings", HandleSettingsCommandWrapper }
-    };
-
-        string commandName = trimmed.Split(' ', 2)[0];
-
-        if (commands.TryGetValue(commandName, out var handler))
-        {
-            handler(trimmed, ref input);
-            return true;
-        }
-
-        Console.WriteLine($"Unknown command: {trimmed}");
-        ResetInput(ref input);
+        handler(trimmed, ref input);
         return true;
     }
 
@@ -320,5 +317,30 @@ public class ConsoleUserCommandHandler
         }
 
         ResetInput(ref input);
+    }
+
+    public bool IsExactCommandWord(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        if (input.Contains(' '))
+            return false;
+
+        string commandWord = GetFirstToken(input);
+        return _commandHandlers.ContainsKey(commandWord);
+    }
+
+    private static string GetFirstToken(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        string trimmed = input.Trim();
+        int firstSpaceIndex = trimmed.IndexOf(' ');
+
+        return firstSpaceIndex < 0
+            ? trimmed
+            : trimmed[..firstSpaceIndex];
     }
 }
