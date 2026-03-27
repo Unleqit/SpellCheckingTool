@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient
@@ -19,6 +20,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
         private bool isShown;
         private ConsoleColor oldBC;
         private ConsoleColor oldFC;
+        private Word currentInput;
 
         public PopupWindow(UserSettings settings)
         {
@@ -29,6 +31,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             this.isShown = false;
             this.oldBC = Console.BackgroundColor;
             this.oldFC = Console.ForegroundColor;
+            this.currentInput = Word.Empty;
         }
 
         public PopupWindowCoords GetPosition()
@@ -45,7 +48,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 
         public Word GetSelectedItem()
         {
-            return this.isShown ? this.suggestions[this.selectedLine] : Word.Empty;
+            Word selectedItem = this.suggestions[this.selectedLine];
+            string selectedItemString = AdjustSuggestionToRespectCapitalizationSetting(this.currentInput, selectedItem);
+            
+            if (selectedItem.ToString() != selectedItemString)
+                selectedItem = new Word(new CustomAlphabet(selectedItemString.ToLower().Distinct().ToArray()), selectedItemString);
+           
+            return this.isShown ? selectedItem : Word.Empty;
         }
 
         public int GetSelectedLine()
@@ -68,7 +77,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             return (newPosition.top + newPosition.height) <= Console.WindowHeight ? PopupWindowDisplayState.SUCCESS : PopupWindowDisplayState.NOT_ENOUGH_VERTICAL_SPACE;
         }
 
-        public PopupWindowDisplayState Show(Word[] suggestions)
+        public PopupWindowDisplayState Show(Word input, Word[] suggestions)
         {
             int maxItemLength = (suggestions.Count() == 0 ? 0 : suggestions.Max((item) => item.Length));
 
@@ -79,10 +88,10 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             popupWindowCoords.height = suggestions.Count();
             this.position = popupWindowCoords;
 
-            return Show(suggestions, popupWindowCoords);
+            return Show(input, suggestions, popupWindowCoords);
         }
 
-        public PopupWindowDisplayState Show(Word[] suggestions, PopupWindowCoords popupWindowCoords)
+        public PopupWindowDisplayState Show(Word input, Word[] suggestions, PopupWindowCoords popupWindowCoords)
         {
             PopupWindowDisplayState result = HasEnoughHorizontalSpaceAtNewPosition(popupWindowCoords) | HasEnoughVerticalSpaceAtNewPosition(popupWindowCoords);
             if (result != PopupWindowDisplayState.SUCCESS)
@@ -91,6 +100,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             this.isShown = true;
             this.position = popupWindowCoords;
             this.suggestions = suggestions;
+            this.currentInput = input;
 
             int oldCursorLeft = Console.CursorLeft;
             int oldCursorTop = Console.CursorTop;
@@ -101,7 +111,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                 Console.BackgroundColor = (j == this.selectedLine) ? this.settings.SelectedSuggestionBackColor : this.settings.SuggestionBackColor;
                 Console.ForegroundColor = (j == this.selectedLine) ? this.settings.SelectedSuggestionForeColor : this.settings.SuggestionForeColor;
 
-                WriteSuggestionLine(suggestions[j], position.width);
+                WriteSuggestionLine(input, suggestions[j], position.width);
             }
 
             Console.BackgroundColor = oldBC;
@@ -111,12 +121,23 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             return PopupWindowDisplayState.SUCCESS;
         }
 
-        private void WriteSuggestionLine(Word suggestion, int suggestionPopupWindowWidth)
+        private void WriteSuggestionLine(Word input, Word suggestion, int suggestionPopupWindowWidth)
         {
             int rightFill = suggestionPopupWindowWidth - 2 * this.settings.HorizontalPadding - suggestion.Length;
             rightFill = rightFill < 0 ? 0 : rightFill;
-            string paddedSuggestion = new string(' ', this.settings.HorizontalPadding) + suggestion.ToString() + new string(' ', rightFill + this.settings.HorizontalPadding);
+
+            string suggestionString = AdjustSuggestionToRespectCapitalizationSetting(input, suggestion);
+            string paddedSuggestion = new string(' ', this.settings.HorizontalPadding) + suggestionString + new string(' ', rightFill + this.settings.HorizontalPadding);
             Console.Write(paddedSuggestion);
+        }
+
+        private string AdjustSuggestionToRespectCapitalizationSetting(Word input, Word suggestion)
+        {
+            string suggestionString = suggestion.ToString();
+            string inputString = input.ToString();
+            if (this.settings.EnableCapitalizationInInput && this.settings.AdjustCapitalizationInSuggestions && suggestionString.StartsWith(inputString))
+                suggestionString = input.GetOriginalWordFormat() + suggestionString.Substring(inputString.Length);
+            return suggestionString;
         }
 
         public void Hide()
@@ -165,7 +186,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             Hide();
             int oldLine = this.selectedLine;
             this.selectedLine = line;
-            Show(this.suggestions, this.position);
+            Show(this.currentInput, this.suggestions, this.position);
             return oldLine;
         }
     }

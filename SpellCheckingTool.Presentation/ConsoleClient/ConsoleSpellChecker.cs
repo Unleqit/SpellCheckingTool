@@ -16,6 +16,7 @@ public class ConsoleSpellChecker
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly IFileOpener _fileOpener;
     private readonly CancellationToken _token;
+    private readonly UserSettings _settings;
 
     private SuggestionUseCase _suggestionUseCase;
 
@@ -29,8 +30,9 @@ public class ConsoleSpellChecker
         ISuggestionDisplay suggestionWindow,
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
-        IFileOpener fileOpener,
-        CancellationToken token)
+        CancellationToken token,
+        UserSettings settings,
+        IFileOpener fileOpener)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -40,6 +42,7 @@ public class ConsoleSpellChecker
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
         _token = token;
+        _settings = settings;
 
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
@@ -129,7 +132,9 @@ public class ConsoleSpellChecker
                     if (_suggestionDisplay.IsCurrentlyVisible())
                     {
                         Word completion = _suggestionDisplay.CompleteCurrentlySelectedSuggestion();
-                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + completion;
+                        bool useCapitalization = this._settings.EnableCapitalizationInInput && this._settings.AdjustCapitalizationInSuggestions;
+                        string completionFormat = useCapitalization ? completion.GetOriginalWordFormat() : completion.ToString();
+                        input = input.Substring(0, input.LastIndexOf(' ') + 1) + completionFormat;
                     }
                     else
                     {

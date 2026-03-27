@@ -71,8 +71,9 @@ public class Client
             suggestionDisplay,
             authService,
             spellcheckContextFactory,
-            fileOpener,
-            token);
+            token,
+            settings,
+            fileOpener);
 
         consoleSpellChecker.Run();
     }

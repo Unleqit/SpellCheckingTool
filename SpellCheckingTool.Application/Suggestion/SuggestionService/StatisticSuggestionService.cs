@@ -59,6 +59,9 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         /// </summary>
         private double GetNormalizedLastUsedMetric(Word input, int lastNDays = 14)
         {
+            //.Max() crashes when the sequence has 0 elements...
+            if (this.currentStats == null || this.currentStats.Count() == 0)
+                return 0;
             var inputWordStat = this.currentStats.FirstOrDefault((entry) => entry.Word == input);
             if (inputWordStat == null)
                 return 0;
@@ -73,7 +76,12 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         /// </summary>
         private double GetNormalizedMostUsedMetric(Word input, int lastNDays = 14)
         {
+            //.Max() crashes when the sequence has 0 elements...
+            if (this.currentStats == null || this.currentStats.Count() == 0)
+                return 1;
             var highestUsageCount = this.currentStats.Max((entry) => entry.UsageCount);
+            if (highestUsageCount == 0)
+                return 1;
             double inputWordUsageCount = this.currentStats.FirstOrDefault((entry) => entry.Word == input)?.UsageCount ?? 0;
             return 1 - (inputWordUsageCount / highestUsageCount);
         }
