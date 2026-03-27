@@ -87,6 +87,16 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 
         private void ShowSuggestionsInternal(Word currentWord, bool isCurrentWordInTree, ref IndexedWord currentTypedWord, Word[] suggestions)
         {
+            this.lastWordCompleted = false;
+            ConsoleColor oldFC = Console.ForegroundColor;
+            ConsoleColor oldBC = Console.BackgroundColor;
+            ConsoleColor foreColor = isCurrentWordInTree ? this.settings.ValidWordForeColor : this.settings.InvalidWordForeColor;
+            ConsoleColor backColor = isCurrentWordInTree ? this.settings.ValidWordBackColor : this.settings.InvalidWordBackColor;
+
+            ReplaceWord(currentTypedWord, currentWord, foreColor, backColor);
+            currentTypedWord.word = currentWord;
+
+
             if (suggestions == null || suggestions.Length == 0)
                 return;
 
@@ -100,15 +110,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
 
             if (!EnsureEnoughVerticalSpaceInShell(popupWindow.GetPosition().height + 1))
                 return;
-
-            this.lastWordCompleted = false;
-            ConsoleColor oldFC = Console.ForegroundColor;
-            ConsoleColor oldBC = Console.BackgroundColor;
-            ConsoleColor foreColor = isCurrentWordInTree ? this.settings.ValidWordForeColor : this.settings.InvalidWordForeColor;
-            ConsoleColor backColor = isCurrentWordInTree ? this.settings.ValidWordBackColor : this.settings.InvalidWordBackColor;
-            
-            ReplaceWord(currentTypedWord, currentWord, foreColor, backColor);
-            currentTypedWord.word = currentWord;
 
             //show suggestion popup window
             PopupWindowDisplayState result = popupWindow.Show(currentWord, suggestions);
