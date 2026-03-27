@@ -122,10 +122,12 @@ public class ConsoleSpellChecker
                     break;
 
                 case ConsoleKey.Enter:
-                    if (_commandHandler.TryHandleCommand(input))
-                    {
+                    if(_commandHandler.TryHandleCommand(ref input))
+{
                         RefreshSpellcheckState();
-                        Console.Write(_processManager.GetCurrentConsolePrompt());
+                        shellPrompt = _processManager.GetCurrentConsolePrompt();
+                        Console.Write(shellPrompt);
+                        _suggestionDisplay.Initialize(shellPrompt.Length);
                         break;
                     }
 

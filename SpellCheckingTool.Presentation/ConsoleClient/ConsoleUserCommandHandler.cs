@@ -31,7 +31,7 @@ public class ConsoleUserCommandHandler
         _fileOpener = fileOpener;
     }
 
-    public bool TryHandleCommand(string input)
+    public bool TryHandleCommand(ref string input)
     {
         string trimmed = input.Trim();
 
@@ -41,15 +41,15 @@ public class ConsoleUserCommandHandler
         Console.WriteLine();
 
         var commands = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "/addword", HandleAddWordCommand },
-            { "/delword", HandleDeleteWordCommand },
-            { "/words", HandleWordsCommandWrapper },
-            { "/stats", HandleStatsCommandWrapper },
-            { "/settings", HandleSettingsCommandWrapper }
-        };
+    {
+        { "/addword", HandleAddWordCommand },
+        { "/delword", HandleDeleteWordCommand },
+        { "/words", HandleWordsCommandWrapper },
+        { "/stats", HandleStatsCommandWrapper },
+        { "/settings", HandleSettingsCommandWrapper }
+    };
 
-        var commandName = trimmed.Split(' ', 2)[0];
+        string commandName = trimmed.Split(' ', 2)[0];
 
         if (commands.TryGetValue(commandName, out var handler))
         {
