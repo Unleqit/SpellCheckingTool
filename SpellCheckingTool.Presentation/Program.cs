@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
@@ -138,8 +139,13 @@ public class Program
             userSettingsRepository
         );
 
-        var spellcheckFactory = new UserSpellcheckContextFactory(
+        var userTreeBuilder = new UserWordTreeBuilder(
             defaultDictionaryProvider,
+            userService
+        );
+
+        var spellcheckFactory = new UserSpellcheckContextFactory(
+            userTreeBuilder,
             userService,
             userSettingsRepository,
             inputAlphabet
