@@ -1,11 +1,9 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
-using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Application.Spellcheck;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
+using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 using SpellCheckingTool.Presentation.ConsoleClient;
@@ -103,17 +101,42 @@ public class Program
         var userSettingsRepository = new FileUserSettingsRepository(
             Path.Combine(basePath, "UserSettings"));
 
-        var userStore = new FileUserStore(
-            basePath,
+        var paths = new UserStorePaths(basePath);
+        var reader = new UserStoreJsonReader();
+        var writer = new UserStoreJsonWriter();
+
+        IUserRepository userRepository = new FileUserRepository(
+            paths,
+            reader,
+            writer
+        );
+
+        IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
+            paths,
             inputAlphabet,
-            userSettingsRepository
+            userRepository,
+            reader,
+            writer
+        );
+
+        IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
+            paths,
+            inputAlphabet,
+            userRepository,
+            reader,
+            writer
         );
 
         var persistenceService = new FilePersistenceService();
         var dictionaryLoader = new DictionaryLoader(persistenceService);
         var defaultDictionaryProvider = new DefaultDictionaryLoader(dictionaryLoader);
 
-        var userService = new UserService(userStore, userStore, userStore);
+        var userService = new UserService(
+            userRepository,
+            wordStatsRepository,
+            customDictionaryRepository,
+            userSettingsRepository
+        );
 
         var spellcheckFactory = new UserSpellcheckContextFactory(
             defaultDictionaryProvider,
