@@ -2,6 +2,7 @@
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -54,13 +55,22 @@ public class ConsoleSpellChecker
 
     private void UpdateSuggestions(string input)
     {
-        if (input.StartsWith("/"))
+        if (string.IsNullOrEmpty(input) || input.StartsWith("/"))
+        {
+            _suggestionDisplay.HideSuggestions();
             return;
+        }
+
+        if (input.EndsWith(' '))
+        {
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
 
         var viewModel = _suggestionUseCase.Execute(input);
         _suggestionDisplay.ShowSuggestions(viewModel);
     }
-    
+
     public void Run()
     {
         Console.WriteLine(WelcomeMessage);
@@ -122,10 +132,12 @@ public class ConsoleSpellChecker
                     break;
 
                 case ConsoleKey.Enter:
-                    if (_commandHandler.TryHandleCommand(input))
-                    {
+                    if(_commandHandler.TryHandleCommand(ref input))
+{
                         RefreshSpellcheckState();
-                        Console.Write(_processManager.GetCurrentConsolePrompt());
+                        shellPrompt = _processManager.GetCurrentConsolePrompt();
+                        Console.Write(shellPrompt);
+                        _suggestionDisplay.Initialize(shellPrompt.Length);
                         break;
                     }
 

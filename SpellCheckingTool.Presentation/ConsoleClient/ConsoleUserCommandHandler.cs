@@ -1,7 +1,6 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
-using System.Diagnostics;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -13,9 +12,9 @@ public class ConsoleUserCommandHandler
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly IFileOpener _fileOpener;
 
-    private const int MaxDisplayedStats = 5;
-
     private delegate void CommandHandler(string command, ref string input);
+
+    private readonly Dictionary<string, CommandHandler> _commandHandlers;
 
     public ConsoleUserCommandHandler(
         UserSpellcheckContext context,
@@ -29,18 +28,8 @@ public class ConsoleUserCommandHandler
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
-    }
 
-    public bool TryHandleCommand(string input)
-    {
-        string trimmed = input.Trim();
-
-        if (!trimmed.StartsWith("/"))
-            return false;
-
-        Console.WriteLine();
-
-        var commands = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
+        _commandHandlers = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
         {
             { "/addword", HandleAddWordCommand },
             { "/delword", HandleDeleteWordCommand },
@@ -48,17 +37,24 @@ public class ConsoleUserCommandHandler
             { "/stats", HandleStatsCommandWrapper },
             { "/settings", HandleSettingsCommandWrapper }
         };
+    }
 
-        var commandName = trimmed.Split(' ', 2)[0];
+    public bool TryHandleCommand(ref string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
 
-        if (commands.TryGetValue(commandName, out var handler))
-        {
-            handler(trimmed, ref input);
-            return true;
-        }
+        string trimmed = input.Trim();
+        string commandWord = GetFirstToken(trimmed);
 
-        Console.WriteLine($"Unknown command: {trimmed}");
-        ResetInput(ref input);
+        if (!commandWord.StartsWith("/"))
+            return false;
+
+        if (!_commandHandlers.TryGetValue(commandWord, out var handler))
+            return false;
+
+        Console.WriteLine();
+        handler(trimmed, ref input);
         return true;
     }
 
@@ -127,19 +123,42 @@ public class ConsoleUserCommandHandler
         try
         {
             RebuildActiveTreeAfterDictionaryChange();
+
+            if (!_context.SpellcheckService.IsCorrect(word))
+            {
+                _authService.DeleteWord(_context.UserId.Value, normalized);
+
+                try
+                {
+                    RebuildActiveTreeAfterDictionaryChange();
+                }
+                catch
+                {
+                }
+
+                Console.WriteLine($"Invalid word '{normalized}'.");
+                ResetInput(ref input);
+                return;
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine($"Word '{normalized}' already exists in the active tree.");
+            _authService.DeleteWord(_context.UserId.Value, normalized);
+
+            try
+            {
+                RebuildActiveTreeAfterDictionaryChange();
+            }
+            catch
+            {
+            }
+
+            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
+            ResetInput(ref input);
+            return;
         }
 
-        bool existsInActiveTree = _context.SpellcheckService.IsCorrect(word);
-
-        if (existsInActiveTree)
-            Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
-        else
-            Console.WriteLine($"Saved '{normalized}', but verification in the active tree failed.");
-
+        Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
         ResetInput(ref input);
     }
 
@@ -320,5 +339,18 @@ public class ConsoleUserCommandHandler
         }
 
         ResetInput(ref input);
+    }
+
+    private static string GetFirstToken(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        string trimmed = input.Trim();
+        int firstSpaceIndex = trimmed.IndexOf(' ');
+
+        return firstSpaceIndex < 0
+            ? trimmed
+            : trimmed[..firstSpaceIndex];
     }
 }
