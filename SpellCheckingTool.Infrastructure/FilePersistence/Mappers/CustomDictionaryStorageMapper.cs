@@ -1,10 +1,11 @@
-﻿namespace SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
-
-using SpellCheckingTool.Domain.Alphabet;
+﻿using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.UserPersistence.Models;
 
-public class CustomDictionaryStorageMapper
+namespace SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
+
+internal class CustomDictionaryStorageMapper
 {
     private readonly IAlphabet _alphabet;
 
@@ -13,11 +14,11 @@ public class CustomDictionaryStorageMapper
         _alphabet = alphabet;
     }
 
-    public Dictionary<Guid, HashSet<Word>> ToDomain(Dictionary<Guid, List<string>> storage)
+    public CustomDictionary ToDomain(CustomDictionaryDto storage)
     {
         var result = new Dictionary<Guid, HashSet<Word>>();
 
-        foreach (var userEntry in storage)
+        foreach (var userEntry in storage.Data)
         {
             var words = new HashSet<Word>();
 
@@ -33,23 +34,32 @@ public class CustomDictionaryStorageMapper
                 }
                 catch (SpellCheckingToolException ex)
                 {
-                    Console.WriteLine($"Skipping invalid custom dictionary word '{normalized}': {ex.Message}");
+                    Console.WriteLine(
+                        $"Skipping invalid custom dictionary word '{normalized}': {ex.Message}");
                 }
             }
 
             result[userEntry.Key] = words;
         }
 
-        return result;
+        return new CustomDictionary
+        {
+            Data = result
+        };
     }
 
-    public Dictionary<Guid, List<string>> ToStorage(Dictionary<Guid, HashSet<Word>> domain)
+    public CustomDictionaryDto ToStorage(CustomDictionary domain)
     {
-        return domain.ToDictionary(
+        var result = domain.Data.ToDictionary(
             userEntry => userEntry.Key,
             userEntry => userEntry.Value
                 .Select(w => w.ToString())
                 .OrderBy(w => w, StringComparer.OrdinalIgnoreCase)
                 .ToList());
+
+        return new CustomDictionaryDto
+        {
+            Data = result
+        };
     }
 }

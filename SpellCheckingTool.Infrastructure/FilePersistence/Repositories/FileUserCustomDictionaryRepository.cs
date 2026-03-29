@@ -1,13 +1,12 @@
-﻿using SpellCheckingTool.Infrastructure.UserPersistence;
-
-namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
-
-using SpellCheckingTool.Application.Users;
+﻿using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
+using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Infrastructure.UserPersistence.Models;
+
+namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
 public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepository
 {
@@ -15,7 +14,6 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonReader _reader;
     private readonly UserStoreJsonWriter _writer;
     private readonly CustomDictionaryStorageMapper _mapper;
 
@@ -31,12 +29,11 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
         _path = paths.CustomDictionaryFilePath;
         _alphabet = alphabet;
         _userRepository = userRepository;
-        _reader = reader;
         _writer = writer;
         _mapper = new CustomDictionaryStorageMapper(alphabet);
 
-        var storage = _reader.ReadOrDefault(_path, new Dictionary<Guid, List<string>>());
-        _userCustomDictionary = _mapper.ToDomain(storage);
+        var storage = reader.ReadOrDefault(_path, new CustomDictionaryDto());
+        _userCustomDictionary = _mapper.ToDomain(storage).Data;
     }
 
     public void AddWord(Guid userId, string word)
@@ -101,7 +98,11 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
 
     private void Save()
     {
-        var storage = _mapper.ToStorage(_userCustomDictionary);
+        var storage = _mapper.ToStorage(new CustomDictionary
+        {
+            Data = _userCustomDictionary
+        });
+
         _writer.Write(_path, storage);
     }
 }
