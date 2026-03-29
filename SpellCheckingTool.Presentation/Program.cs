@@ -3,7 +3,7 @@ using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
-using SpellCheckingTool.Application.Executables;
+using SpellCheckingTool.Infrastructure.Executables;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 using SpellCheckingTool.Infrastructure.UserPersistence;

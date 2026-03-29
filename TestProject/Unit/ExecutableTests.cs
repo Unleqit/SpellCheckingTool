@@ -1,4 +1,4 @@
-﻿using SpellCheckingTool.Application.Executables;
+﻿using SpellCheckingTool.Infrastructure.Executables;
 using System.Runtime.InteropServices;
 
 namespace TestProject.Unit;

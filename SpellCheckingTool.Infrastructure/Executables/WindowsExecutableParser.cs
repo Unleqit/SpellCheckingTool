@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 
-namespace SpellCheckingTool.Application.Executables;
+namespace SpellCheckingTool.Infrastructure.Executables;
 public class WindowsExecutableParser : ExecutableParser
 {
     public override WordTree GetAllShellExecutables()

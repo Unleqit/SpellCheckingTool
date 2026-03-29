@@ -52,8 +52,9 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     {
         var tree = _treeBuilder.BuildUserTree(userId);
         var executableTree = _executableParser.GetAllShellExecutables();
+        IAlphabet executableAlphabet = _inputAlphabet is UTF16Alphabet ? _inputAlphabet : new UTF16Alphabet();
         var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, null);
-        var executableService = BuildSpellcheckService(executableTree, _inputAlphabet, _userService, null);
+        var executableService = BuildSpellcheckService(executableTree, executableAlphabet, _userService, null);
         var settings = _settingsRepository.GetSettings(username);
       
         return new UserSpellcheckContext(
