@@ -21,7 +21,7 @@ public class Program
 
     static void Main(string[] args)
     {
-       PrintLicense();
+        LicensePrinter.Print();
 
         int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
         bool startHeadless = args.Contains("--headless");
@@ -54,13 +54,6 @@ public class Program
             clientThread.Join();
     }
 
-    private static void PrintLicense()
-    {
-        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
-        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
-        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
-
-    }
     private static int? ParsePortFromArgs(string[] args)
     {
         var portArg = args.FirstOrDefault(a => a.StartsWith("--port="));
