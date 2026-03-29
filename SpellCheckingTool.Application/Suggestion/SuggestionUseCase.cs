@@ -1,48 +1,65 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace SpellCheckingTool.Application.Suggestion
 {
     public class SuggestionUseCase
 {
-    private readonly ISpellcheckService _spellcheckService;
+    private readonly ISpellcheckService _defaultService;
+    private readonly ISpellcheckService _executableService;
 
     public int MaxSuggestions { get; set; }
     public int MaxDistance { get; set; }
 
-        public SuggestionUseCase(ISpellcheckService spellcheckService)
+        public SuggestionUseCase(ISpellcheckService defaultService, ISpellcheckService executableService)
         {
-            _spellcheckService = spellcheckService;
+            _defaultService = defaultService;
+            _executableService = executableService;
             MaxSuggestions = 5;
             MaxDistance = 2;
         }
 
         public SuggestionViewModel Execute(string input)
         {
-            int startIndex = input.LastIndexOf(' ') + 1;
+            var (wordString, startIndex) = ExtractLastWord(input);
+            var isFirstWord = IsFirstWord(input);
 
-            string wordString = input.Substring(startIndex);
+            var activeService = isFirstWord
+                ? _executableService
+                : _defaultService;
 
-            Word word = new Word(_spellcheckService.Alphabet, wordString);
+            var word = new Word(activeService.Alphabet, wordString);
 
-            bool isCorrect = _spellcheckService.IsCorrect(word);
-            var suggestions =
-                _spellcheckService
-                    .GetSuggestions(word, MaxSuggestions, MaxDistance)
-                    .GetSuggestionArray();
+            bool isCorrect = activeService.IsCorrect(word);
+            var suggestionsResult = activeService.GetSuggestions(word, MaxSuggestions, MaxDistance);
 
-            
+            if (!isCorrect && isFirstWord && _defaultService.IsCorrect(word))
+            {
+                isCorrect = true;
+                suggestionsResult = _defaultService.GetSuggestions(word, MaxSuggestions, MaxDistance);
+            }
+
+            var suggestions = suggestionsResult.GetSuggestionArray();
 
             return new SuggestionViewModel(
                 word,
                 isCorrect,
                 suggestions,
                 startIndex);
+        }
+
+        private static (string wordString, int startIndex) ExtractLastWord(string input)
+        {
+            int startIndex = input.LastIndexOf(' ') + 1;
+            string wordString = input.Substring(startIndex);
+            return (wordString, startIndex);
+        }
+
+        private static bool IsFirstWord(string input)
+        {
+            var tokens = input.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return tokens.Length <= 1;
         }
     }
 }

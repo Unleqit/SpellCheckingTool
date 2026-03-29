@@ -9,6 +9,7 @@ public sealed class UserSpellcheckContext
     public string? Username { get; }
     public WordTree Tree { get; set; }
     public ISpellcheckService SpellcheckService { get; set; }
+    public ISpellcheckService ExecutableSpellcheckService { get; set; }
 
     public UserSettings Settings { get; }
 
@@ -21,6 +22,7 @@ public sealed class UserSpellcheckContext
         string? username,
         WordTree tree,
         ISpellcheckService spellcheckService,
+        ISpellcheckService executableSpellcheckService,
         UserSettings settings,
         IUserSettingsRepository settingsRepository)
     {
@@ -28,6 +30,7 @@ public sealed class UserSpellcheckContext
         Username = username;
         Tree = tree;
         SpellcheckService = spellcheckService;
+        ExecutableSpellcheckService = executableSpellcheckService;
         Settings = settings;
         SettingsRepository = settingsRepository;
     }
