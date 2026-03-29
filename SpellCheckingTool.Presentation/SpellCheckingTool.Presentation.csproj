@@ -13,8 +13,4 @@
     <ProjectReference Include="..\SpellCheckingTool.Infrastructure\SpellCheckingTool.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ConsoleClient\Http\" />
-  </ItemGroup>
-
 </Project>

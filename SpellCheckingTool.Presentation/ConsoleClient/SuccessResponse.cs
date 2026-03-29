@@ -1,5 +1,5 @@
 ﻿namespace SpellCheckingTool.Presentation.ConsoleClient;
-public class SuccessResponseDto
+public class SuccessResponse
 {
     public bool Success { get; set; }
 }

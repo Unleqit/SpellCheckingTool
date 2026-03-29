@@ -104,7 +104,7 @@ public class UserController: BaseController
             userId,
             stats = ordered.Select(s => new
             {
-                word = s.Word.ToString(),
+                word = WordMapper.ToStorage(s.Word),
                 usageCount = s.UsageCount,
                 lastUsedAt = s.LastUsedAt
             })

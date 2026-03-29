@@ -1,22 +1,15 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Infrastructure.UserPersistence.Models;
 
-namespace SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
+namespace SpellCheckingTool.Application.CustomDictionary;
 
-internal class CustomDictionaryStorageMapper
+public static class CustomDictionaryMapper
 {
-    private readonly IAlphabet _alphabet;
-
-    public CustomDictionaryStorageMapper(IAlphabet alphabet)
-    {
-        _alphabet = alphabet;
-    }
-
-    public CustomDictionary ToDomain(CustomDictionaryDto storage)
+    public static CustomDictionary ToDomain(CustomDictionaryDto storage)
     {
         var result = new Dictionary<Guid, HashSet<Word>>();
+        var alphabet = new UTF16Alphabet();
 
         foreach (var userEntry in storage.Data)
         {
@@ -24,18 +17,15 @@ internal class CustomDictionaryStorageMapper
 
             foreach (var raw in userEntry.Value)
             {
-                var normalized = raw?.Trim().ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(normalized))
-                    continue;
-
                 try
                 {
-                    words.Add(new Word(_alphabet, normalized));
+                    Word domain = WordMapper.ToDomain(raw);
+                    words.Add(domain);
                 }
                 catch (SpellCheckingToolException ex)
                 {
                     Console.WriteLine(
-                        $"Skipping invalid custom dictionary word '{normalized}': {ex.Message}");
+                        $"Skipping invalid custom dictionary word '{raw.Word}': {ex.Message}");
                 }
             }
 
@@ -48,13 +38,12 @@ internal class CustomDictionaryStorageMapper
         };
     }
 
-    public CustomDictionaryDto ToStorage(CustomDictionary domain)
+    public static CustomDictionaryDto ToStorage(CustomDictionary domain)
     {
         var result = domain.Data.ToDictionary(
             userEntry => userEntry.Key,
             userEntry => userEntry.Value
-                .Select(w => w.ToString())
-                .OrderBy(w => w, StringComparer.OrdinalIgnoreCase)
+                .Select(w => WordMapper.ToStorage(w))
                 .ToList());
 
         return new CustomDictionaryDto
