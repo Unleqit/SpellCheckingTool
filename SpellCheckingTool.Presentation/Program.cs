@@ -103,29 +103,25 @@ public class Program
             Path.Combine(basePath, "UserSettings"));
 
         var paths = new UserStorePaths(basePath);
-        var reader = new UserStoreJsonReader();
-        var writer = new UserStoreJsonWriter();
+        var serializer = new UserStoreJsonSerializer();
 
         IUserRepository userRepository = new FileUserRepository(
             paths,
-            reader,
-            writer
+            serializer
         );
 
         IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
             paths,
             inputAlphabet,
             userRepository,
-            reader,
-            writer
+            serializer
         );
 
         IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
             paths,
             inputAlphabet,
             userRepository,
-            reader,
-            writer
+            serializer
         );
 
         var persistenceService = new FilePersistenceService();

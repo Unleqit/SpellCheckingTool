@@ -15,7 +15,7 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonWriter _writer;
+    private readonly UserStoreJsonSerializer _serializer;
     private readonly WordStatisticStorageMapper _mapper;
 
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats;
@@ -24,16 +24,15 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
         UserStorePaths paths,
         IAlphabet alphabet,
         IUserRepository userRepository,
-        UserStoreJsonReader reader,
-        UserStoreJsonWriter writer)
+        UserStoreJsonSerializer serializer)
     {
         _path = paths.WordStatsFilePath;
         _alphabet = alphabet;
         _userRepository = userRepository;
-        _writer = writer;
+        _serializer = serializer;
         _mapper = new WordStatisticStorageMapper(alphabet);
 
-        var storage = reader.ReadOrDefault(_path, new UserWordStatsDto());
+        var storage = _serializer.ReadOrDefault(_path, new UserWordStatsDto());
         _userWordStats = _mapper.ToDomain(storage).Data;
     }
 
@@ -95,6 +94,6 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
             Data = _userWordStats
         });
 
-        _writer.Write(_path, storage);
+        _serializer.Write(_path, storage);
     }
 }

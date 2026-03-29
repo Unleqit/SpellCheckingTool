@@ -14,25 +14,24 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonWriter _writer;
+    private readonly UserStoreJsonSerializer _serializer;
     private readonly CustomDictionaryStorageMapper _mapper;
 
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary;
 
     public FileUserCustomDictionaryRepository(
-        UserStorePaths paths,
-        IAlphabet alphabet,
-        IUserRepository userRepository,
-        UserStoreJsonReader reader,
-        UserStoreJsonWriter writer)
+    UserStorePaths paths,
+    IAlphabet alphabet,
+    IUserRepository userRepository,
+    UserStoreJsonSerializer serializer)
     {
         _path = paths.CustomDictionaryFilePath;
         _alphabet = alphabet;
         _userRepository = userRepository;
-        _writer = writer;
+        _serializer = serializer;
         _mapper = new CustomDictionaryStorageMapper(alphabet);
 
-        var storage = reader.ReadOrDefault(_path, new CustomDictionaryDto());
+        var storage = _serializer.ReadOrDefault(_path, new CustomDictionaryDto());
         _userCustomDictionary = _mapper.ToDomain(storage).Data;
     }
 
@@ -103,6 +102,6 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
             Data = _userCustomDictionary
         });
 
-        _writer.Write(_path, storage);
+        _serializer.Write(_path, storage);
     }
 }
