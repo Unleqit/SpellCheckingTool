@@ -189,16 +189,21 @@ public class ConsoleSpellChecker
 
         _context.Tree = refreshed.Tree;
         _context.SpellcheckService = refreshed.SpellcheckService;
+        _context.ExecutableSpellcheckService = refreshed.ExecutableSpellcheckService;
 
-        _suggestionUseCase = CreateSuggestionUseCase(_context.SpellcheckService);
+        _suggestionUseCase = CreateSuggestionUseCase(
+            _context.SpellcheckService,
+            _context.ExecutableSpellcheckService);
     }
 
-    private static SuggestionUseCase CreateSuggestionUseCase(ISpellcheckService spellcheckService)
+    private SuggestionUseCase CreateSuggestionUseCase(
+        ISpellcheckService defaultService,
+        ISpellcheckService executableService)
     {
-        return new SuggestionUseCase(spellcheckService)
+        return new SuggestionUseCase(defaultService, executableService)
         {
-            MaxSuggestions = 5,
-            MaxDistance = 3
+            MaxSuggestions = _settings.MaxSuggestions,
+            MaxDistance = _settings.MaxDistance
         };
     }
 
@@ -248,9 +253,11 @@ public class ConsoleSpellChecker
 
         try
         {
-            var word = new Word(_context.SpellcheckService.Alphabet, token);
+            var service = _context.SpellcheckService;
 
-            if (_context.SpellcheckService.IsCorrect(word))
+            var word = new Word(service.Alphabet, token);
+
+            if (service.IsCorrect(word))
             {
                 _authService.TrackWordUsage(_context.UserId.Value, token);
             }

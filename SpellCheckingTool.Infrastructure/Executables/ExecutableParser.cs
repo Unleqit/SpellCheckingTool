@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
 using System.Diagnostics;
 
-namespace SpellCheckingTool.Infrastructure.Executables;
+namespace SpellCheckingTool.Application.Executables;
 
 public abstract class ExecutableParser : IExecutableParser
     {
