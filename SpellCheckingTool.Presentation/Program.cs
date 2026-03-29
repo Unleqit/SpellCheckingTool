@@ -4,6 +4,7 @@ using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
+using SpellCheckingTool.Infrastructure.Executables;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 using SpellCheckingTool.Infrastructure.Http.Servers;
@@ -137,11 +138,15 @@ public class Program
             userService
         );
 
+
+        var executableParser = new WindowsExecutableParser();
         var spellcheckFactory = new UserSpellcheckContextFactory(
             userTreeBuilder,
             userService,
             userSettingsRepository,
-            inputAlphabet
+            inputAlphabet,
+            executableParser
+
         );
 
         return (userService, authService, spellcheckFactory);

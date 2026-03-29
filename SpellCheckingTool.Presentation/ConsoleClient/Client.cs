@@ -56,7 +56,9 @@ public class Client
     {
         var settings = context.Settings;
 
-        var suggestionUseCase = new SuggestionUseCase(context.SpellcheckService)
+        var suggestionUseCase = new SuggestionUseCase(
+            context.SpellcheckService,
+            context.ExecutableSpellcheckService)
         {
             MaxSuggestions = settings.MaxSuggestions,
             MaxDistance = settings.MaxDistance
