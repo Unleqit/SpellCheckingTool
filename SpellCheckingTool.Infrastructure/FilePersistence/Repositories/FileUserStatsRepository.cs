@@ -1,14 +1,13 @@
-﻿using SpellCheckingTool.Infrastructure.UserPersistence;
-
-namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
-
-using SpellCheckingTool.Application.Users;
+﻿using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
+using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Infrastructure.UserPersistence.Models;
+
+namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
 public class FileUserWordStatsRepository : IUserWordStatsRepository
 {
@@ -16,8 +15,7 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonReader _reader;
-    private readonly UserStoreJsonWriter _writer;
+    private readonly UserStoreJsonSerializer _serializer;
     private readonly WordStatisticStorageMapper _mapper;
 
     private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats;
@@ -26,55 +24,50 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
         UserStorePaths paths,
         IAlphabet alphabet,
         IUserRepository userRepository,
-        UserStoreJsonReader reader,
-        UserStoreJsonWriter writer)
+        UserStoreJsonSerializer serializer)
     {
         _path = paths.WordStatsFilePath;
         _alphabet = alphabet;
         _userRepository = userRepository;
-        _reader = reader;
-        _writer = writer;
+        _serializer = serializer;
         _mapper = new WordStatisticStorageMapper(alphabet);
 
-        var storage = _reader.ReadOrDefault(
-            _path,
-            new Dictionary<Guid, Dictionary<string, WordStatisticStorage>>());
-
-        _userWordStats = _mapper.ToDomain(storage);
+        var storage = _serializer.ReadOrDefault(_path, new UserWordStatsDto());
+        _userWordStats = _mapper.ToDomain(storage).Data;
     }
 
     public void IncrementWord(Guid userId, string word)
-{
-    lock (_lock)
     {
-        if (_userRepository.GetById(userId) == null)
-            throw new UserNotFoundDomainException(userId);
-
-        if (!_userWordStats.TryGetValue(userId, out var words))
+        lock (_lock)
         {
-            words = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
-            _userWordStats[userId] = words;
-        }
+            if (_userRepository.GetById(userId) == null)
+                throw new UserNotFoundDomainException(userId);
 
-        var normalized = word.Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(normalized))
-            return;
+            if (!_userWordStats.TryGetValue(userId, out var words))
+            {
+                words = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
+                _userWordStats[userId] = words;
+            }
 
-        if (!words.TryGetValue(normalized, out var info))
-        {
-            var wordObj = new Word(_alphabet, normalized);
-            var statistic = new WordStatistic(wordObj);
-            statistic.Increment(); 
-            words[normalized] = new WordInfo(normalized, statistic);
-        }
-        else
-        {
-            info.Statistic.Increment();
-        }
+            var normalized = word.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return;
 
-        Save();
+            if (!words.TryGetValue(normalized, out var info))
+            {
+                var wordObj = new Word(_alphabet, normalized);
+                var statistic = new WordStatistic(wordObj);
+                statistic.Increment();
+                words[normalized] = new WordInfo(normalized, statistic);
+            }
+            else
+            {
+                info.Statistic.Increment();
+            }
+
+            Save();
+        }
     }
-}
 
     public IReadOnlyCollection<WordStatistic> GetWordStats(Guid userId)
     {
@@ -96,7 +89,11 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
 
     private void Save()
     {
-        var storage = _mapper.ToStorage(_userWordStats);
-        _writer.Write(_path, storage);
+        var storage = _mapper.ToStorage(new UserWordStats
+        {
+            Data = _userWordStats
+        });
+
+        _serializer.Write(_path, storage);
     }
 }

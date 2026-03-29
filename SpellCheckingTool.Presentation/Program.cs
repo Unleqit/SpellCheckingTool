@@ -20,7 +20,7 @@ public class Program
 
     static void Main(string[] args)
     {
-       PrintLicense();
+        LicensePrinter.Print();
 
         int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
         bool startHeadless = args.Contains("--headless");
@@ -53,13 +53,6 @@ public class Program
             clientThread.Join();
     }
 
-    private static void PrintLicense()
-    {
-        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
-        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
-        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
-
-    }
     private static int? ParsePortFromArgs(string[] args)
     {
         var portArg = args.FirstOrDefault(a => a.StartsWith("--port="));
@@ -102,29 +95,25 @@ public class Program
             Path.Combine(basePath, "UserSettings"));
 
         var paths = new UserStorePaths(basePath);
-        var reader = new UserStoreJsonReader();
-        var writer = new UserStoreJsonWriter();
+        var serializer = new UserStoreJsonSerializer();
 
         IUserRepository userRepository = new FileUserRepository(
             paths,
-            reader,
-            writer
+            serializer
         );
 
         IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
             paths,
             inputAlphabet,
             userRepository,
-            reader,
-            writer
+            serializer
         );
 
         IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
             paths,
             inputAlphabet,
             userRepository,
-            reader,
-            writer
+            serializer
         );
 
         var persistenceService = new FilePersistenceService();

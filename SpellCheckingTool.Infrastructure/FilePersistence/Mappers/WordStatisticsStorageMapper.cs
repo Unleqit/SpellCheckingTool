@@ -1,12 +1,12 @@
-﻿using SpellCheckingTool.Infrastructure.UserPersistence;
+﻿using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.WordStats;
+using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure.UserPersistence;
+using SpellCheckingTool.Infrastructure.UserPersistence.Models;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
 
-using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordStats;
-using SpellCheckingTool.Domain.WordTree;
-
-public class WordStatisticStorageMapper
+internal class WordStatisticStorageMapper
 {
     private readonly IAlphabet _alphabet;
 
@@ -15,12 +15,11 @@ public class WordStatisticStorageMapper
         _alphabet = alphabet;
     }
 
-    public Dictionary<Guid, Dictionary<string, WordInfo>> ToDomain(
-        Dictionary<Guid, Dictionary<string, WordStatisticStorage>> storage)
+    public UserWordStats ToDomain(UserWordStatsDto storage)
     {
         var result = new Dictionary<Guid, Dictionary<string, WordInfo>>();
 
-        foreach (var userEntry in storage)
+        foreach (var userEntry in storage.Data)
         {
             var inner = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
 
@@ -28,7 +27,10 @@ public class WordStatisticStorageMapper
             {
                 var storageStat = wordEntry.Value;
                 var wordObj = new Word(_alphabet, storageStat.Word);
-                var stat = new WordStatistic(wordObj, storageStat.UsageCount, storageStat.LastUsedAt);
+                var stat = new WordStatistic(
+                    wordObj,
+                    storageStat.UsageCount,
+                    storageStat.LastUsedAt);
 
                 inner[wordEntry.Key] = new WordInfo(wordEntry.Key, stat);
             }
@@ -36,13 +38,15 @@ public class WordStatisticStorageMapper
             result[userEntry.Key] = inner;
         }
 
-        return result;
+        return new UserWordStats
+        {
+            Data = result
+        };
     }
 
-    public Dictionary<Guid, Dictionary<string, WordStatisticStorage>> ToStorage(
-        Dictionary<Guid, Dictionary<string, WordInfo>> domain)
+    public UserWordStatsDto ToStorage(UserWordStats domain)
     {
-        return domain.ToDictionary(
+        var result = domain.Data.ToDictionary(
             userEntry => userEntry.Key,
             userEntry => userEntry.Value.ToDictionary(
                 wordEntry => wordEntry.Key,
@@ -52,5 +56,10 @@ public class WordStatisticStorageMapper
                     UsageCount = wordEntry.Value.Statistic.UsageCount,
                     LastUsedAt = wordEntry.Value.Statistic.LastUsedAt
                 }));
+
+        return new UserWordStatsDto
+        {
+            Data = result
+        };
     }
 }

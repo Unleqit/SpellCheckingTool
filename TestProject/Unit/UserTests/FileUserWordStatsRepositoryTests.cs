@@ -2,9 +2,8 @@
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.Users;
-using SpellCheckingTool.Infrastructure.FilePersistence;
-using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
+using SpellCheckingTool.Infrastructure.UserPersistence;
 using TestProject.Fakes;
 
 namespace TestProject.Unit;
@@ -15,8 +14,7 @@ public class FileUserWordStatsRepositoryTests
     private string _testDirectory = null!;
     private IAlphabet _alphabet = null!;
     private UserStorePaths _paths = null!;
-    private UserStoreJsonReader _reader = null!;
-    private UserStoreJsonWriter _writer = null!;
+    private UserStoreJsonSerializer _serializer = null!;
     private FakeUserRepository _userRepository = null!;
 
     [TestInitialize]
@@ -31,8 +29,7 @@ public class FileUserWordStatsRepositoryTests
         Directory.CreateDirectory(_testDirectory);
 
         _paths = new UserStorePaths(_testDirectory);
-        _reader = new UserStoreJsonReader();
-        _writer = new UserStoreJsonWriter();
+        _serializer = new UserStoreJsonSerializer();
         _userRepository = new FakeUserRepository();
     }
 
@@ -49,8 +46,7 @@ public class FileUserWordStatsRepositoryTests
             _paths,
             _alphabet,
             _userRepository,
-            _reader,
-            _writer);
+            _serializer);
     }
 
     [TestMethod]
