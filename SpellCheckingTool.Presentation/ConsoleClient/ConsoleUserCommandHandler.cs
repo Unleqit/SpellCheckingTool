@@ -229,7 +229,7 @@ public class ConsoleUserCommandHandler
 
         var words = _authService.GetWords(_context.UserId.Value);
 
-        if (words.Count == 0)
+        if (words.Count() == 0)
         {
             Console.WriteLine("No saved words found.");
             ResetInput(ref input);
@@ -237,9 +237,9 @@ public class ConsoleUserCommandHandler
         }
 
         Console.WriteLine("Personal dictionary:");
-        foreach (var item in words.OrderBy(w => w.Word, StringComparer.OrdinalIgnoreCase))
+        foreach (var item in words.OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase))
         {
-            Console.WriteLine($"- {item.Word}");
+            Console.WriteLine($"- {item}");
         }
 
         ResetInput(ref input);
@@ -268,7 +268,7 @@ public class ConsoleUserCommandHandler
 
         var topStats = stats
             .OrderByDescending(s => s.UsageCount)
-            .ThenBy(s => s.Word, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(s => s.Word.ToString(), StringComparer.OrdinalIgnoreCase)
             .Take(maxDisplayedStats)
             .ToList();
 

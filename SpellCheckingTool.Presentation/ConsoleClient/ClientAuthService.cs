@@ -1,13 +1,13 @@
 ﻿using Newtonsoft.Json;
+using SpellCheckingTool.Application.UserStatsResponse;
+using SpellCheckingTool.Application.UserWordsFileResponse;
+using SpellCheckingTool.Application.UserWordStats;
+using SpellCheckingTool.Application.WordDto;
+using SpellCheckingTool.Domain.WordStats;
+using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 public class ClientAuthService
@@ -76,7 +76,7 @@ public class ClientAuthService
 
             try
             {
-                var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
+                var json = JsonConvert.DeserializeObject<SuccessResponse>(responseBody);
                 return json?.Success ?? false;
             }
             catch (JsonException ex)
@@ -114,19 +114,12 @@ public class ClientAuthService
     {
         Console.Write(isRegister ? "Choose a password: " : "Password: ");
         string password = ReadPassword();
-        string hashed = Hash(password);
-        var payload = new
-        {
-            username = username,
-            hashedPassword = hashed
-        };
 
-        string requestJson = JsonConvert.SerializeObject(payload);
+        string requestJson = JsonConvert.SerializeObject(new { username = username, password = password });
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-        string url = isRegister
-            ? $"{_backendUrl}/api/v1/users/register"
-            : $"{_backendUrl}/api/v1/users/login";
+        string endpoint = isRegister ? "register" : "login";
+        string url = $"{_backendUrl}/api/v1/users/{endpoint}";
 
         HttpResponseMessage response;
         try
@@ -227,15 +220,9 @@ public class ClientAuthService
             return password.ToString();
         }
 
-        public static string Hash(string password)
-        {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha.ComputeHash(bytes);
-            return Convert.ToHexString(hash);
-        }
+       
 
-    public IReadOnlyList<UserDictionaryWordDto> GetWords(Guid userId)
+    public IReadOnlyList<Word> GetWords(Guid userId)
     {
         var payload = new { userId };
         string requestJson = JsonConvert.SerializeObject(payload);
@@ -251,20 +238,25 @@ public class ClientAuthService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Could not load words: {response.StatusCode}");
-                return Array.Empty<UserDictionaryWordDto>();
+                return Array.Empty<Word>();
             }
 
             var json = JsonConvert.DeserializeObject<UserWordsFileResponseDto>(responseBody);
-            return json?.Words?.ToList() ?? new List<UserDictionaryWordDto>();
+            if (json == null || json.Words == null)
+                return [];
+
+            var wordDtos = json.Words;
+            var words = wordDtos.Select(w => WordMapper.ToDomain(w)).ToList();
+            return words;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading words: {ex.Message}");
-            return Array.Empty<UserDictionaryWordDto>();
+            return Array.Empty<Word>();
         }
     }
 
-    public IReadOnlyList<UserWordStatDto> GetStats(Guid userId)
+    public IReadOnlyList<WordStatistic> GetStats(Guid userId)
     {
         var payload = new { userId };
         string requestJson = JsonConvert.SerializeObject(payload);
@@ -280,16 +272,20 @@ public class ClientAuthService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Could not load stats: {response.StatusCode}");
-                return Array.Empty<UserWordStatDto>();
+                return Array.Empty<WordStatistic>();
             }
 
-            var json = JsonConvert.DeserializeObject<UserStatsResponseDto>(responseBody);
-            return json?.Stats?.ToList() ?? new List<UserWordStatDto>();
+            var dto = JsonConvert.DeserializeObject<UserStatsResponseDto>(responseBody);
+            if (dto == null || dto.Stats == null)
+                return [];
+
+            var domain = UserStatsResponseMapper.ToDomain(dto);
+            return domain.Stats;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading stats: {ex.Message}");
-            return Array.Empty<UserWordStatDto>();
+            return Array.Empty<WordStatistic>();
         }
     }
     private bool Post(string relativeUrl, object payload)
@@ -311,7 +307,7 @@ public class ClientAuthService
 
             try
             {
-                var json = JsonConvert.DeserializeObject<SuccessResponseDto>(responseBody);
+                var json = JsonConvert.DeserializeObject<SuccessResponse>(responseBody);
                 return json?.Success ?? false;
             }
             catch (JsonException ex)

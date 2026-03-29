@@ -1,11 +1,11 @@
-﻿using SpellCheckingTool.Application.Users;
+﻿using SpellCheckingTool.Application.Entities.WordInfo;
+using SpellCheckingTool.Application.Users;
+using SpellCheckingTool.Application.UserWordStats;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Infrastructure.FilePersistence.Mappers;
 using SpellCheckingTool.Infrastructure.UserPersistence;
-using SpellCheckingTool.Infrastructure.UserPersistence.Models;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
@@ -16,9 +16,8 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
     private readonly UserStoreJsonSerializer _serializer;
-    private readonly WordStatisticStorageMapper _mapper;
 
-    private Dictionary<Guid, Dictionary<string, WordInfo>> _userWordStats;
+    private UserWordStats _userWordStats;
 
     public FileUserWordStatsRepository(
         UserStorePaths paths,
@@ -30,10 +29,9 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
         _alphabet = alphabet;
         _userRepository = userRepository;
         _serializer = serializer;
-        _mapper = new WordStatisticStorageMapper(alphabet);
 
         var storage = _serializer.ReadOrDefault(_path, new UserWordStatsDto());
-        _userWordStats = _mapper.ToDomain(storage).Data;
+        _userWordStats = UserWordStatsMapper.ToDomain(storage);
     }
 
     public void IncrementWord(Guid userId, string word)
@@ -43,10 +41,10 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
             if (_userRepository.GetById(userId) == null)
                 throw new UserNotFoundDomainException(userId);
 
-            if (!_userWordStats.TryGetValue(userId, out var words))
+            if (!_userWordStats.Data.TryGetValue(userId, out var words))
             {
                 words = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
-                _userWordStats[userId] = words;
+                _userWordStats.Data[userId] = words;
             }
 
             var normalized = word.Trim().ToLowerInvariant();
@@ -76,7 +74,7 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
             if (_userRepository.GetById(userId) == null)
                 throw new UserNotFoundDomainException(userId);
 
-            if (!_userWordStats.TryGetValue(userId, out var words))
+            if (!_userWordStats.Data.TryGetValue(userId, out var words))
                 return Array.Empty<WordStatistic>();
 
             return words.Values
@@ -89,11 +87,7 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
 
     private void Save()
     {
-        var storage = _mapper.ToStorage(new UserWordStats
-        {
-            Data = _userWordStats
-        });
-
+        var storage = UserWordStatsMapper.ToStorage(_userWordStats);
         _serializer.Write(_path, storage);
     }
 }
