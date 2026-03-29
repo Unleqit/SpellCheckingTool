@@ -1,5 +1,5 @@
 ﻿namespace SpellCheckingTool.Infrastructure.UserPersistence;
-    internal class WordStatisticStorage
+    public class WordStatisticStorage
     {
         public string Word { get; set; } = "";
         public int UsageCount { get; set; }

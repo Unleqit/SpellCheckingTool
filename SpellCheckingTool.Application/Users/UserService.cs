@@ -1,4 +1,5 @@
 ﻿using SpellCheckingTool.Application.Common;
+using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
@@ -10,23 +11,28 @@ public class UserService
     private readonly IUserRepository _userRepo;
     private readonly IUserWordStatsRepository _wordStatsRepo;
     private readonly IUserCustomDictionaryRepository _customDictionaryRepo;
+    private readonly IUserSettingsRepository _settingsRepository;
 
     public UserService(
-    IUserRepository userRepo,
-    IUserWordStatsRepository wordStatsRepo,
-    IUserCustomDictionaryRepository customDictionaryRepo)
+        IUserRepository userRepo,
+        IUserWordStatsRepository wordStatsRepo,
+        IUserCustomDictionaryRepository customDictionaryRepo,
+        IUserSettingsRepository settingsRepository)
     {
         _userRepo = userRepo;
         _wordStatsRepo = wordStatsRepo;
         _customDictionaryRepo = customDictionaryRepo;
+        _settingsRepository = settingsRepository;
     }
 
     public OperationResult<User> Register(string username, string hashedPassword)
     {
         if (string.IsNullOrWhiteSpace(username))
             return OperationResult<User>.Fail("Username is required.");
+
         if (string.IsNullOrWhiteSpace(hashedPassword))
             return OperationResult<User>.Fail("Password is required.");
+
         if (_userRepo.GetByUsername(username) != null)
             return OperationResult<User>.Fail("Username already exists.");
 
@@ -35,9 +41,11 @@ public class UserService
             username.Trim(),
             hashedPassword,
             DateTime.UtcNow
-        );
+            );
 
         _userRepo.Add(user);
+        _settingsRepository.SetSettings(user.Username, UserSettings.Default);
+
         return OperationResult<User>.Ok(user);
     }
 

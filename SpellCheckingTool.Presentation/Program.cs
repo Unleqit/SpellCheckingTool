@@ -1,11 +1,10 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
-using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Spellcheck;
-using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.FilePersistence;
+using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 using SpellCheckingTool.Presentation.ConsoleClient;
@@ -22,7 +21,7 @@ public class Program
 
     static void Main(string[] args)
     {
-       PrintLicense();
+        LicensePrinter.Print();
 
         int serverPort = ParsePortFromArgs(args) ?? GetFreePort();
         bool startHeadless = args.Contains("--headless");
@@ -55,13 +54,6 @@ public class Program
             clientThread.Join();
     }
 
-    private static void PrintLicense()
-    {
-        Console.WriteLine("This application uses the UK Advanced Cryptics Dictionary for a predefined word list under the following license:");
-        Console.WriteLine("Copyright © J Ross Beresford 1993-1999. All Rights Reserved.");
-        Console.WriteLine("Visit the 'UK Advanced Cryptics Dictionary' project at: https://diginoodles.com/projects/eowl");
-
-    }
     private static int? ParsePortFromArgs(string[] args)
     {
         var portArg = args.FirstOrDefault(a => a.StartsWith("--port="));
@@ -103,20 +95,46 @@ public class Program
         var userSettingsRepository = new FileUserSettingsRepository(
             Path.Combine(basePath, "UserSettings"));
 
-        var userStore = new FileUserStore(
-            basePath,
+        var paths = new UserStorePaths(basePath);
+        var serializer = new UserStoreJsonSerializer();
+
+        IUserRepository userRepository = new FileUserRepository(
+            paths,
+            serializer
+        );
+
+        IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
+            paths,
             inputAlphabet,
-            userSettingsRepository
+            userRepository,
+            serializer
+        );
+
+        IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
+            paths,
+            inputAlphabet,
+            userRepository,
+            serializer
         );
 
         var persistenceService = new FilePersistenceService();
         var dictionaryLoader = new DictionaryLoader(persistenceService);
         var defaultDictionaryProvider = new DefaultDictionaryLoader(dictionaryLoader);
 
-        var userService = new UserService(userStore, userStore, userStore);
+        var userService = new UserService(
+            userRepository,
+            wordStatsRepository,
+            customDictionaryRepository,
+            userSettingsRepository
+        );
+
+        var userTreeBuilder = new UserWordTreeBuilder(
+            defaultDictionaryProvider,
+            userService
+        );
 
         var spellcheckFactory = new UserSpellcheckContextFactory(
-            defaultDictionaryProvider,
+            userTreeBuilder,
             userService,
             userSettingsRepository,
             inputAlphabet
