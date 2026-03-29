@@ -1,13 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 public class ClientAuthService
@@ -114,19 +107,12 @@ public class ClientAuthService
     {
         Console.Write(isRegister ? "Choose a password: " : "Password: ");
         string password = ReadPassword();
-        string hashed = Hash(password);
-        var payload = new
-        {
-            username = username,
-            hashedPassword = hashed
-        };
 
-        string requestJson = JsonConvert.SerializeObject(payload);
+        string requestJson = JsonConvert.SerializeObject(new { username = username, password = password });
         var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
-        string url = isRegister
-            ? $"{_backendUrl}/api/v1/users/register"
-            : $"{_backendUrl}/api/v1/users/login";
+        string endpoint = isRegister ? "register" : "login";
+        string url = $"{_backendUrl}/api/v1/users/{endpoint}";
 
         HttpResponseMessage response;
         try
@@ -227,13 +213,7 @@ public class ClientAuthService
             return password.ToString();
         }
 
-        public static string Hash(string password)
-        {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha.ComputeHash(bytes);
-            return Convert.ToHexString(hash);
-        }
+       
 
     public IReadOnlyList<UserDictionaryWordDto> GetWords(Guid userId)
     {

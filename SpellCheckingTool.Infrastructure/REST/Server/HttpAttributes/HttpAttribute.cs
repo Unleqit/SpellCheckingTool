@@ -1,4 +1,4 @@
-﻿namespace SpellCheckingTool.Presentation.Http.Servers.Attributes;
+﻿namespace SpellCheckingTool.Infrastructure.Http.Servers.Attributes;
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public abstract class HttpAttribute : Attribute
     {

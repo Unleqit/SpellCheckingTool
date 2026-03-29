@@ -1,9 +1,11 @@
-﻿using SpellCheckingTool.Presentation.Http.Servers;
-using SpellCheckingTool.Presentation.Servers.Exceptions;
+﻿using SpellCheckingTool.Infrastructure.Controller;
+using SpellCheckingTool.Infrastructure.Http.Controllers;
+using SpellCheckingTool.Infrastructure.Http.Servers;
+using SpellCheckingTool.Infrastructure.Servers.Exceptions;
 using System.Net;
 using System.Reflection;
 
-namespace SpellCheckingTool.Presentation.Servers;
+namespace SpellCheckingTool.Infrastructure.Servers;
 
 public class Server
 {
@@ -18,18 +20,19 @@ public class Server
     /// <summary>
     /// Initializes the server
     /// </summary>
-    public Server()
+    public Server(params BaseController[] controllers)
     {
         listener = new HttpListener();
         middlewares = new MiddlewarePipeline();
 
-        Assembly assembly = typeof(Server).Assembly;
-        router = new Router(assembly);
+        this.router = new Router();
+        router.RegisterController(new HealthController());
 
-        requestThread = new Thread(HandleRequests)
-        {
-            IsBackground = true
-        };
+        //add custom controllers
+        foreach (var controller in controllers)
+            router.RegisterController(controller);
+
+        requestThread = new Thread(HandleRequests) { IsBackground = true };
     }
 
     /// <summary>

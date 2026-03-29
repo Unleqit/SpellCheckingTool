@@ -1,4 +1,4 @@
-﻿namespace SpellCheckingTool.Presentation.Servers.Exceptions;
+﻿namespace SpellCheckingTool.Infrastructure.Servers.Exceptions;
 
 public sealed class ServerShutdownException : Exception
 {

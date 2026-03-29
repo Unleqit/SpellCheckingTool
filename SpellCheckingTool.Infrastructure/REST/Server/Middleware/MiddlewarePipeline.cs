@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SpellCheckingTool.Presentation.Http.Servers;
+namespace SpellCheckingTool.Infrastructure.Http.Servers;
     public class MiddlewarePipeline
     {
         private readonly List<Middleware> Middlewares = new();
