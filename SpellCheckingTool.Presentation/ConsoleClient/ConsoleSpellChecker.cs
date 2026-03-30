@@ -22,7 +22,7 @@ public class ConsoleSpellChecker
     private SuggestionUseCase _suggestionUseCase;
 
     private const string WelcomeMessage =
-        "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats";
+        "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /shutdown";
 
     public ConsoleSpellChecker(
         UserSpellcheckContext context,
