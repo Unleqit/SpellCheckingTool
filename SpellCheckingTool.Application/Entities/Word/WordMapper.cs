@@ -4,6 +4,13 @@ using SpellCheckingTool.Domain.WordTree;
 
 public static class WordMapper
 {
+    private static IAlphabet alphabet;
+
+    static WordMapper()
+    {
+        alphabet = new UTF16Alphabet();
+    }
+
     public static WordDto ToStorage(Word domain)
     {
         return new WordDto
@@ -14,7 +21,6 @@ public static class WordMapper
 
     public static Word ToDomain(WordDto dto)
     {
-        var alphabet = new UTF16Alphabet();
         return new Word(alphabet, dto.Word);
     }
 }

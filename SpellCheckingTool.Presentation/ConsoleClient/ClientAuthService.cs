@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SpellCheckingTool.Application.LoginResponse;
 using SpellCheckingTool.Application.UserStatsResponse;
 using SpellCheckingTool.Application.UserWordsFileResponse;
 using SpellCheckingTool.Application.UserWordStats;
@@ -6,6 +7,7 @@ using SpellCheckingTool.Application.WordDto;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -177,17 +179,22 @@ public class ClientAuthService
 
         try
         {
-            var json = JsonConvert.DeserializeObject<LoginResponseDto>(responseBody);
-
-            if (json != null && json.UserId != Guid.Empty)
+            var dto = JsonConvert.DeserializeObject<LoginResponseDto>(responseBody);
+            if (dto == null || dto.UserId == Guid.Empty)
             {
-                return new AuthSession
-                {
-                    UserId = json.UserId,
-                    Username = json.Username,
-                    IsAuthenticated = true
-                };
+                Console.WriteLine($"DTO Deserializatiob failed: {dto}");
             }
+
+            var domain = LoginResponseMapper.ToDomain(dto);
+
+
+            return new AuthSession
+            {
+                UserId = domain.UserId,
+                Username = domain.Username,
+                IsAuthenticated = true
+            };
+
         }
         catch
         {
