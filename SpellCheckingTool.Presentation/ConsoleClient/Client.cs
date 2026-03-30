@@ -6,7 +6,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
+    public static async Task StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         string backendUrl = $"http://localhost:{port}";
 
@@ -19,7 +19,7 @@ public class Client
 
         if (input.Contains('y'))
         {
-            var session = authService.RunAuthenticationFlow();
+            var session = await authService.RunAuthenticationFlow();
             Console.WriteLine();
 
             context = session != null && session.IsAuthenticated
@@ -42,7 +42,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
+        await StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -52,7 +52,7 @@ public class Client
         return processManager;
     }
 
-    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
+    private static async Task StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         var settings = context.Settings;
 
@@ -78,6 +78,6 @@ public class Client
             fileOpener,
             shutdownAction);
 
-        consoleSpellChecker.Run();
+        await consoleSpellChecker.Run();
     }
 }

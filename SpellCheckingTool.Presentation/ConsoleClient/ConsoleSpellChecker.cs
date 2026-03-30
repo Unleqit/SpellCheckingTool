@@ -73,7 +73,7 @@ public class ConsoleSpellChecker
         _suggestionDisplay.ShowSuggestions(viewModel);
     }
 
-    public void Run()
+    public async Task Run()
     {
         Console.WriteLine(WelcomeMessage);
         string input = "";
@@ -84,12 +84,6 @@ public class ConsoleSpellChecker
 
         while (!_token.IsCancellationRequested)
         {
-            if (!Console.KeyAvailable)
-            {
-                Thread.Sleep(50);
-                continue;
-            }
-
             ConsoleKeyInfo keyInfo = Console.ReadKey(true);
             char c = keyInfo.KeyChar;
 
@@ -129,12 +123,15 @@ public class ConsoleSpellChecker
                     _suggestionDisplay.HideSuggestions();
                     _suggestionDisplay.NextWord();
 
-                    TrackLastCompletedWordOnSpace(input);
+                    await TrackLastCompletedWordOnSpace(input);
                     UpdateSuggestions(input);
                     break;
 
                 case ConsoleKey.Enter:
-                    if(_commandHandler.TryHandleCommand(ref input))
+                    var (handled, newInput) = await _commandHandler.TryHandleCommandAsync(input);
+                    input = newInput;
+
+                    if (handled)
                     {
                         if (_token.IsCancellationRequested)
                             return;
@@ -155,7 +152,7 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
-                        TrackFinalWordOnEnter(input.Trim());
+                        await TrackFinalWordOnEnter(input.Trim());
 
                         Console.WriteLine();
                         _processManager.SendInput(input);
@@ -212,7 +209,7 @@ public class ConsoleSpellChecker
         };
     }
 
-    private void TrackLastCompletedWordOnSpace(string input)
+    private async Task TrackLastCompletedWordOnSpace(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -228,10 +225,10 @@ public class ConsoleSpellChecker
             return;
 
         string lastCompletedToken = tokens[^1].Trim().ToLowerInvariant();
-        TrackSingleWord(lastCompletedToken);
+        await TrackSingleWord(lastCompletedToken);
     }
 
-    private void TrackFinalWordOnEnter(string input)
+    private async Task TrackFinalWordOnEnter(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -245,10 +242,10 @@ public class ConsoleSpellChecker
             return;
 
         string lastToken = tokens[^1].Trim().ToLowerInvariant();
-        TrackSingleWord(lastToken);
+        await TrackSingleWord(lastToken);
     }
 
-    private void TrackSingleWord(string token)
+    private async Task TrackSingleWord(string token)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -264,7 +261,7 @@ public class ConsoleSpellChecker
 
             if (service.IsCorrect(word))
             {
-                _authService.TrackWordUsage(_context.UserId.Value, token);
+                await _authService.TrackWordUsage(_context.UserId.Value, token);
             }
         }
         catch

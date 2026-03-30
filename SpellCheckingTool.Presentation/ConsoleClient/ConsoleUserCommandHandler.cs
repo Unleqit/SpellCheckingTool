@@ -13,9 +13,11 @@ public class ConsoleUserCommandHandler
     private readonly IFileOpener _fileOpener;
     private readonly Action _shutdownAction;
 
-    private delegate void CommandHandler(string command, ref string input);
+    private readonly SemaphoreSlim _commandLock = new(1, 1);
 
-    private readonly Dictionary<string, CommandHandler> _commandHandlers;
+    private delegate Task<string> CommandHandlerAsync(string command, string input);
+
+    private readonly Dictionary<string, CommandHandlerAsync> _commandHandlers;
 
     public ConsoleUserCommandHandler(
         UserSpellcheckContext context,
@@ -32,7 +34,7 @@ public class ConsoleUserCommandHandler
         _fileOpener = fileOpener;
         _shutdownAction = shutdownAction;
 
-        _commandHandlers = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
+        _commandHandlers = new Dictionary<string, CommandHandlerAsync>(StringComparer.OrdinalIgnoreCase)
         {
             { "/addword", HandleAddWordCommand },
             { "/delword", HandleDeleteWordCommand },
@@ -43,47 +45,55 @@ public class ConsoleUserCommandHandler
         };
     }
 
-    public bool TryHandleCommand(ref string input)
+    public async Task<(bool handled, string newInput)> TryHandleCommandAsync(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
-            return false;
+            return (false, input);
 
         string trimmed = input.Trim();
         string commandWord = GetFirstToken(trimmed);
 
         if (!commandWord.StartsWith("/"))
-            return false;
+            return (false, input);
 
         if (!_commandHandlers.TryGetValue(commandWord, out var handler))
-            return false;
+            return (false, input);
 
         Console.WriteLine();
-        handler(trimmed, ref input);
-        return true;
+
+        await _commandLock.WaitAsync();
+        try
+        {
+            string updatedInput = await handler(trimmed, input);
+            return (true, updatedInput);
+        }
+        finally
+        {
+            _commandLock.Release();
+        }
     }
 
-    private void HandleWordsCommandWrapper(string command, ref string input)
+    private async Task<string> HandleWordsCommandWrapper(string command, string input)
     {
-        HandleWordsCommand(ref input);
+        return await HandleWordsCommand(input);
     }
 
-    private void HandleStatsCommandWrapper(string command, ref string input)
+    private async Task<string> HandleStatsCommandWrapper(string command, string input)
     {
-        HandleStatsCommand(ref input);
+        return await HandleStatsCommand(input);
     }
 
-    private void HandleSettingsCommandWrapper(string command, ref string input)
+    private Task<string> HandleSettingsCommandWrapper(string command, string input)
     {
-        HandleSettingsCommand(ref input);
+        return HandleSettingsCommand(input);
     }
 
-    private void HandleAddWordCommand(string command, ref string input)
+    private async Task<string> HandleAddWordCommand(string command, string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to save a personal word.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         string rawWord = command.Substring("/addword".Length).Trim();
@@ -91,15 +101,13 @@ public class ConsoleUserCommandHandler
         if (string.IsNullOrWhiteSpace(rawWord))
         {
             Console.WriteLine("Usage: /addword <word>");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         if (rawWord.Contains(' '))
         {
             Console.WriteLine("Please enter exactly one word.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         string normalized = rawWord.ToLowerInvariant();
@@ -112,16 +120,14 @@ public class ConsoleUserCommandHandler
         catch (Exception ex)
         {
             Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
-        bool persisted = _authService.AddWord(_context.UserId.Value, normalized);
+        bool persisted = await _authService.AddWord(_context.UserId.Value, normalized);
         if (!persisted)
         {
             Console.WriteLine($"Word '{normalized}' was not saved.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         try
@@ -130,7 +136,7 @@ public class ConsoleUserCommandHandler
 
             if (!_context.SpellcheckService.IsCorrect(word))
             {
-                _authService.DeleteWord(_context.UserId.Value, normalized);
+                await _authService.DeleteWord(_context.UserId.Value, normalized);
 
                 try
                 {
@@ -141,13 +147,12 @@ public class ConsoleUserCommandHandler
                 }
 
                 Console.WriteLine($"Invalid word '{normalized}'.");
-                ResetInput(ref input);
-                return;
+                return ResetInput();
             }
         }
         catch (Exception ex)
         {
-            _authService.DeleteWord(_context.UserId.Value, normalized);
+            await _authService.DeleteWord(_context.UserId.Value, normalized);
 
             try
             {
@@ -158,21 +163,19 @@ public class ConsoleUserCommandHandler
             }
 
             Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
-        ResetInput(ref input);
+        return ResetInput();
     }
 
-    private void HandleDeleteWordCommand(string command, ref string input)
+    private async Task<string> HandleDeleteWordCommand(string command, string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to delete a personal word.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         string rawWord = command.Substring("/delword".Length).Trim();
@@ -180,25 +183,22 @@ public class ConsoleUserCommandHandler
         if (string.IsNullOrWhiteSpace(rawWord))
         {
             Console.WriteLine("Usage: /delword <word>");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         if (rawWord.Contains(' '))
         {
             Console.WriteLine("Please enter exactly one word.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         string normalized = rawWord.ToLowerInvariant();
 
-        bool deleted = _authService.DeleteWord(_context.UserId.Value, normalized);
+        bool deleted = await _authService.DeleteWord(_context.UserId.Value, normalized);
         if (!deleted)
         {
             Console.WriteLine($"Word '{normalized}' was not found in your personal dictionary.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         RebuildActiveTreeAfterDictionaryChange();
@@ -219,25 +219,23 @@ public class ConsoleUserCommandHandler
         else
             Console.WriteLine($"Deleted '{normalized}' from your personal dictionary.");
 
-        ResetInput(ref input);
+        return ResetInput();
     }
 
-    private void HandleWordsCommand(ref string input)
+    private async Task<string> HandleWordsCommand(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to view your words.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
-        var words = _authService.GetWords(_context.UserId.Value);
+        var words = await _authService.GetWords(_context.UserId.Value);
 
         if (words.Count() == 0)
         {
             Console.WriteLine("No saved words found.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         Console.WriteLine("Personal dictionary:");
@@ -246,25 +244,23 @@ public class ConsoleUserCommandHandler
             Console.WriteLine($"- {item}");
         }
 
-        ResetInput(ref input);
+        return ResetInput();
     }
 
-    private void HandleStatsCommand(ref string input)
+    private async Task<string> HandleStatsCommand(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to view your stats.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
-        var stats = _authService.GetStats(_context.UserId.Value);
+        var stats = await _authService.GetStats(_context.UserId.Value);
 
         if (stats.Count == 0)
         {
             Console.WriteLine("No stats found.");
-            ResetInput(ref input);
-            return;
+            return ResetInput();
         }
 
         var userSettings = _context.Settings;
@@ -292,7 +288,7 @@ public class ConsoleUserCommandHandler
         Console.WriteLine($"Showing top {topStats.Count} of {stats.Count} tracked words.");
         Console.WriteLine();
 
-        ResetInput(ref input);
+        return ResetInput();
     }
 
     private void RebuildActiveTreeAfterDictionaryChange()
@@ -308,13 +304,13 @@ public class ConsoleUserCommandHandler
         _suggestionDisplay.HideSuggestions();
     }
 
-    private void ResetInput(ref string input)
+    private string ResetInput()
     {
-        input = "";
         _suggestionDisplay.HideSuggestions();
+        return "";
     }
 
-    private void HandleSettingsCommand(ref string input)
+    private Task<string> HandleSettingsCommand(string input)
     {
         try
         {
@@ -342,7 +338,7 @@ public class ConsoleUserCommandHandler
             Console.WriteLine($"Failed to open settings: {ex.Message}");
         }
 
-        ResetInput(ref input);
+        return Task.FromResult(ResetInput());
     }
 
     private static string GetFirstToken(string input)

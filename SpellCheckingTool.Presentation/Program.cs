@@ -21,7 +21,7 @@ namespace SpellCheckingTool.Presentation;
 public class Program
 {
 
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         LicensePrinter.Print();
 
@@ -37,20 +37,9 @@ public class Program
 
         var fileOpener = new FileOpener();
 
-        Thread? clientThread = null;
-
         if (!startHeadless)
         {
-            clientThread = ClientRunner.Start(
-                serverPort,
-                spellcheckFactory,
-                fileOpener,
-                cts,
-                shutdownAction: () =>
-                {
-                    Console.WriteLine("Shutting down...");
-                    cts.Cancel();
-                });
+            await ClientRunner.Start(serverPort, spellcheckFactory, fileOpener, cts);
         }
         else
         {
@@ -60,9 +49,6 @@ public class Program
         cts.Token.WaitHandle.WaitOne();
 
         server.Stop();
-
-        if (clientThread?.IsAlive == true)
-            clientThread.Join();
     }
 
     private static int? ParsePortFromArgs(string[] args)
