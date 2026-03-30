@@ -1,5 +1,6 @@
 ﻿using SpellCheckingTool.Application.Authentication;
 using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Executables;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
@@ -13,6 +14,7 @@ using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 using SpellCheckingTool.Presentation.ConsoleClient;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool.Presentation;
 
@@ -139,7 +141,7 @@ public class Program
         );
 
 
-        var executableParser = new WindowsExecutableParser();
+        IExecutableParser executableParser = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new WindowsExecutableParser() : new LinuxExecutableParser();
         var spellcheckFactory = new UserSpellcheckContextFactory(
             userTreeBuilder,
             userService,
