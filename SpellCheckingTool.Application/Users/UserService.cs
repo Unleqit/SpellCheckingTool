@@ -1,6 +1,5 @@
 ﻿using SpellCheckingTool.Application.Common;
 using SpellCheckingTool.Application.Settings;
-using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
 
@@ -25,41 +24,7 @@ public class UserService
         _settingsRepository = settingsRepository;
     }
 
-    public OperationResult<User> Register(string username, string hashedPassword)
-    {
-        if (string.IsNullOrWhiteSpace(username))
-            return OperationResult<User>.Fail("Username is required.");
-
-        if (string.IsNullOrWhiteSpace(hashedPassword))
-            return OperationResult<User>.Fail("Password is required.");
-
-        if (_userRepo.GetByUsername(username) != null)
-            return OperationResult<User>.Fail("Username already exists.");
-
-        var user = new User(
-            Guid.NewGuid(),
-            username.Trim(),
-            hashedPassword,
-            DateTime.UtcNow
-            );
-
-        _userRepo.Add(user);
-        _settingsRepository.SetSettings(user.Username, UserSettings.Default);
-
-        return OperationResult<User>.Ok(user);
-    }
-
-    public OperationResult<User> Login(string username, string hashedPassword)
-    {
-        var user = _userRepo.GetByUsername(username);
-        if (user == null)
-            return OperationResult<User>.Fail("User not found.");
-
-        if (!string.Equals(user.PasswordHash, hashedPassword, StringComparison.Ordinal))
-            return OperationResult<User>.Fail("Invalid password.");
-
-        return OperationResult<User>.Ok(user);
-    }
+   
 
     /// <summary>
     /// Adds a word to the user's personal dictionary only.

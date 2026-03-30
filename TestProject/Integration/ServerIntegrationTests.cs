@@ -1,7 +1,6 @@
 #pragma warning disable SYSLIB0014
 
-using SpellCheckingTool.Presentation.Http.Servers;
-using SpellCheckingTool.Presentation.Servers;
+using SpellCheckingTool.Infrastructure.Servers;
 using System.Net;
 
 namespace TestProject.Integration;

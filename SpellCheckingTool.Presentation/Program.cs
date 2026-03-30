@@ -1,4 +1,6 @@
-﻿using SpellCheckingTool.Application.Dictionary;
+﻿using SpellCheckingTool.Application.Authentication;
+using SpellCheckingTool.Application.Dictionary;
+using SpellCheckingTool.Application.Executables;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
@@ -6,14 +8,13 @@ using SpellCheckingTool.Infrastructure.Dictionary;
 using SpellCheckingTool.Infrastructure.Executables;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
+using SpellCheckingTool.Infrastructure.Http.Servers;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
 using SpellCheckingTool.Presentation.ConsoleClient;
-using SpellCheckingTool.Presentation.Http.Controllers;
-using SpellCheckingTool.Presentation.Http.Servers;
-using SpellCheckingTool.Presentation.Servers;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 
 namespace SpellCheckingTool.Presentation;
 
@@ -29,9 +30,9 @@ public class Program
 
         var cts = SetupShutdownHandling();
 
-        var (userService, spellcheckFactory) = BuildApplication();
+        var (userService, authService, spellcheckFactory) = BuildApplication();
 
-        var server = ServerFactory.Create(userService);
+        var server = ServerFactory.Create(userService, authService);
         server.Start(serverPort);
 
         var fileOpener = new FileOpener();
@@ -88,7 +89,7 @@ public class Program
         return cts;
     }
 
-    private static (UserService, IUserSpellcheckContextFactory) BuildApplication()
+    private static (UserService, AuthService, IUserSpellcheckContextFactory) BuildApplication()
     {
         var inputAlphabet = new UTF16Alphabet();
         var basePath = Path.Combine(AppContext.BaseDirectory, "data");
@@ -122,6 +123,11 @@ public class Program
         var dictionaryLoader = new DictionaryLoader(persistenceService);
         var defaultDictionaryProvider = new DefaultDictionaryLoader(dictionaryLoader);
 
+        var authService = new AuthService(
+            userRepository,
+            userSettingsRepository
+        );
+
         var userService = new UserService(
             userRepository,
             wordStatsRepository,
@@ -135,7 +141,7 @@ public class Program
         );
 
 
-        var executableParser = new WindowsExecutableParser();
+        IExecutableParser executableParser = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new WindowsExecutableParser() : new LinuxExecutableParser();
         var spellcheckFactory = new UserSpellcheckContextFactory(
             userTreeBuilder,
             userService,
@@ -145,6 +151,6 @@ public class Program
 
         );
 
-        return (userService, spellcheckFactory);
+        return (userService, authService, spellcheckFactory);
     }
 }

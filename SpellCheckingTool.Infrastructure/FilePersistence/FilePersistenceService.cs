@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SpellCheckingTool.Application.Persistence;
+using SpellCheckingTool.Application.WordTreeDto;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.FilePersistence.Exceptions;
@@ -21,20 +22,9 @@ public class FilePersistenceService : IPersistenceService
         if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             throw new UnsupportedFileFormatException(path);
 
-        var walker = new LeftToRightWordTreeTraversal(tree);
+        var dto = WordTreeMapper.ToStorage(tree);
 
-        string[] words = new string[tree.WordCount];
-        int i = 0;
-
-        walker.WalkTree(word => words[i++] = word.ToString());
-
-        WordTreeDto wordTreeDto = new WordTreeDto()
-        {
-            alphabet = tree.Alphabet.GetChars(),
-            words = words
-        };
-
-        string json = JsonConvert.SerializeObject(wordTreeDto, Formatting.Indented);
+        string json = JsonConvert.SerializeObject(dto, Formatting.Indented);
         File.WriteAllText(path, json);
 
         return true;
@@ -54,11 +44,8 @@ public class FilePersistenceService : IPersistenceService
 
         try
         {
-            WordTreeDto dto = JsonConvert.DeserializeObject<WordTreeDto>(json);
-            IAlphabet alphabet = new CustomAlphabet(dto.alphabet);
-            WordTree tree = new WordTree(alphabet);
-            Word[] parsedWords = Word.ParseWords(alphabet, dto.words);
-            tree.Add(parsedWords);
+            var dto = JsonConvert.DeserializeObject<WordTreeDto>(json);
+            WordTree tree = WordTreeMapper.ToDomain(dto);
             return tree;
         }
         catch
