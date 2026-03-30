@@ -33,7 +33,8 @@ public class ConsoleSpellChecker
         IUserSpellcheckContextFactory spellcheckContextFactory,
         CancellationToken token,
         UserSettings settings,
-        IFileOpener fileOpener)
+        IFileOpener fileOpener,
+        Action shutdownAction)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -50,7 +51,8 @@ public class ConsoleSpellChecker
             _suggestionDisplay,
             _authService,
             _spellcheckContextFactory,
-            fileOpener);
+            fileOpener,
+            shutdownAction);
     }
 
     private void UpdateSuggestions(string input)

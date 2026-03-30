@@ -41,7 +41,16 @@ public class Program
 
         if (!startHeadless)
         {
-            clientThread = ClientRunner.Start(serverPort, spellcheckFactory, fileOpener, cts);
+            clientThread = ClientRunner.Start(
+                serverPort,
+                spellcheckFactory,
+                fileOpener,
+                cts,
+                shutdownAction: () =>
+                {
+                    Console.WriteLine("Shutting down from /shutdown...");
+                    cts.Cancel();
+                });
         }
         else
         {

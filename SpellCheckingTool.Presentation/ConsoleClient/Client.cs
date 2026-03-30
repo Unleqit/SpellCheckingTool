@@ -6,7 +6,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token)
+    public static void StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         string backendUrl = $"http://localhost:{port}";
 
@@ -42,7 +42,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token);
+        StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -52,7 +52,7 @@ public class Client
         return processManager;
     }
 
-    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token)
+    private static void StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         var settings = context.Settings;
 
@@ -75,7 +75,8 @@ public class Client
             spellcheckContextFactory,
             token,
             settings,
-            fileOpener);
+            fileOpener,
+            shutdownAction);
 
         consoleSpellChecker.Run();
     }

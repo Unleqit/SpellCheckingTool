@@ -11,6 +11,7 @@ public class ConsoleUserCommandHandler
     private readonly ClientAuthService _authService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly IFileOpener _fileOpener;
+    private readonly Action _shutdownAction;
 
     private delegate void CommandHandler(string command, ref string input);
 
@@ -21,13 +22,15 @@ public class ConsoleUserCommandHandler
         ISuggestionDisplay suggestionDisplay,
         ClientAuthService authService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
-        IFileOpener fileOpener)
+        IFileOpener fileOpener,
+        Action shutdownAction)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
         _authService = authService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
+        _shutdownAction = shutdownAction;
 
         _commandHandlers = new Dictionary<string, CommandHandler>(StringComparer.OrdinalIgnoreCase)
         {
@@ -35,8 +38,10 @@ public class ConsoleUserCommandHandler
             { "/delword", HandleDeleteWordCommand },
             { "/words", HandleWordsCommandWrapper },
             { "/stats", HandleStatsCommandWrapper },
-            { "/settings", HandleSettingsCommandWrapper }
+            { "/settings", HandleSettingsCommandWrapper },
+            { "/shutdown", HandleShutdownCommand }
         };
+        _shutdownAction = shutdownAction;
     }
 
     public bool TryHandleCommand(ref string input)
@@ -352,5 +357,11 @@ public class ConsoleUserCommandHandler
         return firstSpaceIndex < 0
             ? trimmed
             : trimmed[..firstSpaceIndex];
+    }
+
+    private void HandleShutdownCommand(string command, ref string input)
+    {
+        Console.WriteLine("Shutdown command received...");
+        _shutdownAction?.Invoke();
     }
 }

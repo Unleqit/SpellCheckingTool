@@ -14,13 +14,14 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             int port,
             IUserSpellcheckContextFactory factory,
             IFileOpener fileOpener,
-            CancellationTokenSource cts)
+            CancellationTokenSource cts,
+            Action shutdownAction)
         {
             var thread = new Thread(() =>
             {
                 try
                 {
-                    Client.StartClient(port, factory, fileOpener, cts.Token);
+                    Client.StartClient(port, factory, fileOpener, cts.Token, shutdownAction);
                 }
                 catch (OperationCanceledException)
                 {
