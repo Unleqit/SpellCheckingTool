@@ -135,7 +135,10 @@ public class ConsoleSpellChecker
 
                 case ConsoleKey.Enter:
                     if(_commandHandler.TryHandleCommand(ref input))
-{
+                    {
+                        if (_token.IsCancellationRequested)
+                            return;
+
                         RefreshSpellcheckState();
                         shellPrompt = _processManager.GetCurrentConsolePrompt();
                         Console.Write(shellPrompt);

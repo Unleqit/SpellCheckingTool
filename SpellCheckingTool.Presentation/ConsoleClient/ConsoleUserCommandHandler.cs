@@ -41,7 +41,6 @@ public class ConsoleUserCommandHandler
             { "/settings", HandleSettingsCommandWrapper },
             { "/shutdown", HandleShutdownCommand }
         };
-        _shutdownAction = shutdownAction;
     }
 
     public bool TryHandleCommand(ref string input)
@@ -361,7 +360,6 @@ public class ConsoleUserCommandHandler
 
     private void HandleShutdownCommand(string command, ref string input)
     {
-        Console.WriteLine("Shutdown command received...");
         _shutdownAction?.Invoke();
     }
 }

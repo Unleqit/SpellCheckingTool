@@ -48,7 +48,7 @@ public class Program
                 cts,
                 shutdownAction: () =>
                 {
-                    Console.WriteLine("Shutting down from /shutdown...");
+                    Console.WriteLine("Shutting down...");
                     cts.Cancel();
                 });
         }
