@@ -22,7 +22,7 @@ public class ConsoleSpellChecker
     private SuggestionUseCase _suggestionUseCase;
 
     private const string WelcomeMessage =
-        "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats";
+        "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /shutdown";
 
     public ConsoleSpellChecker(
         UserSpellcheckContext context,
@@ -33,7 +33,8 @@ public class ConsoleSpellChecker
         IUserSpellcheckContextFactory spellcheckContextFactory,
         CancellationToken token,
         UserSettings settings,
-        IFileOpener fileOpener)
+        IFileOpener fileOpener,
+        Action shutdownAction)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -50,7 +51,8 @@ public class ConsoleSpellChecker
             _suggestionDisplay,
             _authService,
             _spellcheckContextFactory,
-            fileOpener);
+            fileOpener,
+            shutdownAction);
     }
 
     private void UpdateSuggestions(string input)
@@ -133,7 +135,10 @@ public class ConsoleSpellChecker
 
                 case ConsoleKey.Enter:
                     if(_commandHandler.TryHandleCommand(ref input))
-{
+                    {
+                        if (_token.IsCancellationRequested)
+                            return;
+
                         RefreshSpellcheckState();
                         shellPrompt = _processManager.GetCurrentConsolePrompt();
                         Console.Write(shellPrompt);
