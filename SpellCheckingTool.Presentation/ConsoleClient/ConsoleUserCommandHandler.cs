@@ -354,8 +354,10 @@ public class ConsoleUserCommandHandler
             : trimmed[..firstSpaceIndex];
     }
 
-    private void HandleShutdownCommand(string command, ref string input)
+    private Task<string> HandleShutdownCommand(string command, string input)
     {
         _shutdownAction?.Invoke();
+
+        return Task.FromResult(ResetInput());
     }
 }
