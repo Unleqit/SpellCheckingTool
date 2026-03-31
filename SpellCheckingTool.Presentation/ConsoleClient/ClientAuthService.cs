@@ -4,8 +4,6 @@ using SpellCheckingTool.Application.UserStatsResponse;
 using SpellCheckingTool.Application.UserWordsFileResponse;
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
-using System.Net;
 using System.Text;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
@@ -30,106 +28,31 @@ public class ClientAuthService
         return await HandleAuth(username, isRegister);
     }
 
-    public async Task<bool> AddWord(Guid userId, string word)
+    private async Task<bool> ExecuteWordAction(string url, Guid userId, string word, string errorMessage)
     {
-        try
-        {
-            var (success, body, status) = await _client.PostAsync(
-                "/api/v1/users/words/add",
-                new { userId, word });
+        var result = await _client.PostAsync<SuccessResponse>(
+            url,
+            new { userId, word },
+            errorMessage);
 
-            if (!success)
-            {
-                TryPrintError(body, status, "Could not save word");
-                return false;
-            }
-
-            try
-            {
-                var json = JsonConvert.DeserializeObject<SuccessResponse>(body);
-                return json?.Success ?? false;
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine(new BackendResponseParseException("success response", ex).Message);
-                return false;
-            }
-        }
-        catch (Exception ex)
+        if (!result.IsSuccess)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(result.ErrorMessage);
             return false;
         }
+
+        return result.Data?.Success ?? false;
     }
 
-    private void TryPrintError(string responseBody, HttpStatusCode status, string prefix)
-    {
-        try
-        {
-            var errorJson = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody);
+    public async Task<bool> AddWord(Guid userId, string word) => await
+        ExecuteWordAction("/api/v1/users/words/add", userId, word, "Could not save word");
 
-            if (errorJson != null && errorJson.TryGetValue("error", out var message))
-            {
-                Console.WriteLine($"{prefix}: {message}");
-            }
-            else
-            {
-                Console.WriteLine($"{prefix}: {status}");
-            }
-        }
-        catch
-        {
-            Console.WriteLine($"{prefix}: {status}");
-        }
-    }
+    public async Task<bool> DeleteWord(Guid userId, string word) => await
+        ExecuteWordAction("/api/v1/users/words/delete", userId, word, "Could not delete word");
 
-    public async Task<bool> DeleteWord(Guid userId, string word)
-    {
-        try
-        {
-            var (success, body, status) = await _client.PostAsync(
-                "/api/v1/users/words/delete",
-                new { userId, word });
+    public async Task<bool> TrackWordUsage(Guid userId, string word) => await
+        ExecuteWordAction("/api/v1/users/words/track", userId, word, "Could not track word");
 
-            if (!success)
-            {
-                TryPrintError(body, status, "Could not delete word");
-                return false;
-            }
-
-            var json = JsonConvert.DeserializeObject<SuccessResponse>(body);
-            return json?.Success ?? false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            return false;
-        }
-    }
-
-    public async Task<bool> TrackWordUsage(Guid userId, string word)
-    {
-        try
-        {
-            var (success, body, status) = await _client.PostAsync(
-                "/api/v1/users/words/track",
-                new { userId, word });
-
-            if (!success)
-            {
-                TryPrintError(body, status, "Could not track word");
-                return false;
-            }
-
-            var json = JsonConvert.DeserializeObject<SuccessResponse>(body);
-            return json?.Success ?? false;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            return false;
-        }
-    }
 
     private async Task<AuthSession?> HandleAuth(string username, bool isRegister)
     {
@@ -137,53 +60,39 @@ public class ClientAuthService
         string password = ReadPassword();
 
         string endpoint = isRegister ? "register" : "login";
+        string action = isRegister ? "Registration" : "Login";
 
-        try
+        var result = await _client.PostAsync<LoginResponseDto>(
+            $"/api/v1/users/{endpoint}",
+            new { username, password },
+            $"{action} failed");
+
+        if (!result.IsSuccess)
         {
-            var (success, body, status) = await _client.PostAsync(
-                $"/api/v1/users/{endpoint}",
-                new { username, password });
-
-            if (!success)
-            {
-                string action = isRegister ? "Registration" : "Login";
-                TryPrintError(body, status, $"{action} failed");
-                return null;
-            }
-
-            Console.WriteLine($"{(isRegister ? "Registration" : "Login")} successful!");
-
-            try
-            {
-                var dto = JsonConvert.DeserializeObject<LoginResponseDto>(body);
-                if (dto == null || dto.UserId == Guid.Empty)
-                {
-                    Console.WriteLine($"DTO Deserialization failed: {dto}");
-                }
-
-                var domain = LoginResponseMapper.ToDomain(dto);
-
-
-                return new AuthSession
-                {
-                    UserId = domain.UserId,
-                    Username = domain.Username,
-                    IsAuthenticated = true
-                };
-            }
-            catch
-            {
-            }
-
-            Console.WriteLine("Warning: authenticated, but no usable session payload was returned.");
+            Console.WriteLine(result.ErrorMessage);
             return null;
         }
-        catch (Exception ex)
+
+        Console.WriteLine($"{action} successful!");
+
+        var dto = result.Data;
+
+        if (dto == null || dto.UserId == Guid.Empty)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine("Warning: authenticated, but invalid response.");
             return null;
         }
+
+        var domain = LoginResponseMapper.ToDomain(dto);
+
+        return new AuthSession
+        {
+            UserId = domain.UserId,
+            Username = domain.Username,
+            IsAuthenticated = true
+        };
     }
+
     private string ReadPassword()
         {
             var password = new StringBuilder();
@@ -207,63 +116,44 @@ public class ClientAuthService
             return password.ToString();
         }
 
-
     public async Task<IReadOnlyList<Word>> GetWords(Guid userId)
     {
-        try
+        var result = await _client.PostAsync<UserWordsFileResponseDto>(
+            "/api/v1/users/words/file",
+            new { userId },
+            "Could not load words");
+
+        if (!result.IsSuccess)
         {
-            var (success, body, status) = await _client.PostAsync(
-                "/api/v1/users/words/file",
-                new { userId });
-
-            if (!success)
-            {
-                Console.WriteLine($"Could not load words: {status}");
-                return Array.Empty<Word>();
-            }
-
-            var json = JsonConvert.DeserializeObject<UserWordsFileResponseDto>(body);
-
-            if (json?.Words == null)
-                return Array.Empty<Word>();
-
-            return json.Words
-                .Select(w => WordMapper.ToDomain(w))
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading words: {ex.Message}");
+            Console.WriteLine(result.ErrorMessage);
             return Array.Empty<Word>();
         }
+
+        var dto = result.Data;
+
+        if (dto?.Words == null)
+            return Array.Empty<Word>();
+
+        return dto.Words
+            .Select(w => WordMapper.ToDomain(w))
+            .ToList();
     }
 
     public async Task<IReadOnlyList<WordStatistic>> GetStats(Guid userId)
     {
-        try
+        var result = await _client.PostAsync<UserStatsResponseDto>(
+            "/api/v1/users/words/stats",
+            new { userId },
+            "Could not load stats");
+
+        if (!result.IsSuccess)
         {
-            var (success, body, status) = await _client.PostAsync(
-                "/api/v1/users/words/stats",
-                new { userId });
-
-            if (!success)
-            {
-                Console.WriteLine($"Could not load stats: {status}");
-                return Array.Empty<WordStatistic>();
-            }
-
-            var dto = JsonConvert.DeserializeObject<UserStatsResponseDto>(body);
-
-            if (dto?.Stats == null)
-                return Array.Empty<WordStatistic>();
-
-            var domain = UserStatsResponseMapper.ToDomain(dto);
-            return domain.Stats;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading stats: {ex.Message}");
+            Console.WriteLine(result.ErrorMessage);
             return Array.Empty<WordStatistic>();
         }
+
+        return result.Data?.Stats != null
+            ? UserStatsResponseMapper.ToDomain(result.Data).Stats
+            : Array.Empty<WordStatistic>();
     }
 }

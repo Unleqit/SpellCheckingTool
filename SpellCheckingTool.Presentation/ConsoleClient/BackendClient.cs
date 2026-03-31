@@ -16,7 +16,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             _backendUrl = backendUrl.TrimEnd('/');
         }
 
-        public async Task<(bool Success, string Body, HttpStatusCode Status)> PostAsync(string url, object payload)
+        public async Task<ApiResult<T>> PostAsync<T>(string url, object payload, string errorPrefix)
         {
             var json = JsonConvert.SerializeObject(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -26,7 +26,31 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                 var response = await _httpClient.PostAsync($"{_backendUrl}{url}", content);
                 var body = await response.Content.ReadAsStringAsync();
 
-                return (response.IsSuccessStatusCode, body, response.StatusCode);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ApiResult<T>
+                    {
+                        IsSuccess = false,
+                        StatusCode = response.StatusCode,
+                        ErrorMessage = ExtractErrorMessage(body, response.StatusCode, errorPrefix)
+                    };
+                }
+
+                try
+                {
+                    var data = JsonConvert.DeserializeObject<T>(body);
+
+                    return new ApiResult<T>
+                    {
+                        IsSuccess = true,
+                        Data = data,
+                        StatusCode = response.StatusCode
+                    };
+                }
+                catch (JsonException ex)
+                {
+                    throw new BackendResponseParseException(typeof(T).Name, ex);
+                }
             }
             catch (HttpRequestException ex)
             {
@@ -38,6 +62,24 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                 throw new BackendConnectionException(
                     $"Request to '{url}' timed out.", ex);
             }
+        }
+        private string ExtractErrorMessage(string body, HttpStatusCode status, string prefix)
+        {
+            try
+            {
+                var errorJson = JsonConvert.DeserializeObject<Dictionary<string, string>>(body);
+
+                if (errorJson != null && errorJson.TryGetValue("error", out var message))
+                {
+                    return $"{prefix}: {message}";
+                }
+            }
+            catch
+            {
+                // ignore parsing error
+            }
+
+            return $"{prefix}: {status}";
         }
     }
 }
