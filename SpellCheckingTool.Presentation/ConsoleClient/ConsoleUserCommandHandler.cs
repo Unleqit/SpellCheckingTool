@@ -12,7 +12,7 @@ public class ConsoleUserCommandHandler
     private readonly ClientUserService _clientUserService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly IFileOpener _fileOpener;
-    private readonly Action _shutdownAction;
+    private readonly CancellationTokenSource _cts;
 
     private readonly SemaphoreSlim _commandLock = new(1, 1);
 
@@ -26,14 +26,14 @@ public class ConsoleUserCommandHandler
         ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
         IFileOpener fileOpener,
-        Action shutdownAction)
+        CancellationTokenSource cts)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
         _clientUserService = clientUserService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
-        _shutdownAction = shutdownAction;
+        _cts = cts;
 
         _commandHandlers = new Dictionary<string, CommandHandlerAsync>(StringComparer.OrdinalIgnoreCase)
         {
@@ -91,13 +91,20 @@ public class ConsoleUserCommandHandler
 
     private async Task<string> HandleAddWordCommand(string command, string input)
     {
+
+        string rawWord = command.Substring("/addword".Length).Trim();
+
+        if (string.IsNullOrWhiteSpace(rawWord) || !rawWord.All(char.IsLetter))
+        {
+            Console.WriteLine("Error: Invalid characters. Words must contain only letters.");
+            return ResetInput();
+        }
+
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
             Console.WriteLine("You need to be logged in to save a personal word.");
             return ResetInput();
         }
-
-        string rawWord = command.Substring("/addword".Length).Trim();
 
         if (string.IsNullOrWhiteSpace(rawWord))
         {
@@ -357,8 +364,8 @@ public class ConsoleUserCommandHandler
 
     private Task<string> HandleShutdownCommand(string command, string input)
     {
-        _shutdownAction?.Invoke();
-
+        Console.WriteLine("Shutting down...");
+        _cts.Cancel();
         return Task.FromResult(ResetInput());
     }
 }

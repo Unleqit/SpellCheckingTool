@@ -16,14 +16,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             int port,
             IUserSpellcheckContextFactory factory,
             IFileOpener fileOpener,
-            CancellationTokenSource cts,
-            Action shutdownAction)
+            CancellationTokenSource cts)
         {
             return Task.Run(async () =>
             {
                 try
                 {
-                    await Client.StartClient(port, factory, fileOpener, cts.Token, shutdownAction);
+                    await Client.StartClient(port, factory, fileOpener, cts);
                 }
                 catch (OperationCanceledException)
                 {

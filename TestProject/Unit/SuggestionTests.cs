@@ -18,7 +18,7 @@ public class SuggestionTests
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string projectRoot = Path.GetFullPath(Path.Combine(baseDir, @"../../../.."));
-        string path = Path.Combine(projectRoot, @"TestProject/Resources/wordFile.json");
+        string path = Path.Combine(projectRoot, @"SpellCheckingTool.Presentation/Resources/wordFile.json");
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Wordfile not found at {path}");

@@ -17,7 +17,7 @@ public class ConsoleSpellChecker
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly IFileOpener _fileOpener;
-    private readonly CancellationToken _token;
+    private readonly CancellationTokenSource _token;
     private readonly UserSettings _settings;
 
     private SuggestionUseCase _suggestionUseCase;
@@ -32,10 +32,9 @@ public class ConsoleSpellChecker
         ISuggestionDisplay suggestionWindow,
         ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
-        CancellationToken token,
+        CancellationTokenSource token,
         UserSettings settings,
-        IFileOpener fileOpener,
-        Action shutdownAction)
+        IFileOpener fileOpener)
     {
         _context = context;
         _suggestionUseCase = suggestionUseCase;
@@ -53,7 +52,7 @@ public class ConsoleSpellChecker
             _clientUserService,
             _spellcheckContextFactory,
             fileOpener,
-            shutdownAction);
+            token);
     }
 
     private void UpdateSuggestions(string input)
@@ -83,8 +82,14 @@ public class ConsoleSpellChecker
         Console.Write(shellPrompt);
         _suggestionDisplay.Initialize(shellPrompt.Length);
 
-        while (!_token.IsCancellationRequested)
+        while (!_token.Token.IsCancellationRequested)
         {
+            if (!Console.KeyAvailable)
+            {
+                await Task.Delay(50, _token.Token).ContinueWith(_ => { });
+                continue;
+            }
+
             ConsoleKeyInfo keyInfo = Console.ReadKey(true);
             char c = keyInfo.KeyChar;
 
@@ -134,7 +139,7 @@ public class ConsoleSpellChecker
 
                     if (handled)
                     {
-                        if (_token.IsCancellationRequested)
+                        if (_token.Token.IsCancellationRequested)
                             return;
 
                         RefreshSpellcheckState();

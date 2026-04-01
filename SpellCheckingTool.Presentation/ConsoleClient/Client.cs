@@ -8,7 +8,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient;
 
 public class Client
 {
-    public static async Task StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
+    public static async Task StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationTokenSource token)
     {
         string backendUrl = $"http://localhost:{port}";
         using var httpClient = new HttpClient();
@@ -50,7 +50,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        await StartSpellChecker(context, clientUserService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
+        await StartSpellChecker(context, clientUserService, processManager, spellcheckContextFactory, fileOpener, token);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -60,7 +60,7 @@ public class Client
         return processManager;
     }
 
-    private static async Task StartSpellChecker(UserSpellcheckContext context, ClientUserService clientUserService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
+    private static async Task StartSpellChecker(UserSpellcheckContext context, ClientUserService clientUserService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationTokenSource token)
     {
         var settings = context.Settings;
 
@@ -83,8 +83,7 @@ public class Client
             spellcheckContextFactory,
             token,
             settings,
-            fileOpener,
-            shutdownAction);
+            fileOpener);
 
         await consoleSpellChecker.Run();
     }

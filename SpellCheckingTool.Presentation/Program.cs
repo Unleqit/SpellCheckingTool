@@ -39,11 +39,7 @@ public class Program
 
         if (!startHeadless)
         {
-            await ClientRunner.Start(serverPort, spellcheckFactory, fileOpener, cts, shutdownAction: () =>
-            {
-                Console.WriteLine("Shutting down...");
-                cts.Cancel();
-            });
+            await ClientRunner.Start(serverPort, spellcheckFactory, fileOpener, cts);
         }
         else
         {
