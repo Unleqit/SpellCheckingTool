@@ -125,7 +125,7 @@ public class ConsoleUserCommandHandler
         }
 
         var stats = await _clientUserService.Stats.GetStats(_context.UserId.Value);
-        var formatted = ClientServices.StatsFormatter.FormatStats(stats, _context.Settings);
+        var formatted = StatsFormatter.FormatStats(stats, _context.Settings);
         Console.WriteLine(formatted);
         return ResetInput();
     }

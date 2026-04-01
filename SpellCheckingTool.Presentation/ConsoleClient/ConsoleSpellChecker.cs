@@ -18,36 +18,39 @@ public class ConsoleSpellChecker
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly IFileOpener _fileOpener;
     private readonly CancellationTokenSource _token;
-    private readonly UserSettings _settings;
-
     private SuggestionUseCase _suggestionUseCase;
+    private readonly UserSettings _settings;
 
     private const string WelcomeMessage =
         "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /shutdown";
 
     public ConsoleSpellChecker(
         UserSpellcheckContext context,
-        SuggestionUseCase suggestionUseCase,
         ShellProcessManager processManager,
-        ISuggestionDisplay suggestionWindow,
+        ISuggestionDisplay suggestionDisplay,
         ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
         CancellationTokenSource token,
-        UserSettings settings,
         IFileOpener fileOpener)
     {
         _context = context;
-        _suggestionUseCase = suggestionUseCase;
         _processManager = processManager;
-        _suggestionDisplay = suggestionWindow;
+        _suggestionDisplay = suggestionDisplay;
         _clientUserService = clientUserService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
         _token = token;
-        _settings = settings;
+        _settings = context.Settings;
 
-        var wordService = new WordService(_context, clientUserService, spellcheckContextFactory, _suggestionDisplay);
+        _suggestionUseCase = new SuggestionUseCase(
+            context.SpellcheckService,
+            context.ExecutableSpellcheckService)
+        {
+            MaxSuggestions = context.Settings.MaxSuggestions,
+            MaxDistance = context.Settings.MaxDistance
+        };
 
+        var wordService = new WordService(_context, clientUserService, _spellcheckContextFactory, _suggestionDisplay);
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,

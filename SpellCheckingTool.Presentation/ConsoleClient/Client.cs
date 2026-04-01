@@ -62,29 +62,15 @@ public class Client
 
     private static async Task StartSpellChecker(UserSpellcheckContext context, ClientUserService clientUserService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationTokenSource token)
     {
-        var settings = context.Settings;
-
-        var suggestionUseCase = new SuggestionUseCase(
-            context.SpellcheckService,
-            context.ExecutableSpellcheckService)
-        {
-            MaxSuggestions = settings.MaxSuggestions,
-            MaxDistance = settings.MaxDistance
-        };
-        
-        var suggestionDisplay = new SuggestionDisplay(settings);
-
+        var suggestionDisplay = new SuggestionDisplay(context.Settings);
         var consoleSpellChecker = new ConsoleSpellChecker(
             context,
-            suggestionUseCase,
             processManager,
             suggestionDisplay,
             clientUserService,
             spellcheckContextFactory,
             token,
-            settings,
             fileOpener);
-
         await consoleSpellChecker.Run();
     }
 }
