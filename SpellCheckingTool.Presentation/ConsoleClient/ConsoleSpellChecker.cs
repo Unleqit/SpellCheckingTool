@@ -4,6 +4,7 @@ using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -12,7 +13,7 @@ public class ConsoleSpellChecker
     private readonly ShellProcessManager _processManager;
     private readonly UserSpellcheckContext _context;
     private readonly ISuggestionDisplay _suggestionDisplay;
-    private readonly ClientAuthService _authService;
+    private readonly ClientUserService _clientUserService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly IFileOpener _fileOpener;
@@ -29,7 +30,7 @@ public class ConsoleSpellChecker
         SuggestionUseCase suggestionUseCase,
         ShellProcessManager processManager,
         ISuggestionDisplay suggestionWindow,
-        ClientAuthService authService,
+        ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
         CancellationToken token,
         UserSettings settings,
@@ -40,7 +41,7 @@ public class ConsoleSpellChecker
         _suggestionUseCase = suggestionUseCase;
         _processManager = processManager;
         _suggestionDisplay = suggestionWindow;
-        _authService = authService;
+        _clientUserService = clientUserService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
         _token = token;
@@ -49,7 +50,7 @@ public class ConsoleSpellChecker
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,
-            _authService,
+            _clientUserService,
             _spellcheckContextFactory,
             fileOpener,
             shutdownAction);
@@ -261,7 +262,7 @@ public class ConsoleSpellChecker
 
             if (service.IsCorrect(word))
             {
-                await _authService.TrackWordUsage(_context.UserId.Value, token);
+                await _clientUserService.Words.TrackWordUsage(_context.UserId.Value, token);
             }
         }
         catch

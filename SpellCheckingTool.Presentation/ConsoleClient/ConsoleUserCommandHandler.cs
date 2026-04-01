@@ -1,6 +1,7 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -8,7 +9,7 @@ public class ConsoleUserCommandHandler
 {
     private readonly UserSpellcheckContext _context;
     private readonly ISuggestionDisplay _suggestionDisplay;
-    private readonly ClientAuthService _authService;
+    private readonly ClientUserService _clientUserService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly IFileOpener _fileOpener;
     private readonly Action _shutdownAction;
@@ -22,14 +23,14 @@ public class ConsoleUserCommandHandler
     public ConsoleUserCommandHandler(
         UserSpellcheckContext context,
         ISuggestionDisplay suggestionDisplay,
-        ClientAuthService authService,
+        ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
         IFileOpener fileOpener,
         Action shutdownAction)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
-        _authService = authService;
+        _clientUserService = clientUserService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
         _shutdownAction = shutdownAction;
@@ -123,7 +124,7 @@ public class ConsoleUserCommandHandler
             return ResetInput();
         }
 
-        bool persisted = await _authService.AddWord(_context.UserId.Value, normalized);
+        bool persisted = await _clientUserService.Words.AddWord(_context.UserId.Value, normalized);
         if (!persisted)
         {
             Console.WriteLine($"Word '{normalized}' was not saved.");
@@ -136,7 +137,7 @@ public class ConsoleUserCommandHandler
 
             if (!_context.SpellcheckService.IsCorrect(word))
             {
-                await _authService.DeleteWord(_context.UserId.Value, normalized);
+                await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
 
                 try
                 {
@@ -152,7 +153,7 @@ public class ConsoleUserCommandHandler
         }
         catch (Exception ex)
         {
-            await _authService.DeleteWord(_context.UserId.Value, normalized);
+            await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
 
             try
             {
@@ -194,7 +195,7 @@ public class ConsoleUserCommandHandler
 
         string normalized = rawWord.ToLowerInvariant();
 
-        bool deleted = await _authService.DeleteWord(_context.UserId.Value, normalized);
+        bool deleted = await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
         if (!deleted)
         {
             Console.WriteLine($"Word '{normalized}' was not found in your personal dictionary.");
@@ -230,7 +231,7 @@ public class ConsoleUserCommandHandler
             return ResetInput();
         }
 
-        var words = await _authService.GetWords(_context.UserId.Value);
+        var words = await _clientUserService.Words.GetWords(_context.UserId.Value);
 
         if (words.Count() == 0)
         {
@@ -255,7 +256,7 @@ public class ConsoleUserCommandHandler
             return ResetInput();
         }
 
-        var stats = await _authService.GetStats(_context.UserId.Value);
+        var stats = await _clientUserService.Stats.GetStats(_context.UserId.Value);
 
         if (stats.Count == 0)
         {

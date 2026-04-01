@@ -1,6 +1,8 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Application.Users;
+using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -9,8 +11,14 @@ public class Client
     public static async Task StartClient(int port, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         string backendUrl = $"http://localhost:{port}";
+        using var httpClient = new HttpClient();
 
-        var authService = new ClientAuthService(backendUrl);
+        var backendClient = new BackendClient(httpClient, backendUrl);
+        var authService = new ClientAuthService(backendClient);
+        var wordService = new ClientWordService(backendClient);
+        var statsService = new ClientStatsService(backendClient);
+
+        var clientUserService = new ClientUserService(authService, wordService, statsService);
 
         Console.Write("Do you want to log in? (y/n): ");
         string input = Console.ReadLine()?.Trim().ToLower() ?? "";
@@ -19,7 +27,7 @@ public class Client
 
         if (input.Contains('y'))
         {
-            var session = await authService.RunAuthenticationFlow();
+            var session = await clientUserService.Auth.RunAuthenticationFlow();
             Console.WriteLine();
 
             context = session != null && session.IsAuthenticated
@@ -42,7 +50,7 @@ public class Client
         }
 
         var processManager = StartProcessManager();
-        await StartSpellChecker(context, authService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
+        await StartSpellChecker(context, clientUserService, processManager, spellcheckContextFactory, fileOpener, token, shutdownAction);
     }
 
     private static ShellProcessManager StartProcessManager()
@@ -52,7 +60,7 @@ public class Client
         return processManager;
     }
 
-    private static async Task StartSpellChecker(UserSpellcheckContext context, ClientAuthService authService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
+    private static async Task StartSpellChecker(UserSpellcheckContext context, ClientUserService clientUserService, ShellProcessManager processManager, IUserSpellcheckContextFactory spellcheckContextFactory, IFileOpener fileOpener, CancellationToken token, Action shutdownAction)
     {
         var settings = context.Settings;
 
@@ -71,7 +79,7 @@ public class Client
             suggestionUseCase,
             processManager,
             suggestionDisplay,
-            authService,
+            clientUserService,
             spellcheckContextFactory,
             token,
             settings,
