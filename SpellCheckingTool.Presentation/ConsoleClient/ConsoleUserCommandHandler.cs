@@ -10,9 +10,9 @@ public class ConsoleUserCommandHandler
     private readonly UserSpellcheckContext _context;
     private readonly ISuggestionDisplay _suggestionDisplay;
     private readonly ClientUserService _clientUserService;
-    private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
-    private readonly IFileOpener _fileOpener;
     private readonly CancellationTokenSource _cts;
+    private readonly IWordService _wordService;
+    private readonly SettingsService _settingsService;
 
     private readonly SemaphoreSlim _commandLock = new(1, 1);
 
@@ -24,26 +24,27 @@ public class ConsoleUserCommandHandler
         UserSpellcheckContext context,
         ISuggestionDisplay suggestionDisplay,
         ClientUserService clientUserService,
-        IUserSpellcheckContextFactory spellcheckContextFactory,
         IFileOpener fileOpener,
-        CancellationTokenSource cts)
+        CancellationTokenSource cts,
+        IWordService wordService)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
         _clientUserService = clientUserService;
-        _spellcheckContextFactory = spellcheckContextFactory;
-        _fileOpener = fileOpener;
         _cts = cts;
+        _wordService = wordService;
+        _settingsService = new SettingsService(context, fileOpener);
 
         _commandHandlers = new Dictionary<string, CommandHandlerAsync>(StringComparer.OrdinalIgnoreCase)
         {
             { "/addword", HandleAddWordCommand },
             { "/delword", HandleDeleteWordCommand },
-            { "/words", HandleWordsCommandWrapper },
-            { "/stats", HandleStatsCommandWrapper },
-            { "/settings", HandleSettingsCommandWrapper },
-            { "/shutdown", HandleShutdownCommand }
+            { "/stats", (cmd, input) => HandleStatsCommand(input) },
+            { "/settings", (cmd, input) => HandleSettingsCommand(input) }, 
+            { "/shutdown", HandleShutdownCommand },
+            { "/words", (cmd, input) => HandleWordsCommand() }
         };
+
     }
 
     public async Task<(bool handled, string newInput)> TryHandleCommandAsync(string input)
@@ -74,163 +75,23 @@ public class ConsoleUserCommandHandler
         }
     }
 
-    private async Task<string> HandleWordsCommandWrapper(string command, string input)
-    {
-        return await HandleWordsCommand(input);
-    }
-
-    private async Task<string> HandleStatsCommandWrapper(string command, string input)
-    {
-        return await HandleStatsCommand(input);
-    }
-
-    private Task<string> HandleSettingsCommandWrapper(string command, string input)
-    {
-        return HandleSettingsCommand(input);
-    }
-
     private async Task<string> HandleAddWordCommand(string command, string input)
     {
+        var (success, message) = await _wordService.AddWordAsync(command);
 
-        string rawWord = command.Substring("/addword".Length).Trim();
-
-        if (string.IsNullOrWhiteSpace(rawWord) || !rawWord.All(char.IsLetter))
-        {
-            Console.WriteLine("Error: Invalid characters. Words must contain only letters.");
-            return ResetInput();
-        }
-
-        if (!_context.IsAuthenticated || _context.UserId == null)
-        {
-            Console.WriteLine("You need to be logged in to save a personal word.");
-            return ResetInput();
-        }
-
-        if (string.IsNullOrWhiteSpace(rawWord))
-        {
-            Console.WriteLine("Usage: /addword <word>");
-            return ResetInput();
-        }
-
-        if (rawWord.Contains(' '))
-        {
-            Console.WriteLine("Please enter exactly one word.");
-            return ResetInput();
-        }
-
-        string normalized = rawWord.ToLowerInvariant();
-
-        Word word;
-        try
-        {
-            word = new Word(_context.SpellcheckService.Alphabet, normalized);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-            return ResetInput();
-        }
-
-        bool persisted = await _clientUserService.Words.AddWord(_context.UserId.Value, normalized);
-        if (!persisted)
-        {
-            Console.WriteLine($"Word '{normalized}' was not saved.");
-            return ResetInput();
-        }
-
-        try
-        {
-            RebuildActiveTreeAfterDictionaryChange();
-
-            if (!_context.SpellcheckService.IsCorrect(word))
-            {
-                await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
-
-                try
-                {
-                    RebuildActiveTreeAfterDictionaryChange();
-                }
-                catch
-                {
-                }
-
-                Console.WriteLine($"Invalid word '{normalized}'.");
-                return ResetInput();
-            }
-        }
-        catch (Exception ex)
-        {
-            await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
-
-            try
-            {
-                RebuildActiveTreeAfterDictionaryChange();
-            }
-            catch
-            {
-            }
-
-            Console.WriteLine($"Invalid word '{normalized}': {ex.Message}");
-            return ResetInput();
-        }
-
-        Console.WriteLine($"Saved '{normalized}' to your personal dictionary.");
+        Console.WriteLine(message);
         return ResetInput();
     }
 
     private async Task<string> HandleDeleteWordCommand(string command, string input)
     {
-        if (!_context.IsAuthenticated || _context.UserId == null)
-        {
-            Console.WriteLine("You need to be logged in to delete a personal word.");
-            return ResetInput();
-        }
+        var (success, message) = await _wordService.DeleteWordAsync(command);
 
-        string rawWord = command.Substring("/delword".Length).Trim();
-
-        if (string.IsNullOrWhiteSpace(rawWord))
-        {
-            Console.WriteLine("Usage: /delword <word>");
-            return ResetInput();
-        }
-
-        if (rawWord.Contains(' '))
-        {
-            Console.WriteLine("Please enter exactly one word.");
-            return ResetInput();
-        }
-
-        string normalized = rawWord.ToLowerInvariant();
-
-        bool deleted = await _clientUserService.Words.DeleteWord(_context.UserId.Value, normalized);
-        if (!deleted)
-        {
-            Console.WriteLine($"Word '{normalized}' was not found in your personal dictionary.");
-            return ResetInput();
-        }
-
-        RebuildActiveTreeAfterDictionaryChange();
-
-        bool stillValid;
-        try
-        {
-            var word = new Word(_context.SpellcheckService.Alphabet, normalized);
-            stillValid = _context.SpellcheckService.IsCorrect(word);
-        }
-        catch
-        {
-            stillValid = false;
-        }
-
-        if (stillValid)
-            Console.WriteLine($"Deleted '{normalized}' from your personal dictionary, but it is still valid via the default dictionary.");
-        else
-            Console.WriteLine($"Deleted '{normalized}' from your personal dictionary.");
-
+        Console.WriteLine(message);
         return ResetInput();
     }
 
-    private async Task<string> HandleWordsCommand(string input)
+    private async Task<string> HandleWordsCommand()
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
         {
@@ -238,16 +99,16 @@ public class ConsoleUserCommandHandler
             return ResetInput();
         }
 
-        var words = await _clientUserService.Words.GetWords(_context.UserId.Value);
+        var words = await _wordService.GetWordsAsync();
 
-        if (words.Count() == 0)
+        if (!words.Any())
         {
             Console.WriteLine("No saved words found.");
             return ResetInput();
         }
 
         Console.WriteLine("Personal dictionary:");
-        foreach (var item in words.OrderBy(w => w.ToString(), StringComparer.OrdinalIgnoreCase))
+        foreach (var item in words.OrderBy(s => s, StringComparer.OrdinalIgnoreCase))
         {
             Console.WriteLine($"- {item}");
         }
@@ -264,52 +125,9 @@ public class ConsoleUserCommandHandler
         }
 
         var stats = await _clientUserService.Stats.GetStats(_context.UserId.Value);
-
-        if (stats.Count == 0)
-        {
-            Console.WriteLine("No stats found.");
-            return ResetInput();
-        }
-
-        var userSettings = _context.Settings;
-        int maxDisplayedStats = userSettings.MaxDisplayedStats;
-
-        var topStats = stats
-            .OrderByDescending(s => s.UsageCount)
-            .ThenBy(s => s.Word.ToString(), StringComparer.OrdinalIgnoreCase)
-            .Take(maxDisplayedStats)
-            .ToList();
-
-        Console.WriteLine();
-        Console.WriteLine("Top used words:");
-        Console.WriteLine("────────────────────────────────────────────");
-        Console.WriteLine($"{"Word",-15} {"Count",-7} {"Last Used"}");
-        Console.WriteLine("────────────────────────────────────────────");
-
-        foreach (var item in topStats)
-        {
-            Console.WriteLine(
-                $"{item.Word,-15} {item.UsageCount,-7} {item.LastUsedAt:yyyy-MM-dd HH:mm:ss}");
-        }
-
-        Console.WriteLine("────────────────────────────────────────────");
-        Console.WriteLine($"Showing top {topStats.Count} of {stats.Count} tracked words.");
-        Console.WriteLine();
-
+        var formatted = ClientServices.StatsFormatter.FormatStats(stats, _context.Settings);
+        Console.WriteLine(formatted);
         return ResetInput();
-    }
-
-    private void RebuildActiveTreeAfterDictionaryChange()
-    {
-        if (!_context.IsAuthenticated || _context.UserId == null || string.IsNullOrWhiteSpace(_context.Username))
-            return;
-
-        var refreshed = _spellcheckContextFactory.CreateForUser(_context.UserId.Value, _context.Username);
-
-        _context.Tree = refreshed.Tree;
-        _context.SpellcheckService = refreshed.SpellcheckService;
-
-        _suggestionDisplay.HideSuggestions();
     }
 
     private string ResetInput()
@@ -320,32 +138,8 @@ public class ConsoleUserCommandHandler
 
     private Task<string> HandleSettingsCommand(string input)
     {
-        try
-        {
-            var username = _context.Username ?? string.Empty;
-
-            var path = _context.SettingsRepository.GetUserSettingsFilePath(
-                _context.Username);
-
-            if (!File.Exists(path))
-            {
-                var settingsToWrite = string.IsNullOrWhiteSpace(username)
-                    ? _context.SettingsRepository.GetDefaultSettings()
-                    : _context.Settings;
-
-                _context.SettingsRepository.SetSettings(username, settingsToWrite);
-            }
-
-            _fileOpener.Open(path);
-
-            Console.WriteLine($"Settings opened: {path}");
-            Console.WriteLine("Note: Restart the application to apply changes.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to open settings: {ex.Message}");
-        }
-
+        var result = _settingsService.OpenOrCreateSettingsFile();
+        Console.WriteLine(result);
         return Task.FromResult(ResetInput());
     }
 

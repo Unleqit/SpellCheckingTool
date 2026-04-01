@@ -46,13 +46,15 @@ public class ConsoleSpellChecker
         _token = token;
         _settings = settings;
 
+        var wordService = new WordService(_context, clientUserService, spellcheckContextFactory, _suggestionDisplay);
+
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,
             _clientUserService,
-            _spellcheckContextFactory,
             fileOpener,
-            token);
+            token,
+            wordService);
     }
 
     private void UpdateSuggestions(string input)
