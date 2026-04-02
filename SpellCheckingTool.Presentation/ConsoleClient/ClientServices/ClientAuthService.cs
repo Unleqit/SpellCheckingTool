@@ -42,12 +42,11 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
             var result = await _client.PostAsync<LoginResponseDto>(
                 $"/api/v1/users/{endpoint}",
-                new { username, password },
-                $"{action} failed");
+                new { username, password });
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine(result.ErrorMessage);
+                Console.WriteLine($"{action} failed: {result.ErrorMessage}");
                 return null;
             }
 

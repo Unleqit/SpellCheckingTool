@@ -21,12 +21,11 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
         {
             var result = await _client.PostAsync<SuccessResponse>(
                 url,
-                new { userId, word },
-                errorMessage);
+                new { userId, word });
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine(result.ErrorMessage);
+                Console.WriteLine($"{errorMessage}: {result.ErrorMessage}");
                 return false;
             }
 
@@ -46,12 +45,11 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
         {
             var result = await _client.PostAsync<UserWordsFileResponseDto>(
                 "/api/v1/users/words/file",
-                new { userId },
-                "Could not load words");
+                new { userId });
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine(result.ErrorMessage);
+                Console.WriteLine($"Could not load words: {result.ErrorMessage}");
                 return Array.Empty<Word>();
             }
 

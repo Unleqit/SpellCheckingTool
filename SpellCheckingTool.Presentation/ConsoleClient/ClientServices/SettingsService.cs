@@ -18,27 +18,21 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
         public string OpenOrCreateSettingsFile()
         {
-            try
+            var username = _context.Username ?? string.Empty;
+            var path = _context.SettingsRepository.GetUserSettingsFilePath(_context.Username);
+
+            if (!File.Exists(path))
             {
-                var username = _context.Username ?? string.Empty;
-                var path = _context.SettingsRepository.GetUserSettingsFilePath(_context.Username);
+                var settingsToWrite = string.IsNullOrWhiteSpace(username)
+                    ? _context.SettingsRepository.GetDefaultSettings()
+                    : _context.Settings;
 
-                if (!File.Exists(path))
-                {
-                    var settingsToWrite = string.IsNullOrWhiteSpace(username)
-                        ? _context.SettingsRepository.GetDefaultSettings()
-                        : _context.Settings;
-
-                    _context.SettingsRepository.SetSettings(username, settingsToWrite);
-                }
-
-                _fileOpener.Open(path);
-                return $"Settings opened: {path}\nNote: Restart the application to apply changes.";
+                _context.SettingsRepository.SetSettings(username, settingsToWrite);
             }
-            catch (Exception ex)
-            {
-                return $"Failed to open settings: {ex.Message}";
-            }
+
+            _fileOpener.Open(path);
+
+            return path;
         }
     }
 }

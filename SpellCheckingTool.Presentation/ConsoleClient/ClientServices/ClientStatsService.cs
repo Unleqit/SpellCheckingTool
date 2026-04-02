@@ -21,12 +21,11 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
         {
             var result = await _client.PostAsync<UserStatsResponseDto>(
                 "/api/v1/users/words/stats",
-                new { userId },
-                "Could not load stats");
+                new { userId });
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine(result.ErrorMessage);
+                Console.WriteLine($"Could not load stats: {result.ErrorMessage}");
                 return Array.Empty<WordStatistic>();
             }
 

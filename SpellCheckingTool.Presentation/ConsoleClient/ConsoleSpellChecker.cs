@@ -134,7 +134,7 @@ public class ConsoleSpellChecker
                     _suggestionDisplay.HideSuggestions();
                     _suggestionDisplay.NextWord();
 
-                    await TrackLastCompletedWordOnSpace(input);
+                    _ = TrackLastCompletedWordOnSpace(input);
                     UpdateSuggestions(input);
                     break;
 
@@ -163,7 +163,7 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
-                        await TrackFinalWordOnEnter(input.Trim());
+                        _ = TrackFinalWordOnEnter(input.Trim());
 
                         Console.WriteLine();
                         _processManager.SendInput(input);

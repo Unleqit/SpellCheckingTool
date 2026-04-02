@@ -138,8 +138,18 @@ public class ConsoleUserCommandHandler
 
     private Task<string> HandleSettingsCommand(string input)
     {
-        var result = _settingsService.OpenOrCreateSettingsFile();
-        Console.WriteLine(result);
+        try
+        {
+            string path = _settingsService.OpenOrCreateSettingsFile();
+
+            Console.WriteLine($"Settings opened: {path}");
+            Console.WriteLine("Note: Restart the application to apply changes.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to open settings: {ex.Message}");
+        }
+
         return Task.FromResult(ResetInput());
     }
 
