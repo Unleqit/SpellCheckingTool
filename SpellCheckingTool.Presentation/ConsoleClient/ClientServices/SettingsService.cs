@@ -12,25 +12,39 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
         {
             _context = context;
             _fileOpener = fileOpener;
-        }   
+        }
 
         public string OpenOrCreateSettingsFile()
         {
-            var username = _context.Username ?? string.Empty;
-            var path = _context.SettingsRepository.GetUserSettingsFilePath(_context.Username);
+            var path = GetSettingsFilePath();
 
-            if (!File.Exists(path))
-            {
-                var settingsToWrite = string.IsNullOrWhiteSpace(username)
-                    ? _context.SettingsRepository.GetDefaultSettings()
-                    : _context.Settings;
-
-                _context.SettingsRepository.SetSettings(username, settingsToWrite);
-            }
+            EnsureSettingsFileExists(path);
 
             _fileOpener.Open(path);
 
             return path;
+        }
+        private string GetSettingsFilePath()
+        {
+            return _context.SettingsRepository.GetUserSettingsFilePath(_context.Username);
+        }
+
+        private void EnsureSettingsFileExists(string path)
+        {
+            if (File.Exists(path))
+                return;
+
+            CreateSettingsFile();
+        }
+
+        private void CreateSettingsFile()
+        {
+            var username = _context.Username ?? string.Empty;
+            var settingsToWrite = string.IsNullOrWhiteSpace(username)
+                    ? _context.SettingsRepository.GetDefaultSettings()
+                    : _context.Settings;
+
+            _context.SettingsRepository.SetSettings(username, settingsToWrite);
         }
     }
 }
