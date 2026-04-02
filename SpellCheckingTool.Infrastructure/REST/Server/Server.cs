@@ -3,7 +3,6 @@ using SpellCheckingTool.Infrastructure.Http.Controllers;
 using SpellCheckingTool.Infrastructure.Http.Servers;
 using SpellCheckingTool.Infrastructure.Servers.Exceptions;
 using System.Net;
-using System.Reflection;
 
 namespace SpellCheckingTool.Infrastructure.Servers;
 

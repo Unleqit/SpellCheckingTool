@@ -1,9 +1,7 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.Dictionary.Exceptions;
-using System.Resources;
 
 namespace SpellCheckingTool.Infrastructure.Dictionary;
 

@@ -1,8 +1,5 @@
 using SpellCheckingTool.Domain.WordStats;
 using SpellCheckingTool.Application.Settings;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices

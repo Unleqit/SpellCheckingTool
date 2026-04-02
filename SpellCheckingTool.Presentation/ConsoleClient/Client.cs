@@ -1,7 +1,5 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
-using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;

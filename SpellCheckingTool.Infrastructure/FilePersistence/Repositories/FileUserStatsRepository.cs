@@ -1,5 +1,4 @@
-﻿using SpellCheckingTool.Application.Entities.WordInfo;
-using SpellCheckingTool.Application.Users;
+﻿using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Application.UserWordStats;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;

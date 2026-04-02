@@ -1,12 +1,5 @@
 ﻿using SpellCheckingTool.Application.Settings;
-using SpellCheckingTool.Infrastructure.UserSettingsPersistence;
-using SpellCheckingTool.Presentation.ConsoleClient;
 using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient
 {

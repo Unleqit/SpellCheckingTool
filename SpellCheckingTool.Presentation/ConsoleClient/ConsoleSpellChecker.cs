@@ -1,8 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using SpellCheckingTool.Application.Settings;
+﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 

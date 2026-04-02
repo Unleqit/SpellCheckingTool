@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SpellCheckingTool.Application.Persistence;
+﻿using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Suggestion.SuggestionService;
 using SpellCheckingTool.Domain.Alphabet;

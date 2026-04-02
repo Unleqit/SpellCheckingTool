@@ -1,6 +1,4 @@
-﻿using SpellCheckingTool.Domain.WordTree;
-
-namespace SpellCheckingTool.Domain.Exceptions;
+﻿namespace SpellCheckingTool.Domain.Exceptions;
 
 public sealed class InvalidWordCharacterException : SpellCheckingToolException
 {
