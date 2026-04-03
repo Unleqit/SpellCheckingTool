@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Application.LoginResponse;
+﻿using SpellCheckingTool.Application.Entities.LoginResponse;
+using SpellCheckingTool.Application.LoginResponse;
 using System.Text;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
@@ -14,20 +15,39 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
         public async Task<AuthSession?> RunAuthenticationFlow()
         {
-            var (username, isRegister) = ReadUsername();
-            var password = ReadPassword(isRegister);
-
-            var session = await Authenticate(username, password, isRegister);
-
-            if (session == null)
+            while (true)
             {
-                Console.WriteLine("Authentication failed.");
-                return null;
-            }
+                var (username, isRegister) = ReadUsername();
 
-            string action = isRegister ? "Registration" : "Login";
-            Console.WriteLine($"{action} successful!");
-            return session;
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    Console.WriteLine("Username is required.");
+                    continue;
+                }
+
+                if (isRegister)
+                {
+                    bool exists = await CheckUsernameExists(username);
+                    if (exists)
+                    {
+                        Console.WriteLine("Username already exists.");
+                        continue;
+                    }
+                }
+
+                var password = ReadPassword(isRegister);
+                var session = await Authenticate(username, password, isRegister);
+
+                if (session == null)
+                {
+                    Console.WriteLine("Authentication failed.");
+                    continue;
+                }
+
+                string action = isRegister ? "Registration" : "Login";
+                Console.WriteLine($"{action} successful!");
+                return session;
+            }
         }
 
         public async Task<AuthSession?> Authenticate(string username, string password, bool isRegister)
@@ -94,6 +114,21 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
             Console.WriteLine();
             return password.ToString();
+        }
+
+        private async Task<bool> CheckUsernameExists(string username)
+        {
+            var result = await _client.PostAsync<UsernameCheckResponseDto>(
+                "/api/v1/users/check-username",
+                new { username });
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                Console.WriteLine($"Could not verify username: {result.ErrorMessage}");
+                return true; // safer default: treat as unavailable
+            }
+
+            return result.Data.Exists;
         }
     }
 }

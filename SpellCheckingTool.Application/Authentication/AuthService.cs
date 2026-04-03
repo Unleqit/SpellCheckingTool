@@ -55,5 +55,14 @@ namespace SpellCheckingTool.Application.Authentication
 
             return OperationResult<User>.Ok(user);
         }
+
+        public OperationResult<bool> UsernameExists(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return OperationResult<bool>.Fail("Username is required.");
+
+            bool exists = _userRepository.GetByUsername(username.Trim()) != null;
+            return OperationResult<bool>.Ok(exists);
+        }
     }
 }
