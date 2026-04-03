@@ -52,14 +52,9 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
                 return (false, $"Invalid word '{normalized}': {ex.Message}");
             }
 
-            if (!_context.SpellcheckService.IsCorrect(word))
-            {
-                return (false, $"Invalid word '{normalized}'.");
-            }
-
             bool persisted = await _clientUserService.Words.AddWord(_context.UserId.Value, normalized);
             if (!persisted)
-                return (false, $"Word '{normalized}' was not saved.");
+                return (false, $"Word '{normalized}' already exists in your personal dictionary.");
 
             try
             {
