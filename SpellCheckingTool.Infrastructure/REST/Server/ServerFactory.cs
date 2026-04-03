@@ -2,7 +2,6 @@
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Infrastructure.Servers;
 using SpellCheckingTool.Infrastructure.Http.Controllers;
-using SpellCheckingTool.Infrastructure.Controller;
 
 namespace SpellCheckingTool.Infrastructure.Http.Servers
 {

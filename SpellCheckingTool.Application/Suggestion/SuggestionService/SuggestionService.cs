@@ -1,6 +1,4 @@
 ﻿using SpellCheckingTool.Domain.WordTree;
-using System;
-using System.Collections.Generic;
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
 {
     public class SuggestionService : SuggestionServiceBase

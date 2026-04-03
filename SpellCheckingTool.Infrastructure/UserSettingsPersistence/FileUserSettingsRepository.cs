@@ -1,11 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using SpellCheckingTool.Application.Settings;
-using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Infrastructure.UserSettingsPersistence.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
 {

@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
-using SpellCheckingTool.Application.Settings;
+﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Application.Spellcheck;
 using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient;
 
@@ -12,47 +11,51 @@ public class ConsoleSpellChecker
     private readonly ShellProcessManager _processManager;
     private readonly UserSpellcheckContext _context;
     private readonly ISuggestionDisplay _suggestionDisplay;
-    private readonly ClientAuthService _authService;
+    private readonly ClientUserService _clientUserService;
     private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
     private readonly ConsoleUserCommandHandler _commandHandler;
     private readonly IFileOpener _fileOpener;
-    private readonly CancellationToken _token;
-    private readonly UserSettings _settings;
-
+    private readonly CancellationTokenSource _token;
     private SuggestionUseCase _suggestionUseCase;
+    private readonly UserSettings _settings;
 
     private const string WelcomeMessage =
         "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /shutdown";
 
     public ConsoleSpellChecker(
         UserSpellcheckContext context,
-        SuggestionUseCase suggestionUseCase,
         ShellProcessManager processManager,
-        ISuggestionDisplay suggestionWindow,
-        ClientAuthService authService,
+        ISuggestionDisplay suggestionDisplay,
+        ClientUserService clientUserService,
         IUserSpellcheckContextFactory spellcheckContextFactory,
-        CancellationToken token,
-        UserSettings settings,
-        IFileOpener fileOpener,
-        Action shutdownAction)
+        CancellationTokenSource token,
+        IFileOpener fileOpener)
     {
         _context = context;
-        _suggestionUseCase = suggestionUseCase;
         _processManager = processManager;
-        _suggestionDisplay = suggestionWindow;
-        _authService = authService;
+        _suggestionDisplay = suggestionDisplay;
+        _clientUserService = clientUserService;
         _spellcheckContextFactory = spellcheckContextFactory;
         _fileOpener = fileOpener;
         _token = token;
-        _settings = settings;
+        _settings = context.Settings;
 
+        _suggestionUseCase = new SuggestionUseCase(
+            context.SpellcheckService,
+            context.ExecutableSpellcheckService)
+        {
+            MaxSuggestions = context.Settings.MaxSuggestions,
+            MaxDistance = context.Settings.MaxDistance
+        };
+
+        var wordService = new WordService(_context, clientUserService, _spellcheckContextFactory, _suggestionDisplay);
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,
-            _authService,
-            _spellcheckContextFactory,
+            _clientUserService,
             fileOpener,
-            shutdownAction);
+            token,
+            wordService);
     }
 
     private void UpdateSuggestions(string input)
@@ -73,7 +76,7 @@ public class ConsoleSpellChecker
         _suggestionDisplay.ShowSuggestions(viewModel);
     }
 
-    public void Run()
+    public async Task Run()
     {
         Console.WriteLine(WelcomeMessage);
         string input = "";
@@ -82,11 +85,11 @@ public class ConsoleSpellChecker
         Console.Write(shellPrompt);
         _suggestionDisplay.Initialize(shellPrompt.Length);
 
-        while (!_token.IsCancellationRequested)
+        while (!_token.Token.IsCancellationRequested)
         {
             if (!Console.KeyAvailable)
             {
-                Thread.Sleep(50);
+                await Task.Delay(50, _token.Token).ContinueWith(_ => { });
                 continue;
             }
 
@@ -129,14 +132,17 @@ public class ConsoleSpellChecker
                     _suggestionDisplay.HideSuggestions();
                     _suggestionDisplay.NextWord();
 
-                    TrackLastCompletedWordOnSpace(input);
+                    _ = TrackLastCompletedWordOnSpace(input);
                     UpdateSuggestions(input);
                     break;
 
                 case ConsoleKey.Enter:
-                    if(_commandHandler.TryHandleCommand(ref input))
+                    var (handled, newInput) = await _commandHandler.TryHandleCommandAsync(input);
+                    input = newInput;
+
+                    if (handled)
                     {
-                        if (_token.IsCancellationRequested)
+                        if (_token.Token.IsCancellationRequested)
                             return;
 
                         RefreshSpellcheckState();
@@ -155,7 +161,7 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
-                        TrackFinalWordOnEnter(input.Trim());
+                        _ = TrackFinalWordOnEnter(input.Trim());
 
                         Console.WriteLine();
                         _processManager.SendInput(input);
@@ -212,7 +218,7 @@ public class ConsoleSpellChecker
         };
     }
 
-    private void TrackLastCompletedWordOnSpace(string input)
+    private async Task TrackLastCompletedWordOnSpace(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -228,10 +234,10 @@ public class ConsoleSpellChecker
             return;
 
         string lastCompletedToken = tokens[^1].Trim().ToLowerInvariant();
-        TrackSingleWord(lastCompletedToken);
+        await TrackSingleWord(lastCompletedToken);
     }
 
-    private void TrackFinalWordOnEnter(string input)
+    private async Task TrackFinalWordOnEnter(string input)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -245,10 +251,10 @@ public class ConsoleSpellChecker
             return;
 
         string lastToken = tokens[^1].Trim().ToLowerInvariant();
-        TrackSingleWord(lastToken);
+        await TrackSingleWord(lastToken);
     }
 
-    private void TrackSingleWord(string token)
+    private async Task TrackSingleWord(string token)
     {
         if (!_context.IsAuthenticated || _context.UserId == null)
             return;
@@ -264,7 +270,7 @@ public class ConsoleSpellChecker
 
             if (service.IsCorrect(word))
             {
-                _authService.TrackWordUsage(_context.UserId.Value, token);
+                await _clientUserService.Words.TrackWordUsage(_context.UserId.Value, token);
             }
         }
         catch

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetArchTest.Rules;
+﻿using NetArchTest.Rules;
 using NetArchTestResult = NetArchTest.Rules.TestResult;
 
 namespace TestProject.Architecture;

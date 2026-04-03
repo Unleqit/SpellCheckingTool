@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.WordTreeDto;
-using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.WordTree;
 using SpellCheckingTool.Infrastructure.FilePersistence.Exceptions;
 

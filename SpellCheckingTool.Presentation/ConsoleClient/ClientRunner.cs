@@ -1,27 +1,21 @@
 ﻿using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Presentation.ConsoleClient.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient
 {
     public static class ClientRunner
     {
-        public static Thread Start(
+        public static Task Start(
             int port,
             IUserSpellcheckContextFactory factory,
             IFileOpener fileOpener,
-            CancellationTokenSource cts,
-            Action shutdownAction)
+            CancellationTokenSource cts)
         {
-            var thread = new Thread(() =>
+            return Task.Run(async () =>
             {
                 try
                 {
-                    Client.StartClient(port, factory, fileOpener, cts.Token, shutdownAction);
+                    await Client.StartClient(port, factory, fileOpener, cts);
                 }
                 catch (OperationCanceledException)
                 {
@@ -34,9 +28,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                     cts.Cancel();
                 }
             });
-
-            thread.Start();
-            return thread;
         }
     }
 }
