@@ -13,41 +13,28 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
             _client = client;
         }
 
-        public async Task<AuthSession?> RunAuthenticationFlow()
+        public async Task<AuthSession?> RunAuthenticationFlow(string username, bool isRegister)
         {
-            while (true)
+            username = username?.Trim() ?? "";
+
+            if (string.IsNullOrWhiteSpace(username))
             {
-                var (username, isRegister) = ReadUsername();
-
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    Console.WriteLine("Username is required.");
-                    continue;
-                }
-
-                if (isRegister)
-                {
-                    bool exists = await CheckUsernameExists(username);
-                    if (exists)
-                    {
-                        Console.WriteLine("Username already exists.");
-                        continue;
-                    }
-                }
-
-                var password = ReadPassword(isRegister);
-                var session = await Authenticate(username, password, isRegister);
-
-                if (session == null)
-                {
-                    Console.WriteLine("Authentication failed.");
-                    continue;
-                }
-
-                string action = isRegister ? "Registration" : "Login";
-                Console.WriteLine($"{action} successful!");
-                return session;
+                Console.WriteLine("Usage: /login <username> [--register]");
+                return null;
             }
+
+            var password = ReadPassword(isRegister);
+            var session = await Authenticate(username, password, isRegister);
+
+            if (session == null)
+            {
+                Console.WriteLine("Authentication failed.");
+                return null;
+            }
+
+            string action = isRegister ? "Registration" : "Login";
+            Console.WriteLine($"{action} successful!");
+            return session;
         }
 
         public async Task<AuthSession?> Authenticate(string username, string password, bool isRegister)

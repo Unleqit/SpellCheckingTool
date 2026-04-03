@@ -5,8 +5,8 @@ namespace SpellCheckingTool.Application.Spellcheck;
 
 public sealed class UserSpellcheckContext
 {
-    public Guid? UserId { get; }
-    public string? Username { get; }
+    public Guid? UserId { get; set; }
+    public string? Username { get; set; }
     public WordTree Tree { get; set; }
     public ISpellcheckService SpellcheckService { get; set; }
     public ISpellcheckService ExecutableSpellcheckService { get; set; }
@@ -33,5 +33,14 @@ public sealed class UserSpellcheckContext
         ExecutableSpellcheckService = executableSpellcheckService;
         Settings = settings;
         SettingsRepository = settingsRepository;
+    }
+
+    public void ReplaceWith(UserSpellcheckContext other)
+    {
+        UserId = other.UserId;
+        Username = other.Username;
+        Tree = other.Tree;
+        SpellcheckService = other.SpellcheckService;
+        ExecutableSpellcheckService = other.ExecutableSpellcheckService;
     }
 }
