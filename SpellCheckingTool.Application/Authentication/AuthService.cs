@@ -18,6 +18,8 @@ namespace SpellCheckingTool.Application.Authentication
 
         public OperationResult<User> Register(string username, string password)
         {
+            username = username?.Trim() ?? "";
+
             if (string.IsNullOrWhiteSpace(username))
                 return OperationResult<User>.Fail("Username is required.");
 
@@ -44,6 +46,8 @@ namespace SpellCheckingTool.Application.Authentication
 
         public OperationResult<User> Login(string username, string password)
         {
+            username = username?.Trim() ?? "";
+
             var user = _userRepository.GetByUsername(username);
             if (user == null)
                 return OperationResult<User>.Fail("User not found.");
@@ -58,6 +62,8 @@ namespace SpellCheckingTool.Application.Authentication
 
         public OperationResult<bool> UsernameExists(string username)
         {
+            username = username?.Trim() ?? "";
+
             if (string.IsNullOrWhiteSpace(username))
                 return OperationResult<bool>.Fail("Username is required.");
 
