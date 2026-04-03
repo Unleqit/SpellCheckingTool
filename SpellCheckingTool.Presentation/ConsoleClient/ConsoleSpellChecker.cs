@@ -169,15 +169,16 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
-                        _ = TrackFinalWordOnEnter(input.Trim());
+                        if (!input.EndsWith(' '))
+                        {
+                            _ = TrackFinalWordOnEnter(input.Trim());
+                        }
 
                         Console.WriteLine();
                         _processManager.SendInput(input);
-
                         shellPrompt = _processManager.GetCurrentConsolePrompt();
                         Console.Write(shellPrompt);
                         _suggestionDisplay.Initialize(shellPrompt.Length);
-
                         input = "";
                     }
                     break;
