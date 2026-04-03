@@ -12,7 +12,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
             _client = client;
         }
 
-        private async Task<bool> ExecuteWordAction(string url, Guid userId, string word, string errorMessage)
+        private async Task<bool> ExecuteWordAction(string url, Guid userId, string word)
         {
             var result = await _client.PostAsync<SuccessResponse>(
                 url,
@@ -20,7 +20,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
             if (!result.IsSuccess)
             {
-                Console.WriteLine($"{errorMessage}: {result.ErrorMessage}");
                 return false;
             }
 
@@ -28,13 +27,13 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
         }
 
         public Task<bool> AddWord(Guid userId, string word) =>
-            ExecuteWordAction("/api/v1/users/words/add", userId, word, "Could not save word");
+            ExecuteWordAction("/api/v1/users/words/add", userId, word);
 
         public Task<bool> DeleteWord(Guid userId, string word) =>
-            ExecuteWordAction("/api/v1/users/words/delete", userId, word, "Could not delete word");
+            ExecuteWordAction("/api/v1/users/words/delete", userId, word);
 
         public Task<bool> TrackWordUsage(Guid userId, string word) =>
-            ExecuteWordAction("/api/v1/users/words/track", userId, word, "Could not track word");
+            ExecuteWordAction("/api/v1/users/words/track", userId, word);
 
         public async Task<IReadOnlyList<Word>> GetWords(Guid userId)
         {
