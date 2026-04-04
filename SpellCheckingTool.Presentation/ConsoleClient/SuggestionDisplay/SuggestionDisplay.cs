@@ -118,7 +118,7 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
                 case PopupWindowDisplayState.SUCCESS: 
                     break;
                 case PopupWindowDisplayState.NOT_ENOUGH_HORIZONTAL_SPACE: 
-                    HandleLinebreak(ref currentTypedWord); 
+                    HandleLinebreak(ref currentTypedWord, foreColor, backColor); 
                     goto tryShowPopupWindow;
             }
 
@@ -141,14 +141,14 @@ namespace SpellCheckingTool.Presentation.ConsoleClient
             return true;
         }
 
-        private void HandleLinebreak(ref IndexedWord currentTypedWord)
+        private void HandleLinebreak(ref IndexedWord currentTypedWord, ConsoleColor foreColor, ConsoleColor backColor)
         {
             Console.SetCursorPosition(this.currentShellPromptLength + currentTypedWord.startIndex, currentTypedWord.line);
             Console.Write(new string(' ', currentTypedWord.word.Length + 1));
             Console.SetCursorPosition(0, ++currentTypedWord.line);
             currentTypedWord.offset = 0;
             currentTypedWord.startIndex = 0;
-            ReplaceWord(currentTypedWord, currentTypedWord.word, Console.ForegroundColor, Console.BackgroundColor);
+            ReplaceWord(currentTypedWord, currentTypedWord.word, foreColor, backColor);
         }
 
         private void ReplaceWord(IndexedWord oldWord, Word newWord, ConsoleColor foreColor, ConsoleColor backColor)
