@@ -5,7 +5,7 @@ using SpellCheckingTool.Infrastructure.UserSettingsPersistence.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
 {
-    public class FileUserSettingsRepository : IUserSettingsRepository
+    public class UserSettingsRepository : IUserSettingsRepository
     {
         private readonly string _baseDirectory;
         private readonly UserSettings _defaultSettings;
@@ -19,7 +19,7 @@ namespace SpellCheckingTool.Infrastructure.UserSettingsPersistence
             Converters = { new StringEnumConverter() }
         };
 
-        public FileUserSettingsRepository(string baseDirectory)
+        public UserSettingsRepository(string baseDirectory)
         {
             Directory.CreateDirectory(baseDirectory);
             _baseDirectory = baseDirectory;

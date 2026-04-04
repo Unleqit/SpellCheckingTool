@@ -42,7 +42,7 @@ public class UserWordStatsRepositoryTests
 
     private IUserWordStatsRepository CreateRepository()
     {
-        return new FileUserWordStatsRepository(
+        return new UserWordStatsRepository(
             _paths,
             _alphabet,
             _userRepository,

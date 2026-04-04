@@ -89,7 +89,7 @@ public class Program
         var inputAlphabet = new UTF16Alphabet();
         var basePath = Path.Combine(AppContext.BaseDirectory, "data");
 
-        var userSettingsRepository = new FileUserSettingsRepository(
+        var userSettingsRepository = new UserSettingsRepository(
             Path.Combine(basePath, "UserSettings"));
 
         var paths = new UserStorePaths(basePath);
@@ -100,7 +100,7 @@ public class Program
             serializer
         );
 
-        IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
+        IUserWordStatsRepository wordStatsRepository = new UserWordStatsRepository(
             paths,
             inputAlphabet,
             userRepository,
