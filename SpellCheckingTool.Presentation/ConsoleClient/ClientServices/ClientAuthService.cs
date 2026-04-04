@@ -23,6 +23,27 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
                 return null;
             }
 
+            if (isRegister)
+            {
+                var exists = await CheckUsernameExists(username);
+
+                if (exists)
+                {
+                    Console.WriteLine("Registration failed: Username already exists.");
+                    return null;
+                }
+            }
+            else
+            {
+                var exists = await CheckUsernameExists(username);
+
+                if (!exists)
+                {
+                    Console.WriteLine("Login failed: Username does not exist.");
+                    return null;
+                }
+            }
+
             var password = ReadPassword(isRegister);
             var session = await Authenticate(username, password, isRegister);
 
@@ -65,17 +86,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
                 Username = domain.Username,
                 IsAuthenticated = true
             };
-        }
-
-        private (string Username, bool IsRegister) ReadUsername()
-        {
-            Console.Write("Username (add '--register' to register): ");
-            string input = Console.ReadLine()?.Trim() ?? "";
-
-            bool isRegister = input.Contains("--register");
-            string username = input.Replace("--register", "").Trim();
-
-            return (username, isRegister);
         }
 
         private string ReadPassword(bool isRegister)

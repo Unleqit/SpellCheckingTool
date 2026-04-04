@@ -20,8 +20,8 @@ public class Client
         var context = spellcheckContextFactory.CreateAnonymous();
 
         Console.WriteLine("Loaded default spellcheck context.");
-        Console.WriteLine("Use /login <username> (--register) to log in or register.");
         Console.WriteLine();
+        Console.WriteLine("Use /login <username> (--register) to log in or register.");
 
         var processManager = StartProcessManager();
 
