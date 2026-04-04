@@ -20,16 +20,16 @@ public class ConsoleSpellChecker
     private readonly UserSettings _settings;
 
     private const string WelcomeMessage =
-        "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /shutdown";
+    "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /logout, /shutdown";
 
     public ConsoleSpellChecker(
-        UserSpellcheckContext context,
-        ShellProcessManager processManager,
-        ISuggestionDisplay suggestionDisplay,
-        ClientUserService clientUserService,
-        IUserSpellcheckContextFactory spellcheckContextFactory,
-        CancellationTokenSource token,
-        IFileOpener fileOpener)
+    UserSpellcheckContext context,
+    ShellProcessManager processManager,
+    ISuggestionDisplay suggestionDisplay,
+    ClientUserService clientUserService,
+    IUserSpellcheckContextFactory spellcheckContextFactory,
+    CancellationTokenSource token,
+    IFileOpener fileOpener)
     {
         _context = context;
         _processManager = processManager;
@@ -40,23 +40,20 @@ public class ConsoleSpellChecker
         _token = token;
         _settings = context.Settings;
 
-        _suggestionUseCase = new SuggestionUseCase(
-            context.SpellcheckService,
-            context.ExecutableSpellcheckService)
-        {
-            MaxSuggestions = context.Settings.MaxSuggestions,
-            MaxDistance = context.Settings.MaxDistance
-        };
+        RefreshSuggestionUseCase();
 
         var wordService = new WordService(_context, clientUserService, _spellcheckContextFactory, _suggestionDisplay);
+
         _commandHandler = new ConsoleUserCommandHandler(
             _context,
             _suggestionDisplay,
             _clientUserService,
             fileOpener,
             token,
-            wordService);
-    }
+            wordService,
+            _spellcheckContextFactory,
+            RefreshSuggestionUseCase);
+            }
 
     private void UpdateSuggestions(string input)
     {
@@ -74,6 +71,17 @@ public class ConsoleSpellChecker
 
         var viewModel = _suggestionUseCase.Execute(input);
         _suggestionDisplay.ShowSuggestions(viewModel);
+    }
+
+    private void RefreshSuggestionUseCase()
+    {
+        _suggestionUseCase = new SuggestionUseCase(
+            _context.SpellcheckService,
+            _context.ExecutableSpellcheckService)
+        {
+            MaxSuggestions = _context.Settings.MaxSuggestions,
+            MaxDistance = _context.Settings.MaxDistance
+        };
     }
 
     public async Task Run()
@@ -161,15 +169,16 @@ public class ConsoleSpellChecker
                     }
                     else
                     {
-                        _ = TrackFinalWordOnEnter(input.Trim());
+                        if (!input.EndsWith(' '))
+                        {
+                            _ = TrackFinalWordOnEnter(input.Trim());
+                        }
 
                         Console.WriteLine();
                         _processManager.SendInput(input);
-
                         shellPrompt = _processManager.GetCurrentConsolePrompt();
                         Console.Write(shellPrompt);
                         _suggestionDisplay.Initialize(shellPrompt.Length);
-
                         input = "";
                     }
                     break;

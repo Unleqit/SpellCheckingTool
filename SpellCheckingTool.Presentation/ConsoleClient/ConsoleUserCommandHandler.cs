@@ -19,13 +19,19 @@ public class ConsoleUserCommandHandler
 
     private readonly Dictionary<string, CommandHandlerAsync> _commandHandlers;
 
+    private readonly Action _onContextChanged;
+
+    private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
+
     public ConsoleUserCommandHandler(
-        UserSpellcheckContext context,
-        ISuggestionDisplay suggestionDisplay,
-        ClientUserService clientUserService,
-        IFileOpener fileOpener,
-        CancellationTokenSource cts,
-        IWordService wordService)
+    UserSpellcheckContext context,
+    ISuggestionDisplay suggestionDisplay,
+    ClientUserService clientUserService,
+    IFileOpener fileOpener,
+    CancellationTokenSource cts,
+    IWordService wordService,
+    IUserSpellcheckContextFactory spellcheckContextFactory,
+    Action onContextChanged)
     {
         _context = context;
         _suggestionDisplay = suggestionDisplay;
@@ -33,17 +39,20 @@ public class ConsoleUserCommandHandler
         _cts = cts;
         _wordService = wordService;
         _settingsService = new SettingsService(context, fileOpener);
+        _spellcheckContextFactory = spellcheckContextFactory;
+        _onContextChanged = onContextChanged;
 
         _commandHandlers = new Dictionary<string, CommandHandlerAsync>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "/addword", HandleAddWordCommand },
-            { "/delword", HandleDeleteWordCommand },
-            { "/stats", (cmd, input) => HandleStatsCommand(input) },
-            { "/settings", (cmd, input) => HandleSettingsCommand(input) }, 
-            { "/shutdown", HandleShutdownCommand },
-            { "/words", (cmd, input) => HandleWordsCommand() }
-        };
-
+    {
+        { "/addword", HandleAddWordCommand },
+        { "/delword", HandleDeleteWordCommand },
+        { "/stats", (cmd, input) => HandleStatsCommand(input) },
+        { "/settings", (cmd, input) => HandleSettingsCommand(input) },
+        { "/shutdown", HandleShutdownCommand },
+        { "/login", HandleLoginCommand },
+        { "/logout", HandleLogoutCommand },
+        { "/words", (cmd, input) => HandleWordsCommand() }
+    };
     }
 
     public async Task<(bool handled, string newInput)> TryHandleCommandAsync(string input)
@@ -163,6 +172,60 @@ public class ConsoleUserCommandHandler
         return firstSpaceIndex < 0
             ? trimmed
             : trimmed[..firstSpaceIndex];
+    }
+    private async Task<string> HandleLoginCommand(string command, string input)
+    {
+        if (_context.IsAuthenticated)
+        {
+            Console.WriteLine($"Already logged in as '{_context.Username}'. Use /logout first.");
+            return ResetInput();
+        }
+
+        var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length < 2)
+        {
+            Console.WriteLine("Usage: /login <username> [--register]");
+            return ResetInput();
+        }
+
+        string username = parts[1];
+        bool isRegister = parts.Skip(2).Any(p =>
+            string.Equals(p, "--register", StringComparison.OrdinalIgnoreCase));
+
+        var session = await _clientUserService.Auth.RunAuthenticationFlow(username, isRegister);
+
+        if (session == null || !session.IsAuthenticated)
+        {
+            Console.WriteLine("Login failed.");
+            return ResetInput();
+        }
+
+        var userContext = _spellcheckContextFactory.CreateForUser(session.UserId, session.Username);
+
+        _context.ReplaceWith(userContext);
+        _onContextChanged();
+
+        Console.WriteLine($"Loaded spellcheck context for '{_context.Username}'.");
+        return ResetInput();
+    }
+
+    private Task<string> HandleLogoutCommand(string command, string input)
+    {
+        if (!_context.IsAuthenticated)
+        {
+            Console.WriteLine("You are already in default mode.");
+            return Task.FromResult(ResetInput());
+        }
+
+        var anonymous = _spellcheckContextFactory.CreateAnonymous();
+        _context.ReplaceWith(anonymous);
+        _onContextChanged();
+
+
+        _suggestionDisplay.HideSuggestions();
+        Console.WriteLine("Logged out. Loaded default spellcheck context.");
+        return Task.FromResult(ResetInput());
     }
 
     private Task<string> HandleShutdownCommand(string command, string input)

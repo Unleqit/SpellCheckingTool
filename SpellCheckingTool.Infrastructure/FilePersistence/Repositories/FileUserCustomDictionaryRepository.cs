@@ -32,7 +32,7 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
         _userCustomDictionary = CustomDictionaryMapper.ToDomain(storage).Data;
     }
 
-    public void AddWord(Guid userId, string word)
+    public bool AddWord(Guid userId, string word)
     {
         lock (_lock)
         {
@@ -41,7 +41,7 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
 
             var normalized = word.Trim().ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(normalized))
-                return;
+                return false;
 
             if (!_userCustomDictionary.TryGetValue(userId, out var words))
             {
@@ -49,8 +49,12 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
                 _userCustomDictionary[userId] = words;
             }
 
-            words.Add(new Word(_alphabet, normalized));
-            Save();
+            bool added = words.Add(new Word(_alphabet, normalized));
+
+            if (added)
+                Save();
+
+            return added;
         }
     }
 

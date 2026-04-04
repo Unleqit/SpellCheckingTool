@@ -15,39 +15,16 @@ public class Client
         var authService = new ClientAuthService(backendClient);
         var wordService = new ClientWordService(backendClient);
         var statsService = new ClientStatsService(backendClient);
-
         var clientUserService = new ClientUserService(authService, wordService, statsService);
 
-        Console.Write("Do you want to log in? (y/n): ");
-        string input = Console.ReadLine()?.Trim().ToLower() ?? "";
+        var context = spellcheckContextFactory.CreateAnonymous();
 
-        UserSpellcheckContext context;
-
-        if (input.Contains('y'))
-        {
-            var session = await clientUserService.Auth.RunAuthenticationFlow();
-            Console.WriteLine();
-
-            context = session != null && session.IsAuthenticated
-                ? spellcheckContextFactory.CreateForUser(session.UserId, session.Username)
-                : spellcheckContextFactory.CreateAnonymous();
-        }
-        else
-        {
-            Console.WriteLine("Skipping authentication." + Environment.NewLine);
-            context = spellcheckContextFactory.CreateAnonymous();
-        }
-
-        if (context.IsAuthenticated)
-        {
-            Console.WriteLine($"Loaded spellcheck context for '{context.Username}'.");
-        }
-        else
-        {
-            Console.WriteLine("Loaded default spellcheck context.");
-        }
+        Console.WriteLine("Loaded default spellcheck context.");
+        Console.WriteLine();
+        Console.WriteLine("Use /login <username> (--register) to log in or register.");
 
         var processManager = StartProcessManager();
+
         await StartSpellChecker(context, clientUserService, processManager, spellcheckContextFactory, fileOpener, token);
     }
 

@@ -1,4 +1,5 @@
-﻿using SpellCheckingTool.Application.LoginResponse;
+﻿using SpellCheckingTool.Application.Entities.LoginResponse;
+using SpellCheckingTool.Application.LoginResponse;
 using System.Text;
 
 namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
@@ -12,11 +13,38 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
             _client = client;
         }
 
-        public async Task<AuthSession?> RunAuthenticationFlow()
+        public async Task<AuthSession?> RunAuthenticationFlow(string username, bool isRegister)
         {
-            var (username, isRegister) = ReadUsername();
-            var password = ReadPassword(isRegister);
+            username = username?.Trim() ?? "";
 
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                Console.WriteLine("Usage: /login <username> [--register]");
+                return null;
+            }
+
+            if (isRegister)
+            {
+                var exists = await CheckUsernameExists(username);
+
+                if (exists)
+                {
+                    Console.WriteLine("Registration failed: Username already exists.");
+                    return null;
+                }
+            }
+            else
+            {
+                var exists = await CheckUsernameExists(username);
+
+                if (!exists)
+                {
+                    Console.WriteLine("Login failed: Username does not exist.");
+                    return null;
+                }
+            }
+
+            var password = ReadPassword(isRegister);
             var session = await Authenticate(username, password, isRegister);
 
             if (session == null)
@@ -60,17 +88,6 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
             };
         }
 
-        private (string Username, bool IsRegister) ReadUsername()
-        {
-            Console.Write("Username (add '--register' to register): ");
-            string input = Console.ReadLine()?.Trim() ?? "";
-
-            bool isRegister = input.Contains("--register");
-            string username = input.Replace("--register", "").Trim();
-
-            return (username, isRegister);
-        }
-
         private string ReadPassword(bool isRegister)
         {
             Console.Write(isRegister ? "Choose a password: " : "Password: ");
@@ -94,6 +111,21 @@ namespace SpellCheckingTool.Presentation.ConsoleClient.ClientServices
 
             Console.WriteLine();
             return password.ToString();
+        }
+
+        private async Task<bool> CheckUsernameExists(string username)
+        {
+            var result = await _client.PostAsync<UsernameCheckResponseDto>(
+                "/api/v1/users/check-username",
+                new { username });
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                Console.WriteLine($"Could not verify username: {result.ErrorMessage}");
+                return true; // safer default: treat as unavailable
+            }
+
+            return result.Data.Exists;
         }
     }
 }

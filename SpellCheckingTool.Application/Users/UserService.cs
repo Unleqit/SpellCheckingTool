@@ -24,7 +24,7 @@ public class UserService
         _settingsRepository = settingsRepository;
     }
 
-   
+
 
     /// <summary>
     /// Adds a word to the user's personal dictionary only.
@@ -34,11 +34,14 @@ public class UserService
     {
         if (_userRepo.GetById(userId) == null)
             return OperationResult<bool>.Fail("User not found.");
-
         if (string.IsNullOrWhiteSpace(word))
             return OperationResult<bool>.Fail("Word is required.");
 
-        _customDictionaryRepo.AddWord(userId, word);
+        bool added = _customDictionaryRepo.AddWord(userId, word);
+
+        if (!added)
+            return OperationResult<bool>.Fail("Word already exists in personal dictionary.");
+
         return OperationResult<bool>.Ok(true);
     }
 

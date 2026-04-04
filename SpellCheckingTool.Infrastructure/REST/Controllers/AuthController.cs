@@ -47,5 +47,22 @@ namespace SpellCheckingTool.Infrastructure.Http.Controllers
                 username = result.Value.Username
             });
         }
+
+        [HttpPost("/api/v1/users/check-username")]
+        public void CheckUsername(HttpListenerContext context, [FromBody] string username)
+        {
+            var result = _service.UsernameExists(username);
+
+            if (!result.Success)
+            {
+                WriteError(context, 400, result.ErrorMessage ?? "Username check failed.");
+                return;
+            }
+
+            WriteJson(context, 200, new
+            {
+                exists = result.Value
+            });
+        }
     }
 }

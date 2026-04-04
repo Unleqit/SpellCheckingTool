@@ -38,7 +38,7 @@ public class FakeUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
         return new Word(_alphabet, normalized);
     }
 
-    public void AddWord(Guid userId, string word)
+    public bool AddWord(Guid userId, string word)
     {
         AddCustomWordCallCount++;
         LastAddedCustomUserId = userId;
@@ -46,7 +46,7 @@ public class FakeUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
 
         var wordObj = NormalizeAndValidateWord(word);
         if (wordObj is null)
-            return;
+            return false;
 
         if (!_customWords.TryGetValue(userId, out var words))
         {
@@ -54,7 +54,7 @@ public class FakeUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
             _customWords[userId] = words;
         }
 
-        words.Add(wordObj);
+        return words.Add(wordObj);
     }
 
     public bool RemoveWord(Guid userId, string word)
@@ -86,6 +86,6 @@ public class FakeUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
 
     public void SeedCustomWord(Guid userId, string word)
     {
-        AddWord(userId, word);
+        _ = AddWord(userId, word);
     }
 }
