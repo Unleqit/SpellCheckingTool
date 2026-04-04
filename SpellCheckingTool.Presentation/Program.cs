@@ -95,7 +95,7 @@ public class Program
         var paths = new UserStorePaths(basePath);
         var serializer = new UserStoreJsonSerializer();
 
-        IUserRepository userRepository = new FileUserRepository(
+        IUserRepository userRepository = new UserRepository(
             paths,
             serializer
         );
@@ -107,7 +107,7 @@ public class Program
             serializer
         );
 
-        IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
+        IUserCustomDictionaryRepository customDictionaryRepository = new UserCustomDictionaryRepository(
             paths,
             inputAlphabet,
             userRepository,

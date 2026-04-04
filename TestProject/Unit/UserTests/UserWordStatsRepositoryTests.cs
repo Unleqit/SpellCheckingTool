@@ -9,7 +9,7 @@ using TestProject.Fakes;
 namespace TestProject.Unit;
 
 [TestClass]
-public class FileUserWordStatsRepositoryTests
+public class UserWordStatsRepositoryTests
 {
     private string _testDirectory = null!;
     private IAlphabet _alphabet = null!;
