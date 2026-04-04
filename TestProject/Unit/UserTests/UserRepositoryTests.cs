@@ -7,7 +7,7 @@ using SpellCheckingTool.Infrastructure.UserPersistence;
 namespace TestProject.Unit.UserTests;
 
 [TestClass]
-public class FileUserRepositoryTests
+public class UserRepositoryTests
 {
     private string _testDirectory = null!;
     private UserStorePaths _paths = null!;
@@ -36,7 +36,7 @@ public class FileUserRepositoryTests
 
     private IUserRepository CreateRepository()
     {
-        return new FileUserRepository(_paths, _serializer);
+        return new UserRepository(_paths, _serializer);
     }
 
     [TestMethod]

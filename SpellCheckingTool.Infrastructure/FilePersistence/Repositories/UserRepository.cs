@@ -6,14 +6,14 @@ using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.Users;
 
-public class FileUserRepository : IUserRepository
+public class UserRepository : IUserRepository
 {
     private readonly object _lock = new();
     private readonly string _path;
     private readonly UserStoreJsonSerializer _serializer;
     private Dictionary<Guid, User> _users;
 
-    public FileUserRepository(
+    public UserRepository(
     UserStorePaths paths,
     UserStoreJsonSerializer serializer)
     {

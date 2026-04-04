@@ -9,7 +9,7 @@ using TestProject.Fakes;
 namespace TestProject.Unit.UserTests;
 
 [TestClass]
-public class FileUserCustomDictionaryRepositoryTests
+public class UserCustomDictionaryRepositoryTests
 {
     private string _testDirectory = null!;
     private IAlphabet _alphabet = null!;
@@ -42,7 +42,7 @@ public class FileUserCustomDictionaryRepositoryTests
 
     private IUserCustomDictionaryRepository CreateRepository()
     {
-        return new FileUserCustomDictionaryRepository(
+        return new UserCustomDictionaryRepository(
             _paths,
             _alphabet,
             _userRepository,

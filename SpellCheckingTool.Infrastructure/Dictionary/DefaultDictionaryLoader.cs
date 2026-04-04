@@ -18,7 +18,7 @@ public class DefaultDictionaryLoader : IDefaultDictionaryProvider
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
-        string path = Path.Combine(projectRoot, "SpellCheckingTool.Presentation", "Resources", "wordFile.json");
+        string path = Path.Combine(projectRoot, "SpellCheckingTool.Infrastructure", "Resources", "wordFile.json");
 
         if (!File.Exists(path))
             throw new DefaultDictionaryNotFoundException(path);

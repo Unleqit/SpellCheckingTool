@@ -8,7 +8,7 @@ using SpellCheckingTool.Infrastructure.UserPersistence;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
-public class FileUserWordStatsRepository : IUserWordStatsRepository
+public class UserWordStatsRepository : IUserWordStatsRepository
 {
     private readonly object _lock = new();
     private readonly string _path;
@@ -18,7 +18,7 @@ public class FileUserWordStatsRepository : IUserWordStatsRepository
 
     private UserWordStats _userWordStats;
 
-    public FileUserWordStatsRepository(
+    public UserWordStatsRepository(
         UserStorePaths paths,
         IAlphabet alphabet,
         IUserRepository userRepository,

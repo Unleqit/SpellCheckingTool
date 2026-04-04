@@ -7,7 +7,7 @@ using SpellCheckingTool.Infrastructure.UserPersistence;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
-public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepository
+public class UserCustomDictionaryRepository : IUserCustomDictionaryRepository
 {
     private readonly object _lock = new();
     private readonly string _path;
@@ -17,7 +17,7 @@ public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepositor
 
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary;
 
-    public FileUserCustomDictionaryRepository(
+    public UserCustomDictionaryRepository(
     UserStorePaths paths,
     IAlphabet alphabet,
     IUserRepository userRepository,

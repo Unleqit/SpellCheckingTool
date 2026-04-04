@@ -89,25 +89,25 @@ public class Program
         var inputAlphabet = new UTF16Alphabet();
         var basePath = Path.Combine(AppContext.BaseDirectory, "data");
 
-        var userSettingsRepository = new FileUserSettingsRepository(
+        var userSettingsRepository = new UserSettingsRepository(
             Path.Combine(basePath, "UserSettings"));
 
         var paths = new UserStorePaths(basePath);
         var serializer = new UserStoreJsonSerializer();
 
-        IUserRepository userRepository = new FileUserRepository(
+        IUserRepository userRepository = new UserRepository(
             paths,
             serializer
         );
 
-        IUserWordStatsRepository wordStatsRepository = new FileUserWordStatsRepository(
+        IUserWordStatsRepository wordStatsRepository = new UserWordStatsRepository(
             paths,
             inputAlphabet,
             userRepository,
             serializer
         );
 
-        IUserCustomDictionaryRepository customDictionaryRepository = new FileUserCustomDictionaryRepository(
+        IUserCustomDictionaryRepository customDictionaryRepository = new UserCustomDictionaryRepository(
             paths,
             inputAlphabet,
             userRepository,
