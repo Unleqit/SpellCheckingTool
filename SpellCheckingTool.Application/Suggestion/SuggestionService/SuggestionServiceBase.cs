@@ -1,17 +1,16 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Suggestion;
 
 public abstract class SuggestionServiceBase : ISuggestionService
 {
     private readonly IDistanceAlgorithm distanceAlgorithm;
-    private readonly LeftToRightWordTreeTraversal traversal;
+    private readonly IWordStorage wordStorage;
 
-
-    public SuggestionServiceBase(WordTree tree, IDistanceAlgorithm distanceAlgorithm)
+    public SuggestionServiceBase(IWordStorage wordStorage, IDistanceAlgorithm distanceAlgorithm)
     {
+        this.wordStorage = wordStorage;
         this.distanceAlgorithm = distanceAlgorithm;
-        this.traversal = new LeftToRightWordTreeTraversal(tree);
     }
 
     /// <summary>
@@ -29,7 +28,7 @@ public abstract class SuggestionServiceBase : ISuggestionService
 
         Prewalk();
 
-        traversal.WalkTree((word) =>
+        this.wordStorage.Traverse((word) =>
         {
             normalizedDistance = ComputeNormalizedDistance(input, word, distanceAlgorithm, maxAllowedDistance);
 

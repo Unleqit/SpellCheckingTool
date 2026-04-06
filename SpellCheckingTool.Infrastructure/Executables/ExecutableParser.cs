@@ -1,4 +1,4 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain;
 using System.Diagnostics;
 using SpellCheckingTool.Application.Executables;
 
@@ -6,7 +6,7 @@ namespace SpellCheckingTool.Infrastructure.Executables;
 
 public abstract class ExecutableParser : IExecutableParser
     {
-        public abstract WordTree GetAllShellExecutables();
+        public abstract IWordStorage GetAllShellExecutables();
 
         protected List<string> InvokeShellCommand(string shellName, string arguments, string workingDir = "")
         {

@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Exceptions;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Spellcheck;
 
@@ -18,12 +18,12 @@ public class UserWordTreeBuilder
         _userService = userService;
     }
 
-    public WordTree BuildAnonymousTree()
+    public IWordStorage BuildAnonymousTree()
     {
         return _defaultDictionaryProvider.LoadDefaultDictionary();
     }
 
-    public WordTree BuildUserTree(Guid userId)
+    public IWordStorage BuildUserTree(Guid userId)
     {
         var tree = _defaultDictionaryProvider.LoadDefaultDictionary();
         var customWordsResult = _userService.GetCustomWords(userId);

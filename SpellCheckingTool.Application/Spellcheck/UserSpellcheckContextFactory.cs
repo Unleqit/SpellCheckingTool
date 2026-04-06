@@ -3,7 +3,7 @@ using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Suggestion.SuggestionService;
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Application.Executables;
 
 namespace SpellCheckingTool.Application.Spellcheck;
@@ -68,7 +68,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     }
 
     private static SpellcheckService BuildSpellcheckService(
-        WordTree tree,
+        IWordStorage tree,
         IAlphabet inputAlphabet,
         UserService userService,
         Guid? guid)

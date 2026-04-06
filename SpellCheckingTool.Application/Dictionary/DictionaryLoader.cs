@@ -1,9 +1,9 @@
 ﻿using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Dictionary;
 
 public interface IDictionaryLoader
 {
-    WordTree Load(FilePath filepath);
+    IWordStorage Load(FilePath filepath);
 }

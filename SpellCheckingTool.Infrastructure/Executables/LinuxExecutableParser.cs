@@ -1,10 +1,11 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Application.WordParser;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
 public class LinuxExecutableParser : ExecutableParser
 {
-    public override WordTree GetAllShellExecutables()
+    public override IWordStorage GetAllShellExecutables()
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
@@ -14,7 +15,7 @@ public class LinuxExecutableParser : ExecutableParser
         List<string> executablePaths = base.InvokeShellCommand("/bin/bash", filename, workingDir);
 
         IAlphabet alphabet = new ExecutableNameAlphabet();
-        Word[] words = Word.ParseWords(alphabet, executablePaths.ToArray());
+        Word[] words = WordParser.ParseWords(alphabet, executablePaths.ToArray());
         WordTree tree = new WordTree(alphabet);
 
         tree.Add(words);

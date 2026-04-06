@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace TestProject.Fakes;
 

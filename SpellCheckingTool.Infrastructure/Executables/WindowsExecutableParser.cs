@@ -1,5 +1,6 @@
-﻿using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Application.WordParser;
+using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
 public class WindowsExecutableParser : ExecutableParser
@@ -19,7 +20,7 @@ public class WindowsExecutableParser : ExecutableParser
             executableNames[i] = current;
         }
 
-        Word[] words = Word.ParseWords(alphabet, executableNames);
+        Word[] words = WordParser.ParseWords(alphabet, executableNames);
         WordTree tree = new WordTree(alphabet);
 
         tree.Add(words);

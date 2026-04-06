@@ -1,4 +1,4 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain;
 using System.Runtime.CompilerServices;
 
 namespace SpellCheckingTool.Application.Suggestion;

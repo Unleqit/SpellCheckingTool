@@ -29,7 +29,7 @@ public class CleanArchitectureTests
     public void Domain_must_not_depend_on_Application_Infrastructure_or_Presentation()
     {
         var result = Types
-            .InAssembly(typeof(SpellCheckingTool.Domain.WordTree.WordTree).Assembly)
+            .InAssembly(typeof(SpellCheckingTool.Domain.Word).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(ApplicationNamespace, InfrastructureNamespace, PresentationNamespace)
             .GetResult();

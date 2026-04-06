@@ -1,6 +1,8 @@
-﻿using SpellCheckingTool.Domain.Alphabet;
+﻿using SpellCheckingTool.Application.WordParser;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure;
 using System.Diagnostics;
 
 namespace TestProject.Unit;
@@ -43,7 +45,7 @@ public class WordTreeTests
         string[] rawWords = { "test", "anotherWord" };
         IAlphabet alphabet = new LatinAlphabet();
 
-        Word[] words = Word.ParseWords(alphabet, rawWords);
+        Word[] words = WordParser.ParseWords(alphabet, rawWords);
         Assert.AreEqual(rawWords.Length, words.Length);
     }
 
@@ -53,7 +55,7 @@ public class WordTreeTests
         string[] rawWords = { "test", "anotherWord", "ungültigesWort" };
         IAlphabet alphabet = new LatinAlphabet();
 
-        Word[] words = Word.ParseWords(alphabet, rawWords);
+        Word[] words = WordParser.ParseWords(alphabet, rawWords);
         Assert.AreEqual(rawWords.Length - 1, words.Length);
     }
 
@@ -68,7 +70,7 @@ public class WordTreeTests
         int successCount = tree.Add(new Word(alphabet, "test"));
 
         Assert.AreEqual(1, successCount);
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
     }
 
     [TestMethod]
@@ -78,10 +80,10 @@ public class WordTreeTests
         WordTree tree = new WordTree(alphabet);
 
         Assert.AreEqual(1, tree.Add(new Word(alphabet, "test")));
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
 
         Assert.AreEqual(0, tree.Add(new Word(alphabet, "test")));
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
     }
 
     [TestMethod]
@@ -121,7 +123,7 @@ public class WordTreeTests
         int removeSuccessCount = tree.Remove(w);
 
         Assert.AreEqual(1, removeSuccessCount);
-        Assert.AreEqual(0, tree.WordCount);
+        Assert.AreEqual(0, tree.GetWordCount());
     }
 
     [TestMethod]
@@ -134,7 +136,7 @@ public class WordTreeTests
         int removeSuccessCount = tree.Remove(new Word(alphabet, "someOtherWord"));
 
         Assert.AreEqual(0, removeSuccessCount);
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
     }
 
     [TestMethod]
@@ -147,10 +149,10 @@ public class WordTreeTests
         Word w2 = new Word(alphabet, "lollipop");
 
         Assert.AreEqual(2, tree.Add(new[] { w, w2 }));
-        Assert.AreEqual(2, tree.WordCount);
+        Assert.AreEqual(2, tree.GetWordCount());
 
         Assert.AreEqual(1, tree.Remove(w));
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
 
         Assert.IsFalse(tree.Contains(w));
         Assert.IsTrue(tree.Contains(w2));
@@ -166,10 +168,10 @@ public class WordTreeTests
         Word w2 = new Word(alphabet, "lollipop");
 
         Assert.AreEqual(2, tree.Add(new[] { w, w2 }));
-        Assert.AreEqual(2, tree.WordCount);
+        Assert.AreEqual(2, tree.GetWordCount());
 
         Assert.AreEqual(1, tree.Remove(w2));
-        Assert.AreEqual(1, tree.WordCount);
+        Assert.AreEqual(1, tree.GetWordCount());
 
         Assert.IsFalse(tree.Contains(w2));
         Assert.IsTrue(tree.Contains(w));
@@ -188,12 +190,12 @@ public class WordTreeTests
         Stopwatch sw = Stopwatch.StartNew();
 
         IAlphabet alphabet = new LatinAlphabet();
-        Word[] parsedWords = Word.ParseWords(alphabet, rawWords);
+        Word[] parsedWords = WordParser.ParseWords(alphabet, rawWords);
 
         WordTree tree = new WordTree(alphabet);
         tree.Add(parsedWords);
 
-        Assert.AreEqual(rawWords.Length, tree.WordCount);
+        Assert.AreEqual(rawWords.Length, tree.GetWordCount());
 
         sw.Stop();
         Assert.IsTrue(sw.ElapsedMilliseconds < 2000);

@@ -1,10 +1,11 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain;
+
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
 {
     public class SuggestionService : SuggestionServiceBase
     {
-        public SuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm) : base(tree, distanceAlgorithm)
-        {
+        public SuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm) : base(tree, distanceAlgorithm)
+        { 
         }
 
         /// <summary>

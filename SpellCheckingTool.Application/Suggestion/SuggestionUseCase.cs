@@ -1,5 +1,5 @@
 ﻿using SpellCheckingTool.Application.Spellcheck;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 
 namespace SpellCheckingTool.Application.Suggestion

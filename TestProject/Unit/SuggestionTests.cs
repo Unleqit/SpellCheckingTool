@@ -1,8 +1,10 @@
 ﻿using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Suggestion;
 using SpellCheckingTool.Application.Suggestion.SuggestionService;
+using SpellCheckingTool.Application.WordParser;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Infrastructure;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 
 namespace TestProject.Unit;
@@ -10,7 +12,7 @@ namespace TestProject.Unit;
 [TestClass]
 public class SuggestionTests
 {
-    private WordTree tree = null!;
+    private IWordStorage tree = null!;
 
     [TestInitialize]
     public void SetupTests()
@@ -32,7 +34,7 @@ public class SuggestionTests
     public void GetTwentySuggestionsOfAllDistancesForTreeWithTenElements_ShouldReturnTenSuggestions()
     {
         IAlphabet alphabet = new LatinAlphabet();
-        Word[] words = Word.ParseWords(alphabet, new[]
+        Word[] words = WordParser.ParseWords(alphabet, new[]
         {
             "these","are","some","random","english","words","containing","only","latin","characters"
         });
@@ -43,7 +45,7 @@ public class SuggestionTests
         ISuggestionService service = new SuggestionService(smallTree, new LevenshteinDistanceAlgorithm());
         SuggestionResult result = service.GetSuggestionResult(new Word(new LatinAlphabet(), "containing"), 20, 999);
 
-        Assert.AreEqual(smallTree.WordCount, result.GetSuggestionCount());
+        Assert.AreEqual(smallTree.GetWordCount(), result.GetSuggestionCount());
     }
 
     [TestMethod]

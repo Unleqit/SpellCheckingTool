@@ -1,8 +1,8 @@
-﻿using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Dictionary;
 
 public interface IDefaultDictionaryProvider
 {
-    WordTree LoadDefaultDictionary();
+    IWordStorage LoadDefaultDictionary();
 }

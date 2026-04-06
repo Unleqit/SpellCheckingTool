@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Application.Users;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.WordStats;
-using SpellCheckingTool.Domain.WordTree;
 
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
 {
@@ -11,7 +11,7 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         private Guid guid;
         private int lastNDays;
 
-        public StatisticSuggestionService(WordTree tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14) : base(tree, distanceAlgorithm)
+        public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14) : base(tree, distanceAlgorithm)
         {
             this.userService = userService;
             this.guid = guid;

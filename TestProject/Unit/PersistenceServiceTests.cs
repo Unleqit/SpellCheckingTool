@@ -1,9 +1,11 @@
 ﻿using SpellCheckingTool.Application.Persistence;
 using SpellCheckingTool.Application.Persistence.Exceptions;
 using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 using SpellCheckingTool.Infrastructure.FilePersistence.Exceptions;
+using SpellCheckingTool.Infrastructure;
+using SpellCheckingTool.Application.WordParser;
 
 namespace TestProject.Unit;
 
@@ -16,7 +18,7 @@ public class PersistenceServiceTests
     public void SetupTests()
     {
         IAlphabet alphabet = new LatinAlphabet();
-        Word[] words = Word.ParseWords(alphabet, new[]
+        Word[] words = WordParser.ParseWords(alphabet, new[]
         {
             "these","are","some","random","english","words","containing","only","latin","characters"
         });
@@ -37,14 +39,13 @@ public class PersistenceServiceTests
         Assert.IsTrue(success);
         Assert.IsTrue(File.Exists(file));
 
-        WordTree tree2 = persistence.Load(filePath);
+        IWordStorage tree2 = persistence.Load(filePath);
 
         Assert.IsNotNull(tree2);
-        Assert.AreEqual(tree.WordBufferLength, tree2.WordBufferLength);
-        Assert.AreEqual(tree.WordCount, tree2.WordCount);
-        Assert.IsTrue(tree.Alphabet.GetChars().SequenceEqual(tree2.Alphabet.GetChars()));
-        Assert.AreEqual(tree.Alphabet.GetLength(), tree2.Alphabet.GetLength());
-        Assert.AreEqual(tree.Contains(new Word(tree.Alphabet, "these")), tree2.Contains(new Word(tree2.Alphabet, "these")));
+        Assert.AreEqual(tree.GetWordCount(), tree2.GetWordCount());
+        Assert.IsTrue(tree.GetAlphabet().GetChars().SequenceEqual(tree2.GetAlphabet().GetChars()));
+        Assert.AreEqual(tree.GetAlphabet().GetLength(), tree2.GetAlphabet().GetLength());
+        Assert.AreEqual(tree.Contains(new Word(tree.GetAlphabet(), "these")), tree2.Contains(new Word(tree2.GetAlphabet(), "these")));
 
         File.Delete(file);
         Assert.IsFalse(File.Exists(file));
