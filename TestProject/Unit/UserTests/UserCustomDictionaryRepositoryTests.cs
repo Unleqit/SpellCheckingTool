@@ -14,7 +14,7 @@ public class UserCustomDictionaryRepositoryTests
     private string _testDirectory = null!;
     private IAlphabet _alphabet = null!;
     private UserStorePaths _paths = null!;
-    private UserStoreJsonSerializer _serializer = null!;
+    private FakeUserStoreJsonSerializer _serializer = null!;
     private FakeUserRepository _userRepository = null!;
 
     [TestInitialize]
@@ -29,7 +29,7 @@ public class UserCustomDictionaryRepositoryTests
         Directory.CreateDirectory(_testDirectory);
 
         _paths = new UserStorePaths(_testDirectory);
-        _serializer = new UserStoreJsonSerializer();
+        _serializer = new FakeUserStoreJsonSerializer();
         _userRepository = new FakeUserRepository();
     }
 

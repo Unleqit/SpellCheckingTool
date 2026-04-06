@@ -3,6 +3,7 @@ using SpellCheckingTool.Domain.Exceptions;
 using SpellCheckingTool.Domain.Users;
 using SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 using SpellCheckingTool.Infrastructure.UserPersistence;
+using TestProject.Fakes;
 
 namespace TestProject.Unit.UserTests;
 
@@ -11,7 +12,7 @@ public class UserRepositoryTests
 {
     private string _testDirectory = null!;
     private UserStorePaths _paths = null!;
-    private UserStoreJsonSerializer _serializer = null!;
+    private FakeUserStoreJsonSerializer _serializer = null!;
 
     [TestInitialize]
     public void Setup()
@@ -24,7 +25,7 @@ public class UserRepositoryTests
         Directory.CreateDirectory(_testDirectory);
 
         _paths = new UserStorePaths(_testDirectory);
-        _serializer = new UserStoreJsonSerializer();
+        _serializer = new FakeUserStoreJsonSerializer();
     }
 
     [TestCleanup]

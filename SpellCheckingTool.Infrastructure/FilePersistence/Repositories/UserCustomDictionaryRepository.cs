@@ -13,7 +13,7 @@ public class UserCustomDictionaryRepository : IUserCustomDictionaryRepository
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonSerializer _serializer;
+    private readonly IUserStoreJsonSerializer _serializer;
 
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary;
 
@@ -21,7 +21,7 @@ public class UserCustomDictionaryRepository : IUserCustomDictionaryRepository
     UserStorePaths paths,
     IAlphabet alphabet,
     IUserRepository userRepository,
-    UserStoreJsonSerializer serializer)
+    IUserStoreJsonSerializer serializer)
     {
         _path = paths.CustomDictionaryFilePath;
         _alphabet = alphabet;
