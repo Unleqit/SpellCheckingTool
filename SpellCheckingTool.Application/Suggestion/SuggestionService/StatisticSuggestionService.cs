@@ -1,5 +1,6 @@
 ﻿using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Suggestion;
 using SpellCheckingTool.Domain.WordStats;
 
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
@@ -100,6 +101,15 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
                 double lastUsedResult = GetNormalizedLastUsedMetric(otherWord, 14);
                 double mostUsedResult = GetNormalizedMostUsedMetric(otherWord, 14);
                 double final = (0.8 * normalizedDistance + 0.05 * lastUsedResult + 0.15 * mostUsedResult);
+
+
+                if (otherWord.ToString() == "echo")
+                    Console.WriteLine("aa");
+
+                if (otherWord.ToString() == "each")
+                    Console.WriteLine("bb");
+
+
                 return final;
             }
             else

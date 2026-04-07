@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain;
 
-namespace SpellCheckingTool.Application.Suggestion;
+namespace SpellCheckingTool.Domain.Suggestion;
 
 public interface IDistanceAlgorithm
 {

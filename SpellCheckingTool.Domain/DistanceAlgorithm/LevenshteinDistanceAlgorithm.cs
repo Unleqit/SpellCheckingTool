@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Domain;
 using System.Runtime.CompilerServices;
 
-namespace SpellCheckingTool.Application.Suggestion;
+namespace SpellCheckingTool.Domain.Suggestion;
 
 public class LevenshteinDistanceAlgorithm : IDistanceAlgorithm
 {

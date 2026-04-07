@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain;
 
-namespace SpellCheckingTool.Application.Suggestion.SuggestionService
+namespace SpellCheckingTool.Domain.Suggestion.SuggestionService
 {
     public class SuggestionService : SuggestionServiceBase
     {
