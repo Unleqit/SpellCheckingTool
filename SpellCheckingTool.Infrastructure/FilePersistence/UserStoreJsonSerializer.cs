@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json;
+using SpellCheckingTool.Infrastructure.FilePersistence;
 
 namespace SpellCheckingTool.Infrastructure.UserPersistence;
 
-public class UserStoreJsonSerializer
+public class UserStoreJsonSerializer : IUserStoreJsonSerializer
 {
     public T ReadOrDefault<T>(string path, T defaultValue)
     {

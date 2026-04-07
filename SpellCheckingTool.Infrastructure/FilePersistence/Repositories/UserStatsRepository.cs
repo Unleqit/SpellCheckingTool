@@ -8,21 +8,21 @@ using SpellCheckingTool.Infrastructure.UserPersistence;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
-public class FileUserWordStatsRepository : IUserWordStatsRepository
+public class UserWordStatsRepository : IUserWordStatsRepository
 {
     private readonly object _lock = new();
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonSerializer _serializer;
+    private readonly IUserStoreJsonSerializer _serializer;
 
     private UserWordStats _userWordStats;
 
-    public FileUserWordStatsRepository(
+    public UserWordStatsRepository(
         UserStorePaths paths,
         IAlphabet alphabet,
         IUserRepository userRepository,
-        UserStoreJsonSerializer serializer)
+        IUserStoreJsonSerializer serializer)
     {
         _path = paths.WordStatsFilePath;
         _alphabet = alphabet;
