@@ -7,21 +7,21 @@ using SpellCheckingTool.Infrastructure.UserPersistence;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
-public class FileUserCustomDictionaryRepository : IUserCustomDictionaryRepository
+public class UserCustomDictionaryRepository : IUserCustomDictionaryRepository
 {
     private readonly object _lock = new();
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
-    private readonly UserStoreJsonSerializer _serializer;
+    private readonly IUserStoreJsonSerializer _serializer;
 
     private Dictionary<Guid, HashSet<Word>> _userCustomDictionary;
 
-    public FileUserCustomDictionaryRepository(
+    public UserCustomDictionaryRepository(
     UserStorePaths paths,
     IAlphabet alphabet,
     IUserRepository userRepository,
-    UserStoreJsonSerializer serializer)
+    IUserStoreJsonSerializer serializer)
     {
         _path = paths.CustomDictionaryFilePath;
         _alphabet = alphabet;
