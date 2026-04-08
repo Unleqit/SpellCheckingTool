@@ -102,14 +102,6 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
                 double mostUsedResult = GetNormalizedMostUsedMetric(otherWord, 14);
                 double final = (0.8 * normalizedDistance + 0.05 * lastUsedResult + 0.15 * mostUsedResult);
 
-
-                if (otherWord.ToString() == "echo")
-                    Console.WriteLine("aa");
-
-                if (otherWord.ToString() == "each")
-                    Console.WriteLine("bb");
-
-
                 return final;
             }
             else
