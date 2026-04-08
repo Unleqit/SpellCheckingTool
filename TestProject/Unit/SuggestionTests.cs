@@ -3,7 +3,7 @@ using SpellCheckingTool.Application.WordParser;
 using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Suggestion;
-using SpellCheckingTool.Domain.Suggestion.SuggestionService;
+using SpellCheckingTool.Application.Suggestion.SuggestionService;
 using SpellCheckingTool.Infrastructure;
 using SpellCheckingTool.Infrastructure.FilePersistence;
 

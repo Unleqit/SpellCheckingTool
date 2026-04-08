@@ -1,13 +1,16 @@
 ﻿using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Suggestion;
 
-namespace SpellCheckingTool.Domain.Suggestion;
+namespace SpellCheckingTool.Application.Suggestion;
 
 public abstract class SuggestionServiceBase : ISuggestionService
 {
     private readonly IDistanceAlgorithm distanceAlgorithm;
     private readonly IWordStorage wordStorage;
+    protected Action? onPreWalk;
+    protected Func<Word, Word, IDistanceAlgorithm, int, double>? computeNormalizedDistance;
 
-    public SuggestionServiceBase(IWordStorage wordStorage, IDistanceAlgorithm distanceAlgorithm)
+    protected SuggestionServiceBase(IWordStorage wordStorage, IDistanceAlgorithm distanceAlgorithm)
     {
         this.wordStorage = wordStorage;
         this.distanceAlgorithm = distanceAlgorithm;
@@ -26,11 +29,12 @@ public abstract class SuggestionServiceBase : ISuggestionService
         double normalizedWorstDistanceValueInResults = 1;
         MatchResult[] matchResults = new MatchResult[maxSuggestions];
 
-        Prewalk();
+        if (this.onPreWalk != null)
+            this.onPreWalk();
 
         this.wordStorage.Traverse((word) =>
         {
-            normalizedDistance = ComputeNormalizedDistance(input, word, distanceAlgorithm, maxAllowedDistance);
+            normalizedDistance = this.computeNormalizedDistance(input, word, this.distanceAlgorithm, maxAllowedDistance);
 
             if (normalizedDistance >= 0 && normalizedDistance < normalizedWorstDistanceValueInResults)
             {
@@ -59,12 +63,6 @@ public abstract class SuggestionServiceBase : ISuggestionService
         return new SuggestionResult(matchedWords, matchesCount, totalMatchesCount);
     }
 
-    protected abstract double ComputeNormalizedDistance(Word input, Word current, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance);
-
-    protected virtual void Prewalk()
-    {
-
-    }
 
     /// <summary>
     /// bubble sorts the matches array by their distances in ascending order

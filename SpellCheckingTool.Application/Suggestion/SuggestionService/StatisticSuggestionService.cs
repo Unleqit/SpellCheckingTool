@@ -5,25 +5,28 @@ using SpellCheckingTool.Domain.WordStats;
 
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
 {
-    public class StatisticSuggestionService : SuggestionServiceBase
+    public class StatisticSuggestionService: SuggestionServiceBase
     {
         private UserService userService;
         private IEnumerable<WordStatistic> currentStats;
         private Guid guid;
         private int lastNDays;
 
-        public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14) : base(tree, distanceAlgorithm)
+        public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14): base(tree, distanceAlgorithm)
         {
+            base.onPreWalk = Prewalk;
+            base.computeNormalizedDistance = ComputeNormalizedDistance;
             this.userService = userService;
             this.guid = guid;
             this.lastNDays = lastNDays;
+            this.currentStats = [];
         }
 
         /// <summary>
         /// Returns a value between 0 and 1 representing the normalized distance value of the two passed words.
         /// Retunds -1, if their levenshtein distance exceeds the provided threshold.
         /// </summary>
-        protected override void Prewalk()
+        protected virtual void Prewalk()
         {
             var result = this.userService.GetStats(this.guid);
             if (!result.Success || result.Value == null)
@@ -32,24 +35,6 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
             var offset = DateTime.Now.Subtract(TimeSpan.FromDays(this.lastNDays));
             var statsInTimeFrame = stats.Where((entry) => entry.LastUsedAt > offset);
             this.currentStats = statsInTimeFrame;
-        }
-
-        /// <summary>
-        /// Returns a value between 0 and 1 representing the normalized distance value of the two passed words.
-        /// 1: The word has maximal achievable distance (none of the characters match or are in the right places)
-        /// 0: The two words are equal
-        /// Retunds -1, if the levenshtein distance of both words exceeds the provided threshold.
-        /// </summary>
-        private double GetNormalizedDistance(Word input, Word otherWord, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance)
-        {
-            double distanceToInputWord = distanceAlgorithm.GetDistance(input, otherWord);
-            if (distanceToInputWord > maxAllowedDistance)
-                return -1;
-
-            //this is a property of the levenshtein algorithm
-            int worstPossibleDistance = Math.Max(input.Length, otherWord.Length);
-            double normalizedDistance = distanceToInputWord / worstPossibleDistance;
-            return normalizedDistance;
         }
 
         /// <summary>
@@ -90,9 +75,16 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         /// Returns a value between 0 and 1 representing the normalized distance value of the two passed words.
         /// Retunds -1, if their levenshtein distance exceeds the provided threshold.
         /// </summary>
-        protected override double ComputeNormalizedDistance(Word input, Word otherWord, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance)
+        protected double ComputeNormalizedDistance(Word input, Word otherWord, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance)
         {
-            double normalizedDistance = GetNormalizedDistance(input, otherWord, distanceAlgorithm, maxAllowedDistance);
+            double distanceToInputWord = distanceAlgorithm.GetDistance(input, otherWord);
+            if (distanceToInputWord > maxAllowedDistance)
+                return -1;
+
+            //this is a property of the levenshtein algorithm
+            int worstPossibleDistance = Math.Max(input.Length, otherWord.Length);
+            double normalizedDistance = distanceToInputWord / worstPossibleDistance;
+
             if (normalizedDistance == -1)
                 return -1;
 
