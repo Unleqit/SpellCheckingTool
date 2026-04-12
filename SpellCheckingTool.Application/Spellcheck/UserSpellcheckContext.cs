@@ -1,5 +1,5 @@
 ﻿using SpellCheckingTool.Application.Settings;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Spellcheck;
 
@@ -7,7 +7,7 @@ public sealed class UserSpellcheckContext
 {
     public Guid? UserId { get; set; }
     public string? Username { get; set; }
-    public WordTree Tree { get; set; }
+    public IWordStorage Tree { get; set; }
     public ISpellcheckService SpellcheckService { get; set; }
     public ISpellcheckService ExecutableSpellcheckService { get; set; }
 
@@ -20,7 +20,7 @@ public sealed class UserSpellcheckContext
     public UserSpellcheckContext(
         Guid? userId,
         string? username,
-        WordTree tree,
+        IWordStorage tree,
         ISpellcheckService spellcheckService,
         ISpellcheckService executableSpellcheckService,
         UserSettings settings,

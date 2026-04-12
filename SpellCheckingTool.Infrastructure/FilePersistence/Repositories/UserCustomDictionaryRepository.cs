@@ -2,7 +2,7 @@
 using SpellCheckingTool.Application.Users;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Infrastructure.UserPersistence;
 
 namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;

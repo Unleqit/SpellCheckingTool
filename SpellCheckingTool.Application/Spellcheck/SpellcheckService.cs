@@ -1,16 +1,16 @@
-﻿using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Suggestion;
 
 namespace SpellCheckingTool.Application.Spellcheck;
 
 public class SpellcheckService : ISpellcheckService
 {
-    private readonly WordTree tree;
+    private readonly IWordStorage tree;
     private readonly ISuggestionService suggestionService;
     private readonly IAlphabet inputAlphabet;
 
-    public SpellcheckService(WordTree tree, ISuggestionService suggestionService, IAlphabet inputAlphabet)
+    public SpellcheckService(IWordStorage tree, ISuggestionService suggestionService, IAlphabet inputAlphabet)
     {
         this.tree = tree;
         this.suggestionService = suggestionService;

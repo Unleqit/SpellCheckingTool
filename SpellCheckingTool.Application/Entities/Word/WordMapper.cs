@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Application.WordDto;
 using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 public static class WordMapper
 {

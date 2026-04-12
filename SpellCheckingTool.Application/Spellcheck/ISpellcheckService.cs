@@ -1,6 +1,6 @@
-﻿using SpellCheckingTool.Application.Suggestion;
-using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
+﻿using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Suggestion;
 
 namespace SpellCheckingTool.Application.Spellcheck;
 

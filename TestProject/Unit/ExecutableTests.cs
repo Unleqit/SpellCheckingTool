@@ -1,5 +1,7 @@
 ﻿using SpellCheckingTool.Infrastructure.Executables;
 using System.Runtime.InteropServices;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Domain.Alphabet;
 
 namespace TestProject.Unit;
 
@@ -12,12 +14,12 @@ public class ExecutableTests
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             var executables = new WindowsExecutableParser().GetAllShellExecutables();
-            Assert.IsTrue(executables.Contains("powershell"));
+            Assert.IsTrue(executables.Contains(new Word(new LatinAlphabet(), "powershell")));
         }
         else
         {
             var executables = new LinuxExecutableParser().GetAllShellExecutables();
-            Assert.IsTrue(executables.Contains("bash"));
+            Assert.IsTrue(executables.Contains(new Word(new LatinAlphabet(), "bash")));
         }
     }
 }

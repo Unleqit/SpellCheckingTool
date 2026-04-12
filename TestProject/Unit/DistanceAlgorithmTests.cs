@@ -1,6 +1,7 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
-using SpellCheckingTool.Domain.WordTree;
-using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Infrastructure;
+using SpellCheckingTool.Domain.Suggestion;
 
 namespace TestProject.Unit;
 

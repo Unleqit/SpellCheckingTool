@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Application.Dictionary;
 using SpellCheckingTool.Application.Persistence;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 using SpellCheckingTool.Infrastructure.Dictionary.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure.Dictionary;
@@ -14,7 +14,7 @@ public class DefaultDictionaryLoader : IDefaultDictionaryProvider
         this.loader = loader;
     }
 
-    public WordTree LoadDefaultDictionary()
+    public IWordStorage LoadDefaultDictionary()
     {
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));

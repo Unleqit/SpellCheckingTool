@@ -1,6 +1,6 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.CustomDictionary;
 

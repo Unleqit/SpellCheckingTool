@@ -1,11 +1,18 @@
 ﻿using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain.Exceptions;
 
-namespace SpellCheckingTool.Domain.WordTree;
+namespace SpellCheckingTool.Domain;
+
 public class Word
 {
-    char[] word;
-    string originalFormatting;
+    private readonly char[] word;
+    private readonly string originalFormatting;
+
+    private Word()
+    {
+        this.word = [];
+        this.originalFormatting = "";
+    }
 
     public Word(IAlphabet alphabet, IEnumerable<char> word, int offset = 0, int length = -1)
     {
@@ -39,11 +46,10 @@ public class Word
             $"Invalid length {length} for offset {offset} and input length {passedWordLength}.");
 
         IEnumerable<char> substring = word.Skip(offset).Take(length);
-        char[] lowerCaseWord = substring.Select((c) => char.ToLower(c)).ToArray();
+        char[] lowerCaseWord = substring.Select((c) => char.ToLowerInvariant(c)).ToArray();
         return lowerCaseWord;
     }
 
-    //define array operator, length property and ToString()-Method on Word class for convenience
     public char this[int i]
     {
         get { return this.word[i]; }
@@ -62,31 +68,6 @@ public class Word
     public string GetOriginalWordFormat()
     {
         return originalFormatting;
-    }
-
-    //convenience method
-    public static Word[] ParseWords(IAlphabet alphabet, string[] rawWords)
-    {
-        List<Word> words = new List<Word>();
-        for (int i = 0; i < rawWords.Length; ++i)
-        {
-            try
-            {
-                Word word = new Word(alphabet, rawWords[i]);
-                words.Add(word);
-            }
-#pragma warning disable CS0168
-            catch (InvalidWordCharacterException)
-            {
-                continue;
-            }
-            catch (InvalidWordRangeException)
-            {
-                continue;
-            }
-#pragma warning restore CS0168
-        }
-        return words.ToArray();
     }
 
     public override bool Equals(object? obj)
@@ -110,7 +91,7 @@ public class Word
     { 
         get
         {
-            return new Word(new CustomAlphabet([]), "");
+            return new Word(); 
         } 
     }
 

@@ -1,7 +1,7 @@
 ﻿using SpellCheckingTool.Application.Common;
 using SpellCheckingTool.Application.Settings;
 using SpellCheckingTool.Domain.WordStats;
-using SpellCheckingTool.Domain.WordTree;
+using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Users;
 
@@ -23,8 +23,6 @@ public class UserService
         _customDictionaryRepo = customDictionaryRepo;
         _settingsRepository = settingsRepository;
     }
-
-
 
     /// <summary>
     /// Adds a word to the user's personal dictionary only.
