@@ -1,4 +1,6 @@
-﻿namespace SpellCheckingTool.Domain.Exceptions;
+﻿using SpellCheckingTool.Domain.Alphabet;
+
+namespace SpellCheckingTool.Domain.Exceptions;
 
 public sealed class InvalidWordCharacterException : SpellCheckingToolException
 {
@@ -7,4 +9,7 @@ public sealed class InvalidWordCharacterException : SpellCheckingToolException
 
     public InvalidWordCharacterException(string word)
         : base($"The word '{word}' contains one or more characters that are not part of the alphabet.") { }
+
+    public InvalidWordCharacterException(string word, IAlphabet alphabet)
+       : base($"The word '{word}' contains one or more characters that are not part of the alphabet [{string.Join(',', alphabet.GetChars())}]") { }
 }

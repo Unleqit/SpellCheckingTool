@@ -1,5 +1,6 @@
 ﻿using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure;
 
@@ -10,9 +11,6 @@ public class WordTree : IWordStorage
     private int wordCount;
     private int wordBufferLength;
 
-    /// <summary>
-    /// Creates an empty WordTree with the provided alphabet (or LatinAlphabet by default).
-    /// </summary>
     public WordTree(IAlphabet? alphabet = null)
     {
         this.alphabet = alphabet ?? new LatinAlphabet();
@@ -30,21 +28,20 @@ public class WordTree : IWordStorage
         WordTreeNode current;
         int posInWord = 0;
         int posInAlphabet = 0;
-        int totalWordLength = 0; //length of all words joined together with a seperator char ('\n')
         int alphabetLength = this.alphabet.GetLength();
-
-        //cache global values to this method
-        int _wordCount = this.wordCount;
         int _wordBufferLength = this.wordBufferLength;
 
         foreach (Word word in words)
         {
             current = this.rootNode;
 
-            //add each character of the current word to the tree structure
             for (posInWord = 0; posInWord < word.Length; ++posInWord)
             {
                 posInAlphabet = alphabet.GetCharPositionInArray(word[posInWord]);
+
+                if (posInAlphabet < 0 || posInAlphabet >= alphabetLength)
+                    throw new InvalidWordCharacterException(word.ToString(), alphabet);
+
                 if (current.Nodes[posInAlphabet] == null)
                     current.Nodes[posInAlphabet] = new WordTreeNode(current, alphabetLength, false);
 
@@ -55,24 +52,18 @@ public class WordTree : IWordStorage
             //check if the word already exists in the tree
             if (current.Nodes[posInAlphabet].IsWord == true)
                 continue;
-            else
+            else //node is not marked as a word (e.g. "lollipop" is already contained in the word tree, and now "lol" is being added to it
             {
-                //node is not marked as a word (e.g. "lollipop" is already contained in the word tree, and now "lol" is being added to it
                 successCount++;
                 current.Nodes[posInAlphabet].IsWord = true;
                 _wordBufferLength = _wordBufferLength < word.Length ? word.Length : _wordBufferLength;
-                totalWordLength += word.Length;
             }
 
             current = current.Nodes[posInAlphabet];
         }
 
-        //update total word count in the tree
-        _wordCount += successCount;
-        this.wordCount = _wordCount;
+        this.wordCount += successCount;
         this.wordBufferLength = _wordBufferLength;
-
-        //return the amount of words that were successfully added to the tree structure
         return successCount;
     }
 

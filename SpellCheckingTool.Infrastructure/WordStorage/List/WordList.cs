@@ -1,5 +1,6 @@
 ﻿using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.Alphabet;
+using SpellCheckingTool.Domain.Exceptions;
 
 namespace SpellCheckingTool.Infrastructure
 {
@@ -25,12 +26,16 @@ namespace SpellCheckingTool.Infrastructure
 
         private int _add(Word[] words)
         {
+            char[] alphabetChars = alphabet.GetChars();
             int c = 0;
-            foreach (var item in words)
-                if (!this.list.Contains(item))
+            foreach (var word in words)
+                if (!this.list.Contains(word))
                 {
+                    if (word.ToString().Any((c) => !alphabetChars.Contains(c)))
+                        throw new InvalidWordCharacterException(word.ToString(), alphabet);
+
                     c++;
-                    this.list.Add(item);
+                    this.list.Add(word);
                 }
 
             return c;

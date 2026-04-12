@@ -87,6 +87,15 @@ public class WordTreeTests
     }
 
     [TestMethod]
+    public void AddWordWithNonLatinCharactersToLatinAlphabetWordTree_ShouldThrowInvalidWordCharException()
+    {
+        IAlphabet alphabet = new LatinAlphabet();
+        WordTree tree = new WordTree(alphabet);
+        Assert.ThrowsException<InvalidWordCharacterException>(() => tree.Add(new Word(new UTF16Alphabet(), "لوكاس")));
+        Assert.AreEqual(0, tree.GetWordCount());
+    }
+
+    [TestMethod]
     public void SearchWordContainedInTree_ShouldReturnTrue()
     {
         IAlphabet alphabet = new LatinAlphabet();
