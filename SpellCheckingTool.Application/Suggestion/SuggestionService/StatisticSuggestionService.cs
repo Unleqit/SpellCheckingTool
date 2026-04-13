@@ -5,28 +5,28 @@ using SpellCheckingTool.Domain.WordStats;
 
 namespace SpellCheckingTool.Application.Suggestion.SuggestionService
 {
-    public class StatisticSuggestionService: SuggestionServiceBase
+    public class StatisticSuggestionService: SuggestionService
     {
+        private const double distanceWeight = 0.8;
+        private const double lastUsedWeight = 0.05;
+        private const double frequencyWeight = 0.15;
+
         private UserService userService;
-        private IEnumerable<WordStatistic> currentStats;
+        private IEnumerable<WordStatistic> currentStats = [];
         private Guid guid;
         private int lastNDays;
 
         public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14): base(tree, distanceAlgorithm)
         {
-            base.onPreWalk = Prewalk;
-            base.computeNormalizedDistance = ComputeNormalizedDistance;
             this.userService = userService;
             this.guid = guid;
             this.lastNDays = lastNDays;
-            this.currentStats = [];
         }
 
         /// <summary>
-        /// Returns a value between 0 and 1 representing the normalized distance value of the two passed words.
-        /// Retunds -1, if their levenshtein distance exceeds the provided threshold.
+        /// Fetches the current user statistics and caches them for the duration of this suggestion retrieval operation
         /// </summary>
-        protected virtual void Prewalk()
+        protected override void OnPreWalk()
         {
             var result = this.userService.GetStats(this.guid);
             if (!result.Success || result.Value == null)
@@ -59,7 +59,7 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         /// 0: The word was never used before
         /// 1: The word is the most used word of the user.
         /// </summary>
-        private double GetNormalizedMostUsedMetric(Word input, int lastNDays = 14)
+        private double GetNormalizedFrequencyMetric(Word input, int lastNDays = 14)
         {
             //.Max() crashes when the sequence has 0 elements...
             if (this.currentStats == null || this.currentStats.Count() == 0)
@@ -72,32 +72,26 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         }
 
         /// <summary>
-        /// Returns a value between 0 and 1 representing the normalized distance value of the two passed words.
-        /// Retunds -1, if their levenshtein distance exceeds the provided threshold.
+        /// Returns a value between 0 and 1 representing a combination of the weighted distance of two words determined by the distance algorithm used to instantiate this class, 
+        /// while also factoring in if or when the given input word was last used and how often it was used overall.
+        /// Returns -1, if their distance exceeds the provided threshold.
         /// </summary>
-        protected double ComputeNormalizedDistance(Word input, Word otherWord, IDistanceAlgorithm distanceAlgorithm, int maxAllowedDistance)
+        protected override double ComputeScore(Word inputWord, Word otherWord, int maxAllowedDistance)
         {
-            double distanceToInputWord = distanceAlgorithm.GetDistance(input, otherWord);
-            if (distanceToInputWord > maxAllowedDistance)
-                return -1;
-
-            //this is a property of the levenshtein algorithm
-            int worstPossibleDistance = Math.Max(input.Length, otherWord.Length);
-            double normalizedDistance = distanceToInputWord / worstPossibleDistance;
-
-            if (normalizedDistance == -1)
+            double distance = base.ComputeScore(inputWord, otherWord, maxAllowedDistance);
+            if (distance == -1)
                 return -1;
 
             if (!this.guid.Equals(Guid.Empty))
             {
                 double lastUsedResult = GetNormalizedLastUsedMetric(otherWord, 14);
-                double mostUsedResult = GetNormalizedMostUsedMetric(otherWord, 14);
-                double final = (0.8 * normalizedDistance + 0.05 * lastUsedResult + 0.15 * mostUsedResult);
+                double frequencyResult = GetNormalizedFrequencyMetric(otherWord, 14);
+                double final = (distanceWeight * distance + lastUsedWeight * lastUsedResult + frequencyWeight * frequencyResult);
 
                 return final;
             }
             else
-                return normalizedDistance; 
+                return distance; 
         }
     }
 }
