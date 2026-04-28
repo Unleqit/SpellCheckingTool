@@ -12,7 +12,8 @@ namespace SpellCheckingTool.Application.Suggestion.SuggestionService
         private Guid guid;
         private int lastNDays;
 
-        public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, UserService userService, Guid guid, int lastNDays = 14): base(tree, distanceAlgorithm)
+        public StatisticSuggestionService(IWordStorage tree, IDistanceAlgorithm distanceAlgorithm, 
+            UserService userService, Guid guid, int lastNDays = 14): base(tree, distanceAlgorithm)
         {
             base.onPreWalk = Prewalk;
             base.computeNormalizedDistance = ComputeNormalizedDistance;

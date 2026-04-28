@@ -3,6 +3,7 @@ using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
+
 public class WindowsExecutableParser : ExecutableParser
 {
     public override WordTree GetAllShellExecutables()

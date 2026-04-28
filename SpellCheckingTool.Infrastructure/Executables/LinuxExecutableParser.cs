@@ -3,6 +3,7 @@ using SpellCheckingTool.Domain;
 using SpellCheckingTool.Application.WordParser;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
+
 public class LinuxExecutableParser : ExecutableParser
 {
     public override IWordStorage GetAllShellExecutables()
