@@ -1,0 +1,6 @@
+@startuml
+class UserSettingsWriteException <<sealed>> {
+    + UserSettingsWriteException(username:string, innerException:Exception)
+}
+Exception <|-- UserSettingsWriteException
+@enduml

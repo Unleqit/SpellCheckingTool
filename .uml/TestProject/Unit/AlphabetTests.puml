@@ -1,0 +1,11 @@
+@startuml
+class AlphabetTests {
+    + CreateLatinAlphabet_ShouldSucceed() : void
+    + GetIndexOfCharHInLatinAlphabet_ShouldReturn7() : void
+    + CreateCustomAlphabet_ShouldSucceed() : void
+    + GetIndexOfCharHInCustomAlphabet_ShouldReturn7() : void
+    + GetIndexOfCharÜInCustomAlphabet_ShouldReturn28() : void
+    + CreateAlphabetWithDuplicateCharactersInArray_ShouldThrowError() : void
+    + SerializeAndDeserializeAlphabet_ShouldSucceed() : void
+}
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+class DuplicateAlphabetCharacterException <<sealed>> {
+    + DuplicateAlphabetCharacterException()
+    + DuplicateAlphabetCharacterException(duplicateChar:char)
+}
+SpellCheckingToolException <|-- DuplicateAlphabetCharacterException
+@enduml

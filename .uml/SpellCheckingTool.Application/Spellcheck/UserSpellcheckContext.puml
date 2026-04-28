@@ -1,0 +1,12 @@
+@startuml
+class UserSpellcheckContext <<sealed>> {
+    + Username : string? <<get>>
+    + IsAuthenticated : bool <<get>>
+    + UserSpellcheckContext(userId:Guid?, username:string?, tree:WordTree, spellcheckService:ISpellcheckService, settings:UserSettings, settingsRepository:IUserSettingsRepository)
+}
+UserSpellcheckContext --> "UserId" Guid
+UserSpellcheckContext --> "Tree" WordTree
+UserSpellcheckContext --> "SpellcheckService" ISpellcheckService
+UserSpellcheckContext --> "Settings" UserSettings
+UserSpellcheckContext --> "SettingsRepository" IUserSettingsRepository
+@enduml

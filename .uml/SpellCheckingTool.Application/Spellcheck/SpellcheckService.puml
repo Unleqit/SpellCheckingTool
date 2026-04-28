@@ -1,0 +1,12 @@
+@startuml
+class SpellcheckService {
+    + SpellcheckService(tree:WordTree, suggestionService:ISuggestionService, inputAlphabet:IAlphabet)
+    + IsCorrect(word:Word) : bool
+    + GetSuggestions(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+ISpellcheckService <|-- SpellcheckService
+SpellcheckService --> "tree" WordTree
+SpellcheckService --> "suggestionService" ISuggestionService
+SpellcheckService --> "inputAlphabet" IAlphabet
+SpellcheckService --> "Alphabet" IAlphabet
+@enduml

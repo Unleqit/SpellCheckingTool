@@ -1,0 +1,15 @@
+@startuml
+class Word {
+    - originalFormatting : string
+    + Word(alphabet:IAlphabet, word:IEnumerable<char>, offset:int, length:int)
+    - CheckValidity(alphabet:IAlphabet, word:char[]) : void
+    - GetLowerCaseArray(word:IEnumerable<char>, offset:int, length:int) : char[]
+    + Length : int <<get>>
+    + <<override>> ToString() : string
+    + GetOriginalWordFormat() : string
+    + {static} ParseWords(alphabet:IAlphabet, rawWords:string[]) : Word[]
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
+}
+Word --> "Empty" Word
+@enduml

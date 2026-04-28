@@ -1,0 +1,69 @@
+@startuml
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+
+skinparam defaultTextColor #ffffff
+skinparam class {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    AttributeFontColor #ffffff
+    MethodFontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam package {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam rectangle {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam ArrowColor #ffffff
+skinparam ArrowFontColor #ffffff
+
+
+
+
+rectangle "Application" {
+class AuthService {
+    + AuthService(userRepository:IUserRepository, settingsRepository:IUserSettingsRepository)
+    + Register(username:string, password:string) : OperationResult<User>
+    + Login(username:string, password:string) : OperationResult<User>
+}
+
+class HashService {
+    + {static} Hash(password:string) : string
+}
+}
+
+rectangle "Infrastructure" {
+class AuthController {
+    + AuthController(service:AuthService)
+    + Register(context:HttpListenerContext, username:string, password:string) : void
+    + Login(context:HttpListenerContext, username:string, password:string) : void
+}
+AuthController --> "_service" AuthService
+AuthService --> HashService
+}
+
+rectangle "Presentation" {
+class ClientAuthService {
+    + ClientAuthService(backendUrl:string)
+    + RunAuthenticationFlow() : AuthSession?
+    + AddWord(userId:Guid, word:string) : bool
+    + DeleteWord(userId:Guid, word:string) : bool
+    + TrackWordUsage(userId:Guid, word:string) : bool
+    + GetWords(userId:Guid) : IReadOnlyList<UserDictionaryWordDto>
+    + GetStats(userId:Guid) : IReadOnlyList<UserWordStatDto>
+}
+}
+
+ClientAuthService ..> AuthController
+ClientAuthService --> "_httpClient" HttpClient
+@enduml

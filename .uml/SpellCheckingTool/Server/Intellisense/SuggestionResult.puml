@@ -1,0 +1,9 @@
+@startuml
+class SuggestionResult {
+    - length : int
+    + SuggestionResult(suggestions:string[], length:int)
+    + GetSuggestionCount() : int
+    + GetSuggestionArray() : string[]
+    + GetSuggestionList() : List<string>
+}
+@enduml

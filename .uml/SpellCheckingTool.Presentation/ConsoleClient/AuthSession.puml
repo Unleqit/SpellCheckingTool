@@ -1,0 +1,7 @@
+@startuml
+class AuthSession {
+    + Username : string <<get>> <<set>> = ""
+    + IsAuthenticated : bool <<get>> <<set>>
+}
+AuthSession --> "UserId" Guid
+@enduml

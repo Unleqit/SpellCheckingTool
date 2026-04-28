@@ -1,0 +1,13 @@
+@startuml
+interface ISuggestionDisplay {
+    ShowSuggestions(model:SuggestionViewModel) : void
+    HideSuggestions() : void
+    CompleteCurrentlySelectedSuggestion() : Word
+    SelectPreviousSuggestion() : void
+    SelectNextSuggestion() : void
+    IsCurrentlyVisible() : bool
+    NextWord() : void
+    PreviousWord() : void
+    Initialize(shellPromptLength:int) : void
+}
+@enduml

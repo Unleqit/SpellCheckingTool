@@ -1,0 +1,6 @@
+@startuml
+class HttpPut {
+    + HttpPut(path:string)
+}
+HttpAttribute <|-- HttpPut
+@enduml

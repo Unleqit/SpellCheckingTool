@@ -1,0 +1,15 @@
+@startuml
+class FileUserRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserRepository
+    + AddUser_ShouldPersistUserAndLoadAgain() : void
+    + GetByUsername_ShouldFindUserCaseInsensitive() : void
+    + AddDuplicateUserId_ShouldThrowError() : void
+    + AddDuplicateUsername_ShouldThrowError() : void
+}
+FileUserRepositoryTests o-> "_paths" UserStorePaths
+FileUserRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserRepositoryTests o-> "_writer" UserStoreJsonWriter
+@enduml

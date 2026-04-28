@@ -1,0 +1,10 @@
+@startuml
+struct IndexedWord {
+    + startIndex : int
+    + line : int
+    + whiteSpaceAtEnd : int
+    + offset : int
+    + IndexedWord(startIndex:int, line:int, word:Word)
+}
+IndexedWord --> "word" Word
+@enduml

@@ -1,0 +1,319 @@
+﻿using SpellCheckingTool.Application.Settings;
+using SpellCheckingTool.Application.Spellcheck;
+using SpellCheckingTool.Application.Suggestion;
+using SpellCheckingTool.Domain;
+using SpellCheckingTool.Presentation.ConsoleClient.ClientServices;
+
+namespace SpellCheckingTool.Presentation.ConsoleClient;
+
+public class ConsoleSpellChecker1
+{
+    private readonly ShellProcessManager _processManager;
+    private readonly UserSpellcheckContext _context;
+    private readonly ISuggestionDisplay _suggestionDisplay;
+    private readonly ClientUserService _clientUserService;
+    private readonly IUserSpellcheckContextFactory _spellcheckContextFactory;
+    private readonly ConsoleUserCommandHandler _commandHandler;
+    private readonly IFileOpener _fileOpener;
+    private readonly CancellationTokenSource _token;
+    private SuggestionUseCase _suggestionUseCase;
+    private readonly UserSettings _settings;
+
+    private const string WelcomeMessage =
+    "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /logout, /shutdown";
+
+    public ConsoleSpellChecker1(
+    UserSpellcheckContext context,
+    ShellProcessManager processManager,
+    ISuggestionDisplay suggestionDisplay,
+    ClientUserService clientUserService,
+    IUserSpellcheckContextFactory spellcheckContextFactory,
+    CancellationTokenSource token,
+    IFileOpener fileOpener)
+    {
+        _context = context;
+        _processManager = processManager;
+        _suggestionDisplay = suggestionDisplay;
+        _clientUserService = clientUserService;
+        _spellcheckContextFactory = spellcheckContextFactory;
+        _fileOpener = fileOpener;
+        _token = token;
+        _settings = context.Settings;
+
+        RefreshSuggestionUseCase();
+
+        var wordService = new WordService(_context, clientUserService, _spellcheckContextFactory, _suggestionDisplay);
+
+        _commandHandler = new ConsoleUserCommandHandler(
+            _context,
+            _suggestionDisplay,
+            _clientUserService,
+            fileOpener,
+            token,
+            wordService,
+            _spellcheckContextFactory,
+            RefreshSuggestionUseCase);
+    }
+
+    private void UpdateSuggestions(string input)
+    {
+        if (string.IsNullOrEmpty(input) || input.StartsWith("/"))
+        {
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        if (input.EndsWith(' '))
+        {
+            _suggestionDisplay.HideSuggestions();
+            return;
+        }
+
+        var viewModel = _suggestionUseCase.Execute(input);
+        _suggestionDisplay.ShowSuggestions(viewModel);
+    }
+
+    private void RefreshSuggestionUseCase()
+    {
+        _suggestionUseCase = new SuggestionUseCase(
+            _context.SpellcheckService,
+            _context.ExecutableSpellcheckService)
+        {
+            MaxSuggestions = _context.Settings.MaxSuggestions,
+            MaxDistance = _context.Settings.MaxDistance
+        };
+    }
+
+    public async Task Run()
+    {
+        Console.WriteLine(WelcomeMessage);
+        string input = "";
+
+        string shellPrompt = _processManager.GetCurrentConsolePrompt();
+        Console.Write(shellPrompt);
+        _suggestionDisplay.Initialize(shellPrompt.Length);
+
+        while (!_token.Token.IsCancellationRequested)
+        {
+            if (!Console.KeyAvailable)
+            {
+                await Task.Delay(50, _token.Token).ContinueWith(_ => { });
+                continue;
+            }
+
+            ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+            char c = keyInfo.KeyChar;
+
+            switch (keyInfo.Key)
+            {
+                default:
+                    input = handleChararacterInput(input, c);
+                    break;
+
+                case ConsoleKey.Backspace:
+                    input = handleDeletion(input);
+                    break;
+
+                case (ConsoleKey)127:
+                    input = handleDeletion(input);
+                    break;
+
+                case ConsoleKey.Spacebar:
+                    input = handleSpace(input);
+                    break;
+
+                case ConsoleKey.Enter:
+                    input = await handleEnter(input);
+                    break;
+
+                case ConsoleKey.UpArrow:
+                    _suggestionDisplay.SelectPreviousSuggestion();
+                    break;
+
+                case ConsoleKey.DownArrow:
+                    _suggestionDisplay.SelectNextSuggestion();
+                    break;
+
+                case ConsoleKey.Escape:
+                    _suggestionDisplay.HideSuggestions();
+                    break;
+            }
+        }
+    }
+
+    private string handleChararacterInput(string input, char c)
+    {
+        if (!char.IsControl(c))
+        {
+            input += c;
+            Console.Write(c);
+            UpdateSuggestions(input);
+        }
+        return input;
+    }
+
+    private string handleDeletion(string input)
+    {
+        if (input.Length == 0)
+            return input;
+
+        if (input.EndsWith(' '))
+            _suggestionDisplay.PreviousWord();
+
+        _suggestionDisplay.HideSuggestions();
+        input = input[..^1];
+
+        if (Console.CursorLeft > 0)
+            Console.Write("\b \b");
+
+        UpdateSuggestions(input);
+        return input;
+    }
+
+    private string handleSpace(string input)
+    {
+        input += ' ';
+        Console.Write(' ');
+
+        _suggestionDisplay.HideSuggestions();
+        _suggestionDisplay.NextWord();
+
+        _ = TrackLastCompletedWordOnSpace(input);
+        UpdateSuggestions(input);
+        return input;
+    }
+
+    private async Task<string> handleEnter(string input)
+    {
+        var (handled, newInput) = await _commandHandler.TryHandleCommandAsync(input);
+        if (handled)
+            return handleSend(newInput);
+        return handleCompletion(newInput);
+    }
+
+    private string handleCompletion(string input)
+    {
+        if (_suggestionDisplay.IsCurrentlyVisible())
+        {
+            Word completion = _suggestionDisplay.CompleteCurrentlySelectedSuggestion();
+            bool useCapitalization = this._settings.EnableCapitalizationInInput && this._settings.AdjustCapitalizationInSuggestions;
+            string completionFormat = useCapitalization ? completion.GetOriginalWordFormat() : completion.ToString();
+            input = input.Substring(0, input.LastIndexOf(' ') + 1) + completionFormat;
+        }
+        else
+        {
+            if (!input.EndsWith(' '))
+            {
+                _ = TrackFinalWordOnEnter(input.Trim());
+            }
+
+            Console.WriteLine();
+            handleSend(input);
+            input = "";
+        }
+        return input;
+    }
+
+    private string handleSend(string input)
+    {
+        if (!_token.Token.IsCancellationRequested)
+        {
+            RefreshSpellcheckState();
+            string shellPrompt = _processManager.GetCurrentConsolePrompt();
+            Console.Write(shellPrompt);
+            _suggestionDisplay.Initialize(shellPrompt.Length);
+        }
+        return input;
+    }
+
+
+    private void RefreshSpellcheckState()
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        var refreshed = _spellcheckContextFactory.CreateForUser(
+            _context.UserId.Value,
+            _context.Username);
+
+        _context.Tree = refreshed.Tree;
+        _context.SpellcheckService = refreshed.SpellcheckService;
+        _context.ExecutableSpellcheckService = refreshed.ExecutableSpellcheckService;
+
+        _suggestionUseCase = CreateSuggestionUseCase(
+            _context.SpellcheckService,
+            _context.ExecutableSpellcheckService);
+    }
+
+    private SuggestionUseCase CreateSuggestionUseCase(
+        ISpellcheckService defaultService,
+        ISpellcheckService executableService)
+    {
+        return new SuggestionUseCase(defaultService, executableService)
+        {
+            MaxSuggestions = _settings.MaxSuggestions,
+            MaxDistance = _settings.MaxDistance
+        };
+    }
+
+    private async Task TrackLastCompletedWordOnSpace(string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        var tokens = input
+            .TrimEnd()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (tokens.Length == 0)
+            return;
+
+        string lastCompletedToken = tokens[^1].Trim().ToLowerInvariant();
+        await TrackSingleWord(lastCompletedToken);
+    }
+
+    private async Task TrackFinalWordOnEnter(string input)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(input))
+            return;
+
+        var tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (tokens.Length == 0)
+            return;
+
+        string lastToken = tokens[^1].Trim().ToLowerInvariant();
+        await TrackSingleWord(lastToken);
+    }
+
+    private async Task TrackSingleWord(string token)
+    {
+        if (!_context.IsAuthenticated || _context.UserId == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(token))
+            return;
+
+        try
+        {
+            var service = _context.SpellcheckService;
+
+            var word = new Word(service.Alphabet, token);
+
+            if (service.IsCorrect(word))
+            {
+                await _clientUserService.Words.TrackWordUsage(_context.UserId.Value, token);
+            }
+        }
+        catch
+        {
+            // ignore invalid token
+        }
+    }
+}

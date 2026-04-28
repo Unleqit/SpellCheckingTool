@@ -1,0 +1,5 @@
+@startuml
+class UserStoreJsonWriter {
+    + Write(path:string, data:T) : void
+}
+@enduml

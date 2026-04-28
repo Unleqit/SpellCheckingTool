@@ -1,0 +1,7 @@
+@startuml
+class LatinAlphabet {
+    + LatinAlphabet()
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+BaseAlphabet <|-- LatinAlphabet
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+class LoginResponseDto {
+    + Username : string <<get>> <<set>> = ""
+}
+LoginResponseDto --> "UserId" Guid
+@enduml

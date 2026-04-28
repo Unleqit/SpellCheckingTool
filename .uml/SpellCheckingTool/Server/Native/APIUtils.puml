@@ -1,0 +1,7 @@
+@startuml
+class API <<unsafe>> <<partial>> {
+    + {static} _saveFile(szPathName:string, lpBits:byte*, size:long) : int
+    + {static} _openFile(filename:string, data:byte**) : int
+    + {static} _fsize(hFile:IntPtr) : long
+}
+@enduml

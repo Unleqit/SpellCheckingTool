@@ -1,0 +1,12 @@
+@startuml
+abstract class WalkWordTreeService <<unsafe>> {
+    # stackIndex : int
+    # wordBufferIndex : int
+    # alphabetLength : int
+    + WalkWordTreeService(tree:WordTree)
+    + Dispose() : void
+    + {abstract} WalkTree(onEachWord:Action<long, int>) : void
+}
+IDisposable <|-- WalkWordTreeService
+WalkWordTreeService --> "tree" WordTree
+@enduml

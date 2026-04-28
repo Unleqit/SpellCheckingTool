@@ -1,0 +1,7 @@
+@startuml
+interface IUserRepository {
+    GetById(id:Guid) : User?
+    GetByUsername(username:string) : User?
+    Add(user:User) : void
+}
+@enduml

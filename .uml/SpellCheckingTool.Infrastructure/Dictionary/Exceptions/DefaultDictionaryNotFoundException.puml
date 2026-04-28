@@ -1,0 +1,6 @@
+@startuml
+class DefaultDictionaryNotFoundException <<sealed>> {
+    + DefaultDictionaryNotFoundException(path:string)
+}
+FileNotFoundException <|-- DefaultDictionaryNotFoundException
+@enduml

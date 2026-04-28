@@ -1,0 +1,6 @@
+@startuml
+class InvalidFilePathException <<sealed>> {
+    + InvalidFilePathException(path:string)
+}
+Exception <|-- InvalidFilePathException
+@enduml

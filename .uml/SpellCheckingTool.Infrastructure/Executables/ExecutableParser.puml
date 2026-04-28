@@ -1,0 +1,7 @@
+@startuml
+abstract class ExecutableParser {
+    + {abstract} GetAllShellExecutables() : WordTree
+    # InvokeShellCommand(shellName:string, arguments:string, workingDir:string) : List<string>
+}
+IExecutableParser <|-- ExecutableParser
+@enduml

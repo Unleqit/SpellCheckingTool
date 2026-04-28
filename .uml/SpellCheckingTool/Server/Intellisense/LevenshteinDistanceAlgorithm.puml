@@ -1,0 +1,10 @@
+@startuml
+class LevenshteinDistanceAlgorithm <<unsafe>> {
+    - maxWordLengthInTree : int
+    + LevenshteinDistanceAlgorithm(tree:WordTree)
+    + GetDistance(wordA:string, wordB:string) : int
+    + GetDistance(wordA:char*, wordB:char*, wordALength:int, wordBLength:int) : int
+    + BufferSize : int <<get>>
+}
+IDistanceAlgorithm <|-- LevenshteinDistanceAlgorithm
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+class UserSpellcheckContextFactory {
+    + UserSpellcheckContextFactory(treeBuilder:UserWordTreeBuilder, userService:UserService, settingsRepository:IUserSettingsRepository, inputAlphabet:IAlphabet)
+    + CreateAnonymous() : UserSpellcheckContext
+    + CreateForUser(userId:Guid, username:string) : UserSpellcheckContext
+    - {static} BuildSpellcheckService(tree:WordTree, inputAlphabet:IAlphabet, userService:UserService, guid:Guid?) : SpellcheckService
+}
+IUserSpellcheckContextFactory <|-- UserSpellcheckContextFactory
+UserSpellcheckContextFactory --> "_treeBuilder" UserWordTreeBuilder
+UserSpellcheckContextFactory --> "_userService" UserService
+UserSpellcheckContextFactory --> "_inputAlphabet" IAlphabet
+UserSpellcheckContextFactory --> "_settingsRepository" IUserSettingsRepository
+@enduml

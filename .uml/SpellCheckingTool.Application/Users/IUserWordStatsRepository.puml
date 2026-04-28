@@ -1,0 +1,6 @@
+@startuml
+interface IUserWordStatsRepository {
+    IncrementWord(userId:Guid, word:string) : void
+    GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+}
+@enduml

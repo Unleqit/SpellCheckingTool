@@ -1,0 +1,6 @@
+@startuml
+class BackendConnectionException <<sealed>> {
+    + BackendConnectionException(message:string, innerException:Exception)
+}
+Exception <|-- BackendConnectionException
+@enduml

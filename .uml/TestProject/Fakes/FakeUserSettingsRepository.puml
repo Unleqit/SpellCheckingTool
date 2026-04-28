@@ -1,0 +1,15 @@
+@startuml
+class FakeUserSettingsRepository {
+    + SetSettingsCallCount : int <<get>>
+    + LastSetUsername : string? <<get>>
+    + GetSettings(username:string) : UserSettings
+    + GetDefaultSettings() : UserSettings
+    + SetSettings(username:string, settings:UserSettings) : void
+    + GetUserSettingsFilePath(username:string?) : string
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserSettingsRepository <|-- FakeUserSettingsRepository
+FakeUserSettingsRepository o-> "_settings<string,UserSettings>" "Dictionary`2"
+FakeUserSettingsRepository --> "LastSetSettings" UserSettings
+@enduml

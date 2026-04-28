@@ -1,0 +1,7 @@
+@startuml
+class SuggestionService {
+    + SuggestionService(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm)
+    # <<override>> ComputeNormalizedDistance(input:Word, word:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+}
+SuggestionServiceBase <|-- SuggestionService
+@enduml

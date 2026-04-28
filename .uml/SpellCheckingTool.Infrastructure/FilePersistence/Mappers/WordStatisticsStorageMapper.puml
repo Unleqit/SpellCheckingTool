@@ -1,0 +1,8 @@
+@startuml
+class WordStatisticStorageMapper {
+    + WordStatisticStorageMapper(alphabet:IAlphabet)
+    + ToDomain(storage:Dictionary<Guid, Dictionary<string, WordStatisticStorage>>) : Dictionary<Guid, Dictionary<string, WordInfo>>
+    + ToStorage(domain:Dictionary<Guid, Dictionary<string, WordInfo>>) : Dictionary<Guid, Dictionary<string, WordStatisticStorage>>
+}
+WordStatisticStorageMapper --> "_alphabet" IAlphabet
+@enduml

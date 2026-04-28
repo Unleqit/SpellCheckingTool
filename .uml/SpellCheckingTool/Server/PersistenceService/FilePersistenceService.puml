@@ -1,0 +1,7 @@
+@startuml
+class FilePersistenceService <<unsafe>> {
+    + Save(tree:WordTree, filepath:FilePath) : bool
+    + Load(filepath:FilePath) : WordTree
+}
+IPersistenceService <|-- FilePersistenceService
+@enduml

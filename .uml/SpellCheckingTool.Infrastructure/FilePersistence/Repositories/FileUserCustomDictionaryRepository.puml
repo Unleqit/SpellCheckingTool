@@ -1,0 +1,20 @@
+@startuml
+class FileUserCustomDictionaryRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserCustomDictionaryRepository(paths:UserStorePaths, alphabet:IAlphabet, userRepository:IUserRepository, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + AddWord(userId:Guid, word:string) : void
+    + RemoveWord(userId:Guid, word:string) : bool
+    + GetWords(userId:Guid) : IReadOnlyCollection<Word>
+    - Save() : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserCustomDictionaryRepository <|-- FileUserCustomDictionaryRepository
+FileUserCustomDictionaryRepository --> "_alphabet" IAlphabet
+FileUserCustomDictionaryRepository --> "_userRepository" IUserRepository
+FileUserCustomDictionaryRepository --> "_reader" UserStoreJsonReader
+FileUserCustomDictionaryRepository --> "_writer" UserStoreJsonWriter
+FileUserCustomDictionaryRepository --> "_mapper" CustomDictionaryStorageMapper
+FileUserCustomDictionaryRepository --> "_userCustomDictionary<Guid,HashSet<Word>>" "Dictionary`2"
+@enduml

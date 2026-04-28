@@ -1,0 +1,8 @@
+@startuml
+class DistanceAlgorithmTests {
+    + LevenshteinDistanceMatchingResizeWordTree_ShouldNotThrow() : void
+    + LevenshteinDistanceMatchingMatchSameWord_ShouldReturnZero() : void
+    + LevenshteinDistanceMatchingMatchTestAndText_ShouldReturnOne() : void
+    + LevenshteinDistanceMatchingMatchInterestingAndImplementation_ShouldReturnNine() : void
+}
+@enduml

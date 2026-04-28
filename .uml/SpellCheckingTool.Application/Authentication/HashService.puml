@@ -1,0 +1,5 @@
+@startuml
+class HashService {
+    + {static} Hash(password:string) : string
+}
+@enduml

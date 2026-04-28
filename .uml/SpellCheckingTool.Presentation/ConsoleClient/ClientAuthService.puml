@@ -1,0 +1,16 @@
+@startuml
+class ClientAuthService {
+    - <<readonly>> _backendUrl : string
+    + ClientAuthService(backendUrl:string)
+    + RunAuthenticationFlow() : AuthSession?
+    + AddWord(userId:Guid, word:string) : bool
+    + DeleteWord(userId:Guid, word:string) : bool
+    + TrackWordUsage(userId:Guid, word:string) : bool
+    - HandleAuth(username:string, isRegister:bool) : AuthSession?
+    - ReadPassword() : string
+    + GetWords(userId:Guid) : IReadOnlyList<UserDictionaryWordDto>
+    + GetStats(userId:Guid) : IReadOnlyList<UserWordStatDto>
+    - Post(relativeUrl:string, payload:object) : bool
+}
+ClientAuthService --> "_httpClient" HttpClient
+@enduml

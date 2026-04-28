@@ -1,0 +1,5 @@
+@startuml
+interface IDefaultDictionaryProvider {
+    LoadDefaultDictionary() : WordTree
+}
+@enduml

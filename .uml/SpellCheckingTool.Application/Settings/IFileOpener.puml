@@ -1,0 +1,5 @@
+@startuml
+interface IFileOpener {
+    Open(filePath:string) : void
+}
+@enduml

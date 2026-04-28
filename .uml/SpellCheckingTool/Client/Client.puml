@@ -1,0 +1,5 @@
+@startuml
+class Client {
+    + {static} StartClient(port:int) : void
+}
+@enduml

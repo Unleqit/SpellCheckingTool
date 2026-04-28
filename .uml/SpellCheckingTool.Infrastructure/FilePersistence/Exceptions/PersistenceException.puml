@@ -1,0 +1,7 @@
+@startuml
+abstract class PersistenceException {
+    # PersistenceException(message:string)
+    # PersistenceException(message:string, innerException:Exception)
+}
+Exception <|-- PersistenceException
+@enduml

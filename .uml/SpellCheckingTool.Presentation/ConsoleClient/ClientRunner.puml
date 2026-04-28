@@ -1,0 +1,5 @@
+@startuml
+class ClientRunner <<static>> {
+    + {static} Start(port:int, factory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, cts:CancellationTokenSource) : Thread
+}
+@enduml

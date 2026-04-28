@@ -1,0 +1,8 @@
+@startuml
+class UserStatsResponseDto {
+}
+class "List`1"<T> {
+}
+UserStatsResponseDto --> "UserId" Guid
+UserStatsResponseDto o-> "Stats<UserWordStatDto>" "List`1"
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+class "OperationResult`1"<T> {
+    + Success : bool <<get>>
+    + ErrorMessage : string? <<get>>
+    - OperationResult(success:bool, value:T?, error:string?)
+    + {static} Ok(value:T) : OperationResult<T>
+    + {static} Fail(error:string) : OperationResult<T>
+}
+"OperationResult`1" --> "Value" T
+@enduml

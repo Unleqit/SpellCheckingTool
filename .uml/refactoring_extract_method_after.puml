@@ -1,0 +1,67 @@
+@startuml
+
+scale max 4096 width
+scale max 4096 height
+scale 2
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+
+skinparam defaultTextColor #ffffff
+skinparam class {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    AttributeFontColor #ffffff
+    MethodFontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam package {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam rectangle {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam ArrowColor #ffffff
+skinparam ArrowFontColor #ffffff
+
+
+
+class WalkWordTreeLeftToRightService <<unsafe>> {
+    + WalkWordTreeLeftToRightService(tree:WordTree)
+    + <<unsafe>> <<override>> WalkTree(onEachWord:Action<long, int>) : void
+}
+WalkWordTreeService <|-- WalkWordTreeLeftToRightService
+
+class SuggestionService <<unsafe>> {
+    + SuggestionService(tree:WordTree, walkWordTreeService:WalkWordTreeService)
+    + GetSuggestionResult(input:string, maxAmountOfSuggestionsToBeReturned:int, 
+    maxAllowedDistance:int) : SuggestionResult
+    + Dispose() : void
+}
+
+SuggestionService --> "walkWordTreeService" WalkWordTreeService
+
+class FilePersistenceService <<unsafe>> {
+    + FilePersistenceService(tree:WordTree)
+    + FilePersistenceService(walkWordTreeService:WalkWordTreeService)
+    + Save(tree:WordTree, filepath:FilePath) : bool
+    + Load(filepath:FilePath) : WordTree
+}
+FilePersistenceService --> "walkWordTreeService" WalkWordTreeService
+
+abstract class WalkWordTreeService <<unsafe>> {
+    + WalkWordTreeService(tree:WordTree)
+    + Dispose() : void
+    + {abstract} WalkTree(onEachWord:Action<long, int>) : void
+}
+
+
+@enduml
+

@@ -1,0 +1,32 @@
+@startuml
+enum PopupWindowDisplayState {
+    SUCCESS= 0,
+    NOT_ENOUGH_VERTICAL_SPACE= 1,
+    NOT_ENOUGH_HORIZONTAL_SPACE= 2,
+}
+class PopupWindow {
+    - selectedLine : int
+    - isShown : bool
+    + PopupWindow(settings:UserSettings)
+    + GetPosition() : PopupWindowCoords
+    + SetPosition(position:PopupWindowCoords) : PopupWindowCoords
+    + GetSelectedItem() : Word
+    + GetSelectedLine() : int
+    + IsShown() : bool
+    - HasEnoughHorizontalSpaceAtNewPosition(newPosition:PopupWindowCoords) : PopupWindowDisplayState
+    - HasEnoughVerticalSpaceAtNewPosition(newPosition:PopupWindowCoords) : PopupWindowDisplayState
+    + Show(input:Word, suggestions:Word[]) : PopupWindowDisplayState
+    + Show(input:Word, suggestions:Word[], popupWindowCoords:PopupWindowCoords) : PopupWindowDisplayState
+    - WriteSuggestionLine(input:Word, suggestion:Word, suggestionPopupWindowWidth:int) : void
+    - AdjustSuggestionToRespectCapitalizationSetting(input:Word, suggestion:Word) : string
+    + Hide() : void
+    + SelectNext() : void
+    + SelectPrevious() : void
+    + SetSelectedLine(line:int) : int
+}
+PopupWindow --> "settings" UserSettings
+PopupWindow --> "position" PopupWindowCoords
+PopupWindow --> "oldBC" ConsoleColor
+PopupWindow --> "oldFC" ConsoleColor
+PopupWindow --> "currentInput" Word
+@enduml

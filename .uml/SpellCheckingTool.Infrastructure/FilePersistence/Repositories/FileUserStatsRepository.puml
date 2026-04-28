@@ -1,0 +1,19 @@
+@startuml
+class FileUserWordStatsRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserWordStatsRepository(paths:UserStorePaths, alphabet:IAlphabet, userRepository:IUserRepository, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + IncrementWord(userId:Guid, word:string) : void
+    + GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+    - Save() : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserWordStatsRepository <|-- FileUserWordStatsRepository
+FileUserWordStatsRepository --> "_alphabet" IAlphabet
+FileUserWordStatsRepository --> "_userRepository" IUserRepository
+FileUserWordStatsRepository --> "_reader" UserStoreJsonReader
+FileUserWordStatsRepository --> "_writer" UserStoreJsonWriter
+FileUserWordStatsRepository --> "_mapper" WordStatisticStorageMapper
+FileUserWordStatsRepository --> "_userWordStats<Guid,Dictionary<string, WordInfo>>" "Dictionary`2"
+@enduml

@@ -1,0 +1,14 @@
+@startuml
+class UserService {
+    + UserService(userRepo:IUserRepository, wordStatsRepo:IUserWordStatsRepository, customDictionaryRepo:IUserCustomDictionaryRepository, settingsRepository:IUserSettingsRepository)
+    + AddWord(userId:Guid, word:string) : OperationResult<bool>
+    + RemoveWord(userId:Guid, word:string) : OperationResult<bool>
+    + TrackWordUsage(userId:Guid, word:string) : OperationResult<bool>
+    + GetCustomWords(userId:Guid) : OperationResult<IReadOnlyCollection<Word>>
+    + GetStats(userId:Guid) : OperationResult<IReadOnlyCollection<WordStatistic>>
+}
+UserService --> "_userRepo" IUserRepository
+UserService --> "_wordStatsRepo" IUserWordStatsRepository
+UserService --> "_customDictionaryRepo" IUserCustomDictionaryRepository
+UserService --> "_settingsRepository" IUserSettingsRepository
+@enduml

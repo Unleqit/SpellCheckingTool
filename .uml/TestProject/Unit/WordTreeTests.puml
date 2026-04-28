@@ -1,0 +1,18 @@
+@startuml
+class WordTreeTests {
+    + CreateNewWordTree_ShouldInitialize() : void
+    + ParseValidWord_ShouldCreateWord() : void
+    + ParseInvalidWord_ShouldFail() : void
+    + ParseMultipleWords_ShouldSucceed() : void
+    + ParseMultipleWordsIncludingInvalidWords_ShouldOnlyReturnArrayOfValidWords() : void
+    + AddWordToTree_ShouldReturnSuccessCount() : void
+    + AddWordAlreadyContainedInTree_ShouldNotAddWord() : void
+    + SearchWordContainedInTree_ShouldReturnTrue() : void
+    + SearchWordNotContainedInTree_ShouldReturnFalse() : void
+    + RemoveWordContainedInTree_ShouldRemoveWordAndReturnSuccess() : void
+    + RemoveWordNotContainedInTree_ShouldReturnZero() : void
+    + RemoveShorterWord_ShouldKeepLongerWordAndOnlyRemoveShorterOne() : void
+    + RemoveLongerWord_ShouldKeepShorterWordAndOnlyRemoveLongerOne() : void
+    + ParseProductionSizedWordTreeFromStringArray_ShouldTakeLessThanTwoSecondsToComplete() : void
+}
+@enduml

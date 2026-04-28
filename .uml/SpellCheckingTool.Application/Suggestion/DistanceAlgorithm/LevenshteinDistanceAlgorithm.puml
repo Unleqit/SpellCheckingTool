@@ -1,0 +1,7 @@
+@startuml
+class LevenshteinDistanceAlgorithm {
+    + LevenshteinDistanceAlgorithm()
+    + GetDistance(wordA:Word, wordB:Word) : int
+}
+IDistanceAlgorithm <|-- LevenshteinDistanceAlgorithm
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+class CustomAlphabet {
+    + CustomAlphabet(chars:char[])
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+BaseAlphabet <|-- CustomAlphabet
+@enduml

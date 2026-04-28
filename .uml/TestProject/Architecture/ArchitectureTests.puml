@@ -1,0 +1,13 @@
+@startuml
+class CleanArchitectureTests {
+    - <<const>> DomainNamespace : string = "SpellCheckingTool.Domain"
+    - <<const>> ApplicationNamespace : string = "SpellCheckingTool.Application"
+    - <<const>> InfrastructureNamespace : string = "SpellCheckingTool.Infrastructure"
+    - <<const>> PresentationNamespace : string = "SpellCheckingTool.Presentation"
+    - {static} AssertArchitecture(result:NetArchTestResult) : void
+    + Domain_must_not_depend_on_Application_Infrastructure_or_Presentation() : void
+    + Application_must_not_depend_on_Infrastructure_or_Presentation() : void
+    + Infrastructure_must_not_depend_on_Presentation() : void
+    + Presentation_must_not_depend_on_Infrastructure_except_composition_root() : void
+}
+@enduml

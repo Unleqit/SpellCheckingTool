@@ -1,0 +1,17 @@
+@startuml
+class StatisticSuggestionService {
+    - lastNDays : int
+    + StatisticSuggestionService(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm, userService:UserService, guid:Guid, lastNDays:int)
+    # <<override>> Prewalk() : void
+    - GetNormalizedDistance(input:Word, otherWord:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+    - GetNormalizedLastUsedMetric(input:Word, lastNDays:int) : double
+    - GetNormalizedMostUsedMetric(input:Word, lastNDays:int) : double
+    # <<override>> ComputeNormalizedDistance(input:Word, otherWord:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+}
+class "IEnumerable`1"<T> {
+}
+SuggestionServiceBase <|-- StatisticSuggestionService
+StatisticSuggestionService --> "userService" UserService
+StatisticSuggestionService --> "currentStats<WordStatistic>" "IEnumerable`1"
+StatisticSuggestionService --> "guid" Guid
+@enduml

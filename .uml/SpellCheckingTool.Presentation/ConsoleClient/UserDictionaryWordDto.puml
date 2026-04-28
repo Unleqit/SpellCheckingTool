@@ -1,0 +1,5 @@
+@startuml
+class UserDictionaryWordDto {
+    + Word : string <<get>> <<set>> = ""
+}
+@enduml

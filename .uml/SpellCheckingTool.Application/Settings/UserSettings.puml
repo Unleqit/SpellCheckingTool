@@ -1,0 +1,19 @@
+@startuml
+class UserSettings {
+    + MaxSuggestions : int <<get>> <<set>>
+    + MaxDistance : int <<get>> <<set>>
+    + HorizontalPadding : int <<get>> <<set>>
+    + MaxDisplayedStats : int <<get>> <<set>>
+    + EnableCapitalizationInInput : bool <<get>> <<set>>
+    + AdjustCapitalizationInSuggestions : bool <<get>> <<set>>
+}
+UserSettings --> "ValidWordForeColor" ConsoleColor
+UserSettings --> "ValidWordBackColor" ConsoleColor
+UserSettings --> "InvalidWordForeColor" ConsoleColor
+UserSettings --> "InvalidWordBackColor" ConsoleColor
+UserSettings --> "SuggestionForeColor" ConsoleColor
+UserSettings --> "SuggestionBackColor" ConsoleColor
+UserSettings --> "SelectedSuggestionForeColor" ConsoleColor
+UserSettings --> "SelectedSuggestionBackColor" ConsoleColor
+UserSettings --> "Default" UserSettings
+@enduml

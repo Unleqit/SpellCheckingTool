@@ -1,0 +1,6 @@
+@startuml
+interface IDistanceAlgorithm <<unsafe>> {
+    + {abstract} GetDistance(a:string, b:string) : int
+    + {abstract} GetDistance(a:char*, b:char*, aLength:int, bLength:int) : int
+}
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+class SuggestionTests {
+    + SetupTests() : void
+    + GetTwentySuggestionsOfAllDistancesForTreeWithTenElements_ShouldReturnTenSuggestions() : void
+    + GetFiveSuggestionsInLargeTreeForContain_ShouldReturnFiveAndContainFirst() : void
+    + GetHundredSuggestionsInLargeTreeForContain_ShouldReturnAtMostTwenty() : void
+    + GetSuggestionsTwice_ShouldYieldSameResult() : void
+    + GetSuggestionsOfWordNotContainedInTreeWithMaxDistanceParameterZero_ShouldReturnZeroSuggestions() : void
+    + GetSuggestionForWordContainingDifferentAlphabet_ShouldReturnNoSuggestions() : void
+    + GetSuggestionsOfWordContainedInTreeWithMaxDistanceParameterZero_ShouldReturnOnlyExactMatch() : void
+}
+SuggestionTests o-> "tree" WordTree
+@enduml

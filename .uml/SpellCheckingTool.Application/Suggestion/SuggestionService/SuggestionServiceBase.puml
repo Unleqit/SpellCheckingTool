@@ -1,0 +1,21 @@
+@startuml
+abstract class SuggestionServiceBase {
+    + SuggestionServiceBase(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm)
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+    # {abstract} ComputeNormalizedDistance(input:Word, current:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+    # <<virtual>> Prewalk() : void
+    - SortMatches(results:MatchResult[], matchesCount:int) : void
+}
+class MatchResult {
+    - <<readonly>> distance : double
+    + MatchResult(matchWord:Word, distance:double)
+    + GetMatchedWord() : Word
+    + GetMatchDistance() : double
+    + <<override>> ToString() : string
+}
+ISuggestionService <|-- SuggestionServiceBase
+SuggestionServiceBase --> "distanceAlgorithm" IDistanceAlgorithm
+SuggestionServiceBase --> "traversal" LeftToRightWordTreeTraversal
+SuggestionServiceBase +-- MatchResult
+MatchResult --> "matchWord" Word
+@enduml

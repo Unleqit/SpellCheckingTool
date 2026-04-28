@@ -1,0 +1,8 @@
+@startuml
+class DefaultDictionaryLoader {
+    + DefaultDictionaryLoader(loader:IDictionaryLoader)
+    + LoadDefaultDictionary() : WordTree
+}
+IDefaultDictionaryProvider <|-- DefaultDictionaryLoader
+DefaultDictionaryLoader --> "loader" IDictionaryLoader
+@enduml

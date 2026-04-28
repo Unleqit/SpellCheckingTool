@@ -1,0 +1,12 @@
+@startuml
+abstract class BaseAlphabet {
+    # length : int
+    + BaseAlphabet(chars:char[])
+    + <<virtual>> GetChars() : char[]
+    + <<virtual>> GetLength() : int
+    + {abstract} GetCharPositionInArray(c:char) : int
+    + {static} <<unsafe>> Serialize(alphabet:IAlphabet) : byte[]
+    + {static} <<unsafe>> Deserialize(serializedAlphabet:byte[]) : CustomAlphabet
+}
+IAlphabet <|-- BaseAlphabet
+@enduml

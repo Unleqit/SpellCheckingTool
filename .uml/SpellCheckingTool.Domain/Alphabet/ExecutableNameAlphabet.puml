@@ -1,0 +1,7 @@
+@startuml
+class ExecutableNameAlphabet {
+    + ExecutableNameAlphabet()
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+CustomAlphabet <|-- ExecutableNameAlphabet
+@enduml

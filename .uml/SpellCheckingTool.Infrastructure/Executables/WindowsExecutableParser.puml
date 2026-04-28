@@ -1,0 +1,6 @@
+@startuml
+class WindowsExecutableParser {
+    + <<override>> GetAllShellExecutables() : WordTree
+}
+ExecutableParser <|-- WindowsExecutableParser
+@enduml

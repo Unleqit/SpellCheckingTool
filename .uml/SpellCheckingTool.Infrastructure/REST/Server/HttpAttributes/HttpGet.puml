@@ -1,0 +1,6 @@
+@startuml
+class HttpGet {
+    + HttpGet(path:string)
+}
+HttpAttribute <|-- HttpGet
+@enduml

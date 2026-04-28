@@ -1,0 +1,43 @@
+@startuml
+
+scale max 8192 width
+scale max 8192 height
+scale 2
+allowmixing
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+
+skinparam defaultTextColor #ffffff
+skinparam class {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    AttributeFontColor #ffffff
+    MethodFontColor #ffffff
+}
+skinparam package {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+}
+skinparam rectangle {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+}
+skinparam ArrowColor #ffffff
+skinparam ArrowFontColor #ffffff
+
+
+rectangle "Presentation" {
+interface ISuggestionDisplay
+class SuggestionDisplay
+ISuggestionDisplay <|-- SuggestionDisplay
+
+class ConsoleSpellChecker
+class Program
+}
+
+
+@enduml

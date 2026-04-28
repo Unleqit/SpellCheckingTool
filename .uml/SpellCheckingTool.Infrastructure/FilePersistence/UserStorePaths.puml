@@ -1,0 +1,8 @@
+@startuml
+class UserStorePaths {
+    + UsersFilePath : string <<get>>
+    + WordStatsFilePath : string <<get>>
+    + CustomDictionaryFilePath : string <<get>>
+    + UserStorePaths(baseDirectory:string)
+}
+@enduml

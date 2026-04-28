@@ -1,0 +1,9 @@
+@startuml
+class AuthController {
+    + AuthController(service:AuthService)
+    + Register(context:HttpListenerContext, username:string, password:string) : void
+    + Login(context:HttpListenerContext, username:string, password:string) : void
+}
+BaseController <|-- AuthController
+AuthController --> "_service" AuthService
+@enduml

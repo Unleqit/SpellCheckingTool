@@ -1,0 +1,17 @@
+@startuml
+class FakeUserWordStatsRepository {
+    + IncrementWordCallCount : int <<get>>
+    + LastIncrementWord : string? <<get>>
+    + FakeUserWordStatsRepository(alphabet:IAlphabet)
+    - Normalize(word:string) : string?
+    + IncrementWord(userId:Guid, word:string) : void
+    + GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+    + SeedStat(userId:Guid, word:string, count:int) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserWordStatsRepository <|-- FakeUserWordStatsRepository
+FakeUserWordStatsRepository --> "_alphabet" IAlphabet
+FakeUserWordStatsRepository o-> "_stats<Guid,Dictionary<string, WordStatistic>>" "Dictionary`2"
+FakeUserWordStatsRepository --> "LastIncrementUserId" Guid
+@enduml

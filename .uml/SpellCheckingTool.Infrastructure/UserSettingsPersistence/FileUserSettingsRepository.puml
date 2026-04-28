@@ -1,0 +1,16 @@
+@startuml
+class FileUserSettingsRepository {
+    - <<readonly>> _baseDirectory : string
+    - <<const>> DefaultSettingsFileName : string = "usersettings.json"
+    + FileUserSettingsRepository(baseDirectory:string)
+    + GetSettings(username:string) : UserSettings
+    + GetDefaultSettings() : UserSettings
+    + SetSettings(username:string, settings:UserSettings) : void
+    - InitializeDefaultSettings() : UserSettings
+    - LoadFromFile(filePath:string) : UserSettings?
+    + GetUserSettingsFilePath(username:string?) : string
+}
+IUserSettingsRepository <|-- FileUserSettingsRepository
+FileUserSettingsRepository --> "_defaultSettings" UserSettings
+FileUserSettingsRepository o-> "JsonOptions" JsonSerializerSettings
+@enduml

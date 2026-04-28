@@ -1,0 +1,24 @@
+@startuml
+class API <<unsafe>> <<partial>> {
+    + {static} <<extern>> windows_malloc(size:long) : void*
+    + {static} <<extern>> windows_realloc(ptr:void*, size:long) : void*
+    + {static} <<extern>> windows_free(ptr:void*) : void
+    + {static} <<extern>> windows__msize(ptr:void*) : int
+    + {static} <<extern>> windows_fopen(filename:string, mode:string) : IntPtr
+    + {static} <<extern>> windows_fread(buffer:void*, size:int, number:int, file:IntPtr) : int
+    + {static} <<extern>> windows_fwrite(buffer:void*, size:int, number:int, file:IntPtr) : int
+    + {static} <<extern>> windows_fclose(file:IntPtr) : int
+    + {static} <<extern>> windows_fseek(stream:IntPtr, offset:long, origin:int) : int
+    + {static} <<extern>> windows_ftell(stream:IntPtr) : long
+    + {static} <<extern>> linux_malloc(size:long) : void*
+    + {static} <<extern>> linux_realloc(ptr:void*, size:long) : void*
+    + {static} <<extern>> linux_free(ptr:void*) : void
+    + {static} <<extern>> linux__msize(ptr:void*) : int
+    + {static} <<extern>> linux_fopen(filename:string, mode:string) : IntPtr
+    + {static} <<extern>> linux_fread(ptr:void*, size:int, nmemb:int, file:IntPtr) : int
+    + {static} <<extern>> linux_fwrite(buffer:void*, size:int, number:int, file:IntPtr) : int
+    + {static} <<extern>> linux_fclose(file:IntPtr) : int
+    + {static} <<extern>> linux_fseek(stream:IntPtr, offset:long, origin:int) : int
+    + {static} <<extern>> linux_ftell(stream:IntPtr) : long
+}
+@enduml

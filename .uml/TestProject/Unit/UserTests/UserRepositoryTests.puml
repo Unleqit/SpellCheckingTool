@@ -1,0 +1,14 @@
+@startuml
+class UserRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserRepository
+    + AddUser_ShouldPersistUserAndLoadAgain() : void
+    + GetByUsername_ShouldFindUserCaseInsensitive() : void
+    + AddDuplicateUserId_ShouldThrowError() : void
+    + AddDuplicateUsername_ShouldThrowError() : void
+}
+UserRepositoryTests o-> "_paths" UserStorePaths
+UserRepositoryTests o-> "_serializer" FakeUserStoreJsonSerializer
+@enduml

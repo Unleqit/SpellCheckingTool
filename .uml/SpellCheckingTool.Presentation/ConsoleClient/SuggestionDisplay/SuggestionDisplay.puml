@@ -1,0 +1,30 @@
+@startuml
+class SuggestionDisplay {
+    - lastWordCompleted : bool
+    - shellPromptLine : int
+    - currentShellPromptLength : int
+    + SuggestionDisplay(settings:UserSettings)
+    + Initialize(shellPromptLength:int) : void
+    - InitDataStructures() : void
+    + ShowSuggestions(model:SuggestionViewModel) : void
+    + HideSuggestions() : void
+    + IsCurrentlyVisible() : bool
+    + SelectNextSuggestion() : void
+    + SelectPreviousSuggestion() : void
+    + CompleteCurrentlySelectedSuggestion() : Word
+    - ShowSuggestionsInternal(currentWord:Word, isCurrentWordInTree:bool, currentTypedWord:IndexedWord, suggestions:Word[]) : void
+    - EnsureEnoughVerticalSpaceInShell(requestedRows:int) : bool
+    - HandleLinebreak(currentTypedWord:IndexedWord) : void
+    - ReplaceWord(oldWord:IndexedWord, newWord:Word, foreColor:ConsoleColor, backColor:ConsoleColor) : void
+    + NextWord() : void
+    + PreviousWord() : void
+}
+class "List`1"<T> {
+}
+ISuggestionDisplay <|-- SuggestionDisplay
+SuggestionDisplay --> "allIndexedWords<IndexedWord>" "List`1"
+SuggestionDisplay --> "currentIndexedWord" IndexedWord
+SuggestionDisplay --> "settings" UserSettings
+SuggestionDisplay --> "popupWindow" PopupWindow
+SuggestionDisplay --> "consoleSizeChecker" ConsoleSizeChecker
+@enduml

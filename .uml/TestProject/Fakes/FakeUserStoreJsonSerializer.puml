@@ -1,0 +1,10 @@
+@startuml
+class FakeUserStoreJsonSerializer {
+    + ReadOrDefault(path:string, defaultValue:T) : T
+    + Write(path:string, data:T) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserStoreJsonSerializer <|-- FakeUserStoreJsonSerializer
+FakeUserStoreJsonSerializer o-> "_storage<string,object>" "Dictionary`2"
+@enduml

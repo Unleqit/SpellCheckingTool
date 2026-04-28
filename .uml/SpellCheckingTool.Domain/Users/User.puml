@@ -1,0 +1,10 @@
+@startuml
+class User {
+    + Username : string <<get>> = ""
+    + PasswordHash : string <<get>> = ""
+    - User()
+    + User(id:Guid, username:string, passwordHash:string, createdAt:DateTime)
+}
+User --> "Id" Guid
+User --> "CreatedAt" DateTime
+@enduml

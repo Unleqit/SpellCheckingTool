@@ -1,0 +1,6 @@
+@startuml
+class HttpDelete {
+    + HttpDelete(path:string)
+}
+HttpAttribute <|-- HttpDelete
+@enduml

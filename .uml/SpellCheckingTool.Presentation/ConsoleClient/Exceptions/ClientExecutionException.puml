@@ -1,0 +1,6 @@
+@startuml
+class ClientExecutionException <<sealed>> {
+    + ClientExecutionException(message:string, innerException:Exception)
+}
+Exception <|-- ClientExecutionException
+@enduml

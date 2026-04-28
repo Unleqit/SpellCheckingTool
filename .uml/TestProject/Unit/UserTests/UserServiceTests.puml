@@ -1,0 +1,24 @@
+@startuml
+class UserServiceTests {
+    + Setup() : void
+    + AddWord_ShouldDelegateToCustomDictionaryRepository() : void
+    + AddWord_ForUnknownUser_ShouldFail() : void
+    + AddWord_WithEmptyWord_ShouldFail() : void
+    + RemoveWord_ShouldDelegateToCustomDictionaryRepository() : void
+    + RemoveWord_ForUnknownUser_ShouldFail() : void
+    + RemoveWord_WithEmptyWord_ShouldFail() : void
+    + RemoveWord_WhenWordDoesNotExist_ShouldFail() : void
+    + TrackWordUsage_ShouldDelegateToWordStatsRepository() : void
+    + TrackWordUsage_ForUnknownUser_ShouldFail() : void
+    + TrackWordUsage_WithEmptyWord_ShouldFail() : void
+    + GetCustomWords_ShouldReturnWordsFromCustomDictionaryRepository() : void
+    + GetCustomWords_ForUnknownUser_ShouldFail() : void
+    + GetStats_ShouldReturnStatsFromWordStatsRepository() : void
+    + GetStats_ForUnknownUser_ShouldFail() : void
+}
+UserServiceTests o-> "_userRepository" FakeUserRepository
+UserServiceTests o-> "_wordStatsRepository" FakeUserWordStatsRepository
+UserServiceTests o-> "_customDictionaryRepository" FakeUserCustomDictionaryRepository
+UserServiceTests o-> "_settingsRepository" FakeUserSettingsRepository
+UserServiceTests o-> "_service" UserService
+@enduml

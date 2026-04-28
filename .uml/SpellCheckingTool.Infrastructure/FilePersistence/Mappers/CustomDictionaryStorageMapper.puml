@@ -1,0 +1,8 @@
+@startuml
+class CustomDictionaryStorageMapper {
+    + CustomDictionaryStorageMapper(alphabet:IAlphabet)
+    + ToDomain(storage:Dictionary<Guid, List<string>>) : Dictionary<Guid, HashSet<Word>>
+    + ToStorage(domain:Dictionary<Guid, HashSet<Word>>) : Dictionary<Guid, List<string>>
+}
+CustomDictionaryStorageMapper --> "_alphabet" IAlphabet
+@enduml

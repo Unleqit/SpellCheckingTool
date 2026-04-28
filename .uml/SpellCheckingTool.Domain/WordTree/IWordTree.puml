@@ -1,0 +1,8 @@
+@startuml
+interface IWordTree {
+    WordBufferLength : int <<get>>
+    WordCount : int <<get>>
+    Contains(word:Word) : bool
+}
+IWordTree --> "Alphabet" IAlphabet
+@enduml

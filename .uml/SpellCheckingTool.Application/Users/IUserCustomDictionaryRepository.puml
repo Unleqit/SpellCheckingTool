@@ -1,0 +1,7 @@
+@startuml
+interface IUserCustomDictionaryRepository {
+    AddWord(userId:Guid, word:string) : void
+    RemoveWord(userId:Guid, word:string) : bool
+    GetWords(userId:Guid) : IReadOnlyCollection<Word>
+}
+@enduml

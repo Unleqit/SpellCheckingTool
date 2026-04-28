@@ -1,0 +1,24 @@
+@startuml
+class FileUserCustomDictionaryRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserCustomDictionaryRepository
+    + AddCustomWord_ShouldPersistWordAndLoadAgain() : void
+    + AddCustomWord_ShouldNormalizeToLowercase() : void
+    + AddSameCustomWordTwice_ShouldNotDuplicateWord() : void
+    + RemoveCustomWord_ShouldDeleteWord() : void
+    + RemoveCustomWord_ShouldPersistDeletionAcrossReload() : void
+    + RemoveMissingCustomWord_ShouldReturnFalse() : void
+    + DifferentUsers_ShouldHaveIsolatedCustomDictionaries() : void
+    + AddCustomWord_ForUnknownUser_ShouldThrowError() : void
+    + RemoveCustomWord_ForUnknownUser_ShouldThrowError() : void
+    + AddInvalidCustomWord_ShouldThrowError() : void
+    + CreatingNewUser_ShouldInitializeEmptyDictionary() : void
+}
+FileUserCustomDictionaryRepositoryTests o-> "_alphabet" IAlphabet
+FileUserCustomDictionaryRepositoryTests o-> "_paths" UserStorePaths
+FileUserCustomDictionaryRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserCustomDictionaryRepositoryTests o-> "_writer" UserStoreJsonWriter
+FileUserCustomDictionaryRepositoryTests o-> "_userRepository" FakeUserRepository
+@enduml

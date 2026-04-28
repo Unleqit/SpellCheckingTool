@@ -1,0 +1,18 @@
+@startuml
+class WordTree {
+    + WordBufferLength : int <<get>>
+    + WordCount : int <<get>>
+    + WordTree(alphabet:IAlphabet?)
+    + Add(word:Word) : int
+    + Add(words:Word[]) : int
+    + Contains(word:string) : bool
+    + Contains(word:Word) : bool
+    + Remove(word:Word) : int
+    + Remove(words:Word[]) : int
+}
+IWordTree <|-- WordTree
+WordTree --> "rootNode" WordTreeNode
+WordTree --> "alphabet" IAlphabet
+WordTree --> "metaData" WordTreeMetadata
+WordTree --> "Alphabet" IAlphabet
+@enduml

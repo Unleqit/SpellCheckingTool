@@ -1,0 +1,6 @@
+@startuml
+class BackendResponseParseException <<sealed>> {
+    + BackendResponseParseException(operation:string, innerException:Exception)
+}
+Exception <|-- BackendResponseParseException
+@enduml

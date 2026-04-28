@@ -1,0 +1,9 @@
+@startuml
+class SuggestionUseCase {
+    + MaxSuggestions : int <<get>> <<set>>
+    + MaxDistance : int <<get>> <<set>>
+    + SuggestionUseCase(spellcheckService:ISpellcheckService)
+    + Execute(input:string) : SuggestionViewModel
+}
+SuggestionUseCase --> "_spellcheckService" ISpellcheckService
+@enduml

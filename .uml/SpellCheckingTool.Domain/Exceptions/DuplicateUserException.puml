@@ -1,0 +1,7 @@
+@startuml
+class DuplicateUserException <<sealed>> {
+    + DuplicateUserException(username:string)
+    + DuplicateUserException(userId:Guid)
+}
+SpellCheckingToolException <|-- DuplicateUserException
+@enduml

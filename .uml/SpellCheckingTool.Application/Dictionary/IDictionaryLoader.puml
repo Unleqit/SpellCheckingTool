@@ -1,0 +1,8 @@
+@startuml
+class DictionaryLoader {
+    + DictionaryLoader(persistenceService:IPersistenceService)
+    + Load(filepath:FilePath) : WordTree
+}
+IDictionaryLoader <|-- DictionaryLoader
+DictionaryLoader --> "persistenceService" IPersistenceService
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+interface IDistanceAlgorithm {
+    GetDistance(a:Word, b:Word) : int
+}
+@enduml

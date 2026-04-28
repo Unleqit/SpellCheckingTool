@@ -1,0 +1,13 @@
+@startuml
+class ShellProcessManager {
+    + CurrentShellOffset : int <<get>>
+    - <<const>> marker : string = "DONTPRINTTHIS"
+    + ShellProcessManager()
+    + Start() : void
+    - currentWorkingDir : string = ""
+    + SendInput(input:string) : void
+    - KeepTrackOfCurrentWorkingDir() : void
+    + GetCurrentConsolePrompt() : string
+}
+ShellProcessManager --> "_process" Process
+@enduml

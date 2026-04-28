@@ -1,0 +1,52 @@
+@startuml
+
+scale max 4096 width
+scale max 4096 height
+scale 2
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+
+skinparam defaultTextColor #ffffff
+skinparam class {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    AttributeFontColor #ffffff
+    MethodFontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam package {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam rectangle {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    StereotypeFontColor #ffffff
+}
+skinparam ArrowColor #ffffff
+skinparam ArrowFontColor #ffffff
+
+
+
+
+class SuggestionService <<unsafe>> {
+    - stackIndex : int
+    - wordBufferIndex : int
+    - alphabetLength : int
+    - worstDistanceValueInResults : int
+    + SuggestionService(tree:WordTree)
+    + GetSuggestionResult(input:string, maxAmountOfSuggestionsToBeReturned:int, 
+    maxAllowedDistance:int) : SuggestionResult
+}
+
+class FilePersistenceService <<unsafe>> {
+    + Save(tree:WordTree, filepath:FilePath) : bool
+    + Load(filepath:FilePath) : WordTree
+}
+
+@enduml

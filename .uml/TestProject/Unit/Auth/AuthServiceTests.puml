@@ -1,0 +1,19 @@
+@startuml
+class AuthServiceTests {
+    + Setup() : void
+    + Register_ShouldCreateUserSuccessfully() : void
+    + Register_ShouldTrimUsernameBeforeSaving() : void
+    + Register_WithEmptyUsername_ShouldFail() : void
+    + Register_WithWhitespaceUsername_ShouldFail() : void
+    + Register_WithEmptyPassword_ShouldFail() : void
+    + Register_WithWhitespacePassword_ShouldFail() : void
+    + Register_WithDuplicateUsername_ShouldFail() : void
+    + Register_ShouldInitializeDefaultSettings() : void
+    + Login_WithCorrectCredentials_ShouldReturnUser() : void
+    + Login_WithWrongPassword_ShouldFail() : void
+    + Login_WithUnknownUsername_ShouldFail() : void
+}
+AuthServiceTests o-> "_userRepository" FakeUserRepository
+AuthServiceTests o-> "_settingsRepository" FakeUserSettingsRepository
+AuthServiceTests o-> "_service" AuthService
+@enduml

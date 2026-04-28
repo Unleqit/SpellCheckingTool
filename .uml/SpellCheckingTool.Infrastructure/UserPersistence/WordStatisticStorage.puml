@@ -1,0 +1,7 @@
+@startuml
+class WordStatisticStorage {
+    + Word : string <<get>> <<set>> = ""
+    + UsageCount : int <<get>> <<set>>
+}
+WordStatisticStorage --> "LastUsedAt" DateTime
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+class FileUserWordStatsRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserWordStatsRepository
+    + IncrementWord_ShouldCreateAndIncreaseUsageStats() : void
+    + IncrementWord_ShouldPersistStatsAcrossReload() : void
+    + IncrementWord_ShouldNormalizeToLowercase() : void
+    + DifferentUsers_ShouldHaveIsolatedStats() : void
+    + IncrementWord_ForUnknownUser_ShouldThrowError() : void
+    + IncrementInvalidWord_ShouldThrowError() : void
+    + CreatingNewUser_ShouldInitializeEmptyStats() : void
+}
+FileUserWordStatsRepositoryTests o-> "_alphabet" IAlphabet
+FileUserWordStatsRepositoryTests o-> "_paths" UserStorePaths
+FileUserWordStatsRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserWordStatsRepositoryTests o-> "_writer" UserStoreJsonWriter
+FileUserWordStatsRepositoryTests o-> "_userRepository" FakeUserRepository
+@enduml

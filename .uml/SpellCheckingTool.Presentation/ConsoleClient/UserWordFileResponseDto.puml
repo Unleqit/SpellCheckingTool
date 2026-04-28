@@ -1,0 +1,8 @@
+@startuml
+class UserWordsFileResponseDto {
+}
+class "List`1"<T> {
+}
+UserWordsFileResponseDto --> "UserId" Guid
+UserWordsFileResponseDto o-> "Words<UserDictionaryWordDto>" "List`1"
+@enduml

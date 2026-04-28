@@ -1,0 +1,7 @@
+@startuml
+interface IAlphabet {
+    GetChars() : char[]
+    GetLength() : int
+    GetCharPositionInArray(c:char) : int
+}
+@enduml

@@ -1,0 +1,8 @@
+@startuml
+class HashServiceTests {
+    + Hash_ReturnsExpectedSHA256Hash() : void
+    + Hash_EmptyString_ReturnsCorrectHash() : void
+    + Hash_SameInput_ReturnsSameHash() : void
+    + Hash_DifferentInputs_ReturnDifferentHashes() : void
+}
+@enduml

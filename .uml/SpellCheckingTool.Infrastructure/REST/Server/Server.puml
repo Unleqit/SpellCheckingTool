@@ -1,0 +1,15 @@
+@startuml
+class Server {
+    - isRequestLoopRunning : bool
+    + IsStarted : bool <<get>>
+    + Server(controllers:BaseController[])
+    + Start(port:int) : void
+    + Stop() : void
+    + Use(middleware:Middleware) : void
+    - HandleRequests() : void
+}
+Server --> "listener" HttpListener
+Server --> "middlewares" MiddlewarePipeline
+Server --> "router" Router
+Server --> "requestThread" Thread
+@enduml

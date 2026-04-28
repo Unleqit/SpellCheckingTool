@@ -1,0 +1,1105 @@
+@startuml
+class Program {
+    {static} - Main(args:string[]) : void
+    - {static} PrintLicense() : void
+    - {static} ParsePortFromArgs(args:string[]) : int?
+    - {static} GetFreePort() : int
+    - {static} SetupShutdownHandling() : CancellationTokenSource
+    - {static} BuildApplication() : (UserService, AuthService, IUserSpellcheckContextFactory)
+}
+class AuthService {
+    + AuthService(userRepository:IUserRepository, settingsRepository:IUserSettingsRepository)
+    + Register(username:string, password:string) : OperationResult<User>
+    + Login(username:string, password:string) : OperationResult<User>
+}
+AuthService --> "_userRepository" IUserRepository
+AuthService --> "_settingsRepository" IUserSettingsRepository
+class HashService {
+    + {static} Hash(password:string) : string
+}
+class LoginResponseDto {
+    + Username : string <<get>> <<set>> = ""
+}
+LoginResponseDto --> "UserId" Guid
+class "OperationResult`1"<T> {
+    + Success : bool <<get>>
+    + ErrorMessage : string? <<get>>
+    - OperationResult(success:bool, value:T?, error:string?)
+    + {static} Ok(value:T) : OperationResult<T>
+    + {static} Fail(error:string) : OperationResult<T>
+}
+"OperationResult`1" --> "Value" T
+interface IDictionaryLoader {
+    Load(filepath:FilePath) : WordTree
+}
+interface IDefaultDictionaryProvider {
+    LoadDefaultDictionary() : WordTree
+}
+class DictionaryLoader {
+    + DictionaryLoader(persistenceService:IPersistenceService)
+    + Load(filepath:FilePath) : WordTree
+}
+IDictionaryLoader <|-- DictionaryLoader
+DictionaryLoader --> "persistenceService" IPersistenceService
+class FilePath {
+    + Path : string <<get>>
+    + FilePath(filepath:string)
+}
+interface IPersistenceService {
+    Save(tree:WordTree, filepath:FilePath) : bool
+    Load(filepath:FilePath) : WordTree
+}
+class WordTreeDto {
+}
+interface IFileOpener {
+    Open(filePath:string) : void
+}
+interface IUserSettingsRepository {
+    GetSettings(username:string) : UserSettings
+    GetDefaultSettings() : UserSettings
+    SetSettings(username:string, settings:UserSettings) : void
+    GetUserSettingsFilePath(username:string?) : string
+}
+class UserSettings {
+    + MaxSuggestions : int <<get>> <<set>>
+    + MaxDistance : int <<get>> <<set>>
+    + HorizontalPadding : int <<get>> <<set>>
+    + MaxDisplayedStats : int <<get>> <<set>>
+    + EnableCapitalizationInInput : bool <<get>> <<set>>
+    + AdjustCapitalizationInSuggestions : bool <<get>> <<set>>
+}
+UserSettings --> "ValidWordForeColor" ConsoleColor
+UserSettings --> "ValidWordBackColor" ConsoleColor
+UserSettings --> "InvalidWordForeColor" ConsoleColor
+UserSettings --> "InvalidWordBackColor" ConsoleColor
+UserSettings --> "SuggestionForeColor" ConsoleColor
+UserSettings --> "SuggestionBackColor" ConsoleColor
+UserSettings --> "SelectedSuggestionForeColor" ConsoleColor
+UserSettings --> "SelectedSuggestionBackColor" ConsoleColor
+UserSettings --> "Default" UserSettings
+interface ISpellcheckService {
+    IsCorrect(word:Word) : bool
+    GetSuggestions(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+ISpellcheckService --> "Alphabet" IAlphabet
+interface IUserSpellcheckContextFactory {
+    CreateAnonymous() : UserSpellcheckContext
+    CreateForUser(userId:Guid, username:string) : UserSpellcheckContext
+}
+class SpellcheckService {
+    + SpellcheckService(tree:WordTree, suggestionService:ISuggestionService, inputAlphabet:IAlphabet)
+    + IsCorrect(word:Word) : bool
+    + GetSuggestions(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+ISpellcheckService <|-- SpellcheckService
+SpellcheckService --> "tree" WordTree
+SpellcheckService --> "suggestionService" ISuggestionService
+SpellcheckService --> "inputAlphabet" IAlphabet
+SpellcheckService --> "Alphabet" IAlphabet
+class UserSpellcheckContext <<sealed>> {
+    + Username : string? <<get>>
+    + IsAuthenticated : bool <<get>>
+    + UserSpellcheckContext(userId:Guid?, username:string?, tree:WordTree, spellcheckService:ISpellcheckService, settings:UserSettings, settingsRepository:IUserSettingsRepository)
+}
+UserSpellcheckContext --> "UserId" Guid
+UserSpellcheckContext --> "Tree" WordTree
+UserSpellcheckContext --> "SpellcheckService" ISpellcheckService
+UserSpellcheckContext --> "Settings" UserSettings
+UserSpellcheckContext --> "SettingsRepository" IUserSettingsRepository
+class UserSpellcheckContextFactory {
+    + UserSpellcheckContextFactory(treeBuilder:UserWordTreeBuilder, userService:UserService, settingsRepository:IUserSettingsRepository, inputAlphabet:IAlphabet)
+    + CreateAnonymous() : UserSpellcheckContext
+    + CreateForUser(userId:Guid, username:string) : UserSpellcheckContext
+    - {static} BuildSpellcheckService(tree:WordTree, inputAlphabet:IAlphabet, userService:UserService, guid:Guid?) : SpellcheckService
+}
+IUserSpellcheckContextFactory <|-- UserSpellcheckContextFactory
+UserSpellcheckContextFactory --> "_treeBuilder" UserWordTreeBuilder
+UserSpellcheckContextFactory --> "_userService" UserService
+UserSpellcheckContextFactory --> "_inputAlphabet" IAlphabet
+UserSpellcheckContextFactory --> "_settingsRepository" IUserSettingsRepository
+class UserWordTreeBuilder {
+    + UserWordTreeBuilder(defaultDictionaryProvider:IDefaultDictionaryProvider, userService:UserService)
+    + BuildAnonymousTree() : WordTree
+    + BuildUserTree(userId:Guid) : WordTree
+}
+UserWordTreeBuilder --> "_defaultDictionaryProvider" IDefaultDictionaryProvider
+UserWordTreeBuilder --> "_userService" UserService
+class SuggestionResult {
+    - <<readonly>> suggestionCount : int
+    - <<readonly>> totalMatchCount : int
+    + SuggestionResult(results:Word[], suggestionCount:int, totalMatchCount:int)
+    + GetSuggestionCount() : int
+    + GetTotalMatchCount() : int
+    + GetSuggestionArray() : Word[]
+}
+class SuggestionUseCase {
+    + MaxSuggestions : int <<get>> <<set>>
+    + MaxDistance : int <<get>> <<set>>
+    + SuggestionUseCase(spellcheckService:ISpellcheckService)
+    + Execute(input:string) : SuggestionViewModel
+}
+SuggestionUseCase --> "_spellcheckService" ISpellcheckService
+class SuggestionViewModel {
+    + IsCorrect : bool <<get>>
+    + SuggestionViewModel(currentWord:Word, isCorrect:bool, suggestions:IReadOnlyList<Word>, startIndex:int)
+}
+class "IReadOnlyList`1"<T> {
+}
+SuggestionViewModel --> "CurrentWord" Word
+SuggestionViewModel --> "Suggestions<Word>" "IReadOnlyList`1"
+interface IUserCustomDictionaryRepository {
+    AddWord(userId:Guid, word:string) : void
+    RemoveWord(userId:Guid, word:string) : bool
+    GetWords(userId:Guid) : IReadOnlyCollection<Word>
+}
+interface IUserRepository {
+    GetById(id:Guid) : User?
+    GetByUsername(username:string) : User?
+    Add(user:User) : void
+}
+interface IUserWordStatsRepository {
+    IncrementWord(userId:Guid, word:string) : void
+    GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+}
+class UserService {
+    + UserService(userRepo:IUserRepository, wordStatsRepo:IUserWordStatsRepository, customDictionaryRepo:IUserCustomDictionaryRepository, settingsRepository:IUserSettingsRepository)
+    + AddWord(userId:Guid, word:string) : OperationResult<bool>
+    + RemoveWord(userId:Guid, word:string) : OperationResult<bool>
+    + TrackWordUsage(userId:Guid, word:string) : OperationResult<bool>
+    + GetCustomWords(userId:Guid) : OperationResult<IReadOnlyCollection<Word>>
+    + GetStats(userId:Guid) : OperationResult<IReadOnlyCollection<WordStatistic>>
+}
+UserService --> "_userRepo" IUserRepository
+UserService --> "_wordStatsRepo" IUserWordStatsRepository
+UserService --> "_customDictionaryRepo" IUserCustomDictionaryRepository
+UserService --> "_settingsRepository" IUserSettingsRepository
+abstract class BaseAlphabet {
+    # length : int
+    + BaseAlphabet(chars:char[])
+    + <<virtual>> GetChars() : char[]
+    + <<virtual>> GetLength() : int
+    + {abstract} GetCharPositionInArray(c:char) : int
+    + {static} <<unsafe>> Serialize(alphabet:IAlphabet) : byte[]
+    + {static} <<unsafe>> Deserialize(serializedAlphabet:byte[]) : CustomAlphabet
+}
+IAlphabet <|-- BaseAlphabet
+class CustomAlphabet {
+    + CustomAlphabet(chars:char[])
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+BaseAlphabet <|-- CustomAlphabet
+class ExecutableNameAlphabet {
+    + ExecutableNameAlphabet()
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+CustomAlphabet <|-- ExecutableNameAlphabet
+interface IAlphabet {
+    GetChars() : char[]
+    GetLength() : int
+    GetCharPositionInArray(c:char) : int
+}
+class LatinAlphabet {
+    + LatinAlphabet()
+    + <<override>> GetCharPositionInArray(c:char) : int
+}
+BaseAlphabet <|-- LatinAlphabet
+class UTF16Alphabet {
+    + UTF16Alphabet()
+    + GetCharPositionInArray(c:char) : int
+    + GetChars() : char[]
+    + GetLength() : int
+}
+IAlphabet <|-- UTF16Alphabet
+UTF16Alphabet --> "internalAlphabet" CustomAlphabet
+class DuplicateAlphabetCharacterException <<sealed>> {
+    + DuplicateAlphabetCharacterException()
+    + DuplicateAlphabetCharacterException(duplicateChar:char)
+}
+SpellCheckingToolException <|-- DuplicateAlphabetCharacterException
+class DuplicateUserException <<sealed>> {
+    + DuplicateUserException(username:string)
+    + DuplicateUserException(userId:Guid)
+}
+SpellCheckingToolException <|-- DuplicateUserException
+class InvalidWordRangeException <<sealed>> {
+    + InvalidWordRangeException(message:string)
+}
+SpellCheckingToolException <|-- InvalidWordRangeException
+class InvalidSerializedAlphabetException <<sealed>> {
+    + InvalidSerializedAlphabetException()
+    + InvalidSerializedAlphabetException(message:string)
+}
+SpellCheckingToolException <|-- InvalidSerializedAlphabetException
+class InvalidWordCharacterException <<sealed>> {
+    + InvalidWordCharacterException()
+    + InvalidWordCharacterException(word:string)
+}
+SpellCheckingToolException <|-- InvalidWordCharacterException
+class InvalidWordException <<sealed>> {
+    + InvalidWordException(message:string)
+    + InvalidWordException(message:string, innerException:Exception)
+}
+SpellCheckingToolException <|-- InvalidWordException
+class PersonalDictionaryWordNotFoundException <<sealed>> {
+    + PersonalDictionaryWordNotFoundException(word:string)
+}
+SpellCheckingToolException <|-- PersonalDictionaryWordNotFoundException
+abstract class SpellCheckingToolException {
+    # SpellCheckingToolException(message:string)
+    # SpellCheckingToolException(message:string, innerException:Exception)
+}
+Exception <|-- SpellCheckingToolException
+class UserNotFoundDomainException <<sealed>> {
+    + UserNotFoundDomainException(userId:Guid)
+    + UserNotFoundDomainException(username:string)
+}
+SpellCheckingToolException <|-- UserNotFoundDomainException
+class User {
+    + Username : string <<get>> = ""
+    + PasswordHash : string <<get>> = ""
+    - User()
+    + User(id:Guid, username:string, passwordHash:string, createdAt:DateTime)
+}
+User --> "Id" Guid
+User --> "CreatedAt" DateTime
+class WordInfo {
+    + Key : string <<get>>
+    + WordInfo(key:string, statistic:WordStatistic)
+}
+WordInfo --> "Statistic" WordStatistic
+class WordStatistic {
+    + UsageCount : int <<get>>
+    - WordStatistic()
+    + WordStatistic(word:Word)
+    + WordStatistic(word:Word, usageCount:int, lastUsedAt:DateTime)
+    + Increment() : void
+}
+WordStatistic --> "Word" Word
+WordStatistic --> "LastUsedAt" DateTime
+interface IWordTree {
+    WordBufferLength : int <<get>>
+    WordCount : int <<get>>
+    Contains(word:Word) : bool
+}
+IWordTree --> "Alphabet" IAlphabet
+class LeftToRightWordTreeTraversal {
+    + LeftToRightWordTreeTraversal(tree:WordTree)
+    + WalkTree(onEachWord:Action<Word>) : void
+}
+LeftToRightWordTreeTraversal --> "tree" WordTree
+class Word {
+    - originalFormatting : string
+    + Word(alphabet:IAlphabet, word:IEnumerable<char>, offset:int, length:int)
+    - CheckValidity(alphabet:IAlphabet, word:char[]) : void
+    - GetLowerCaseArray(word:IEnumerable<char>, offset:int, length:int) : char[]
+    + Length : int <<get>>
+    + <<override>> ToString() : string
+    + GetOriginalWordFormat() : string
+    + {static} ParseWords(alphabet:IAlphabet, rawWords:string[]) : Word[]
+    + <<override>> Equals(obj:object?) : bool
+    + <<override>> GetHashCode() : int
+}
+Word --> "Empty" Word
+class WordTree {
+    + WordBufferLength : int <<get>>
+    + WordCount : int <<get>>
+    + WordTree(alphabet:IAlphabet?)
+    + Add(word:Word) : int
+    + Add(words:Word[]) : int
+    + Contains(word:string) : bool
+    + Contains(word:Word) : bool
+    + Remove(word:Word) : int
+    + Remove(words:Word[]) : int
+}
+IWordTree <|-- WordTree
+WordTree --> "rootNode" WordTreeNode
+WordTree --> "alphabet" IAlphabet
+WordTree --> "metaData" WordTreeMetadata
+WordTree --> "Alphabet" IAlphabet
+class WordTreeMetadata {
+    - _wordCount : int
+    - _nodeCount : int
+    - _serializationLength : int
+    - _wordBufferLength : int
+    + WordTreeMetadata(wordCount:int, nodeCount:int, serializationLength:int, wordBufferLength:int)
+    + wordCount : int <<get>> <<set>>
+    + nodeCount : int <<get>> <<set>>
+    + serializationLength : int <<get>> <<set>>
+    + wordBufferLength : int <<get>> <<set>>
+}
+class WordTreeNode {
+    + IsWord : bool <<get>> <<set>>
+    + reserved : int
+    + WordTreeNode(parent:WordTreeNode, length:int, isWord:bool)
+}
+WordTreeNode --> "parentNode" WordTreeNode
+class DefaultDictionaryLoader {
+    + DefaultDictionaryLoader(loader:IDictionaryLoader)
+    + LoadDefaultDictionary() : WordTree
+}
+IDefaultDictionaryProvider <|-- DefaultDictionaryLoader
+DefaultDictionaryLoader --> "loader" IDictionaryLoader
+abstract class ExecutableParser {
+    + {abstract} GetAllShellExecutables() : WordTree
+    # InvokeShellCommand(shellName:string, arguments:string, workingDir:string) : List<string>
+}
+IExecutableParser <|-- ExecutableParser
+interface IExecutableParser {
+    + GetAllShellExecutables() : WordTree
+}
+class LinuxExecutableParser {
+    + <<override>> GetAllShellExecutables() : WordTree
+}
+ExecutableParser <|-- LinuxExecutableParser
+class WindowsExecutableParser {
+    + <<override>> GetAllShellExecutables() : WordTree
+}
+ExecutableParser <|-- WindowsExecutableParser
+class FilePersistenceService {
+    + Save(tree:WordTree, filepath:FilePath) : bool
+    + Load(filepath:FilePath) : WordTree
+}
+IPersistenceService <|-- FilePersistenceService
+class UserStoreJsonReader {
+    + ReadOrDefault(path:string, defaultValue:T) : T
+}
+class UserStoreJsonWriter {
+    + Write(path:string, data:T) : void
+}
+class UserStorePaths {
+    + UsersFilePath : string <<get>>
+    + WordStatsFilePath : string <<get>>
+    + CustomDictionaryFilePath : string <<get>>
+    + UserStorePaths(baseDirectory:string)
+}
+class WordStatisticStorage {
+    + Word : string <<get>> <<set>> = ""
+    + UsageCount : int <<get>> <<set>>
+}
+WordStatisticStorage --> "LastUsedAt" DateTime
+class FileOpener {
+    + Open(filePath:string) : void
+}
+IFileOpener <|-- FileOpener
+class FileUserSettingsRepository {
+    - <<readonly>> _baseDirectory : string
+    - <<const>> DefaultSettingsFileName : string = "usersettings.json"
+    + FileUserSettingsRepository(baseDirectory:string)
+    + GetSettings(username:string) : UserSettings
+    + GetDefaultSettings() : UserSettings
+    + SetSettings(username:string, settings:UserSettings) : void
+    - InitializeDefaultSettings() : UserSettings
+    - LoadFromFile(filePath:string) : UserSettings?
+    + GetUserSettingsFilePath(username:string?) : string
+}
+IUserSettingsRepository <|-- FileUserSettingsRepository
+FileUserSettingsRepository --> "_defaultSettings" UserSettings
+FileUserSettingsRepository o-> "JsonOptions" JsonSerializerSettings
+class AuthSession {
+    + Username : string <<get>> <<set>> = ""
+    + IsAuthenticated : bool <<get>> <<set>>
+}
+AuthSession --> "UserId" Guid
+class ConsoleSpellChecker1 {
+    - <<const>> WelcomeMessage : string = "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /logout, /shutdown"
+    + ConsoleSpellChecker1(context:UserSpellcheckContext, processManager:ShellProcessManager, suggestionDisplay:ISuggestionDisplay, clientUserService:ClientUserService, spellcheckContextFactory:IUserSpellcheckContextFactory, token:CancellationTokenSource, fileOpener:IFileOpener)
+    - UpdateSuggestions(input:string) : void
+    - RefreshSuggestionUseCase() : void
+    + <<async>> Run() : Task
+    - handleChararacterInput(input:string, c:char) : string
+    - handleDeletion(input:string) : string
+    - handleSpace(input:string) : string
+    - <<async>> handleEnter(input:string) : Task<string>
+    - handleCompletion(input:string) : string
+    - handleSend(input:string) : string
+    - RefreshSpellcheckState() : void
+    - CreateSuggestionUseCase(defaultService:ISpellcheckService, executableService:ISpellcheckService) : SuggestionUseCase
+    - <<async>> TrackLastCompletedWordOnSpace(input:string) : Task
+    - <<async>> TrackFinalWordOnEnter(input:string) : Task
+    - <<async>> TrackSingleWord(token:string) : Task
+}
+ConsoleSpellChecker1 --> "_processManager" ShellProcessManager
+ConsoleSpellChecker1 --> "_context" UserSpellcheckContext
+ConsoleSpellChecker1 --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleSpellChecker1 --> "_clientUserService" ClientUserService
+ConsoleSpellChecker1 --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleSpellChecker1 --> "_commandHandler" ConsoleUserCommandHandler
+ConsoleSpellChecker1 --> "_fileOpener" IFileOpener
+ConsoleSpellChecker1 --> "_token" CancellationTokenSource
+ConsoleSpellChecker1 --> "_suggestionUseCase" SuggestionUseCase
+ConsoleSpellChecker1 --> "_settings" UserSettings
+class Client {
+    + {static} StartClient(port:int, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, token:CancellationToken) : void
+    - {static} StartProcessManager() : ShellProcessManager
+    - {static} StartSpellChecker(context:UserSpellcheckContext, authService:ClientAuthService, processManager:ShellProcessManager, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, token:CancellationToken) : void
+}
+class ClientAuthService {
+    - <<readonly>> _backendUrl : string
+    + ClientAuthService(backendUrl:string)
+    + RunAuthenticationFlow() : AuthSession?
+    + AddWord(userId:Guid, word:string) : bool
+    + DeleteWord(userId:Guid, word:string) : bool
+    + TrackWordUsage(userId:Guid, word:string) : bool
+    - HandleAuth(username:string, isRegister:bool) : AuthSession?
+    - ReadPassword() : string
+    + GetWords(userId:Guid) : IReadOnlyList<UserDictionaryWordDto>
+    + GetStats(userId:Guid) : IReadOnlyList<UserWordStatDto>
+    - Post(relativeUrl:string, payload:object) : bool
+}
+ClientAuthService --> "_httpClient" HttpClient
+class ClientRunner <<static>> {
+    + {static} Start(port:int, factory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, cts:CancellationTokenSource) : Thread
+}
+class ConsoleSpellChecker {
+    - <<const>> WelcomeMessage : string = "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats"
+    + ConsoleSpellChecker(context:UserSpellcheckContext, suggestionUseCase:SuggestionUseCase, processManager:ShellProcessManager, suggestionWindow:ISuggestionDisplay, authService:ClientAuthService, spellcheckContextFactory:IUserSpellcheckContextFactory, token:CancellationToken, settings:UserSettings, fileOpener:IFileOpener)
+    - UpdateSuggestions(input:string) : void
+    + Run() : void
+    - RefreshSpellcheckState() : void
+    - {static} CreateSuggestionUseCase(spellcheckService:ISpellcheckService) : SuggestionUseCase
+    - TrackLastCompletedWordOnSpace(input:string) : void
+    - TrackFinalWordOnEnter(input:string) : void
+    - TrackSingleWord(token:string) : void
+}
+ConsoleSpellChecker --> "_processManager" ShellProcessManager
+ConsoleSpellChecker --> "_context" UserSpellcheckContext
+ConsoleSpellChecker --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleSpellChecker --> "_authService" ClientAuthService
+ConsoleSpellChecker --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleSpellChecker --> "_commandHandler" ConsoleUserCommandHandler
+ConsoleSpellChecker --> "_fileOpener" IFileOpener
+ConsoleSpellChecker --> "_token" CancellationToken
+ConsoleSpellChecker --> "_settings" UserSettings
+ConsoleSpellChecker --> "_suggestionUseCase" SuggestionUseCase
+class ConsoleSizeChecker {
+    <<const>> - consoleWindowTooSmallErrorMessage : string = "Please resize the console window to fit the suggestion buffer."
+    - consoleTooSmallErrorMessageDisplayed : bool
+    - errorMessageStartLeft : int
+    - errorMessageStartTop : int
+    + ShowConsoleTooSmallError() : void
+    + HideConsoleTooSmallError() : void
+    + IsConsoleWindowTooSmall(suggestionWindowHeight:int) : bool
+    + IsErrorMessageDisplayed() : bool
+}
+class ConsoleUserCommandHandler {
+    + ConsoleUserCommandHandler(context:UserSpellcheckContext, suggestionDisplay:ISuggestionDisplay, authService:ClientAuthService, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener)
+    + TryHandleCommand(input:string) : bool
+    - HandleWordsCommandWrapper(command:string, input:string) : void
+    - HandleStatsCommandWrapper(command:string, input:string) : void
+    - HandleSettingsCommandWrapper(command:string, input:string) : void
+    - HandleAddWordCommand(command:string, input:string) : void
+    - HandleDeleteWordCommand(command:string, input:string) : void
+    - HandleWordsCommand(input:string) : void
+    - HandleStatsCommand(input:string) : void
+    - RebuildActiveTreeAfterDictionaryChange() : void
+    - ResetInput(input:string) : void
+    - HandleSettingsCommand(input:string) : void
+    - {static} GetFirstToken(input:string) : string
+}
+class "Dictionary`2"<T1,T2> {
+}
+ConsoleUserCommandHandler --> "_context" UserSpellcheckContext
+ConsoleUserCommandHandler --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleUserCommandHandler --> "_authService" ClientAuthService
+ConsoleUserCommandHandler --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleUserCommandHandler --> "_fileOpener" IFileOpener
+ConsoleUserCommandHandler --> "_commandHandlers<string,CommandHandler>" "Dictionary`2"
+class ShellProcessManager {
+    + CurrentShellOffset : int <<get>>
+    - <<const>> marker : string = "DONTPRINTTHIS"
+    + ShellProcessManager()
+    + Start() : void
+    - currentWorkingDir : string = ""
+    + SendInput(input:string) : void
+    - KeepTrackOfCurrentWorkingDir() : void
+    + GetCurrentConsolePrompt() : string
+}
+ShellProcessManager --> "_process" Process
+class SuccessResponseDto {
+    + Success : bool <<get>> <<set>>
+}
+class UserDictionaryWordDto {
+    + Word : string <<get>> <<set>> = ""
+}
+class UserStatsResponseDto {
+}
+class "List`1"<T> {
+}
+UserStatsResponseDto --> "UserId" Guid
+UserStatsResponseDto o-> "Stats<UserWordStatDto>" "List`1"
+class UserWordsFileResponseDto {
+}
+class "List`1"<T> {
+}
+UserWordsFileResponseDto --> "UserId" Guid
+UserWordsFileResponseDto o-> "Words<UserDictionaryWordDto>" "List`1"
+class UserWordStatDto {
+    + Word : string <<get>> <<set>>
+    + UsageCount : int <<get>> <<set>>
+}
+UserWordStatDto --> "LastUsedAt" DateTime
+class CleanArchitectureTests {
+    - <<const>> DomainNamespace : string = "SpellCheckingTool.Domain"
+    - <<const>> ApplicationNamespace : string = "SpellCheckingTool.Application"
+    - <<const>> InfrastructureNamespace : string = "SpellCheckingTool.Infrastructure"
+    - <<const>> PresentationNamespace : string = "SpellCheckingTool.Presentation"
+    - {static} AssertArchitecture(result:NetArchTestResult) : void
+    + Domain_must_not_depend_on_Application_Infrastructure_or_Presentation() : void
+    + Application_must_not_depend_on_Infrastructure_or_Presentation() : void
+    + Infrastructure_must_not_depend_on_Presentation() : void
+    + Presentation_must_not_depend_on_Infrastructure_except_composition_root() : void
+}
+class FakeUserCustomDictionaryRepository {
+    + AddCustomWordCallCount : int <<get>>
+    + RemoveCustomWordCallCount : int <<get>>
+    + LastAddedCustomWord : string? <<get>>
+    + LastRemovedCustomWord : string? <<get>>
+    + FakeUserCustomDictionaryRepository(alphabet:IAlphabet)
+    - Normalize(word:string) : string?
+    - NormalizeAndValidateWord(word:string) : Word?
+    + AddWord(userId:Guid, word:string) : void
+    + RemoveWord(userId:Guid, word:string) : bool
+    + GetWords(userId:Guid) : IReadOnlyCollection<Word>
+    + SeedCustomWord(userId:Guid, word:string) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserCustomDictionaryRepository <|-- FakeUserCustomDictionaryRepository
+FakeUserCustomDictionaryRepository --> "_alphabet" IAlphabet
+FakeUserCustomDictionaryRepository o-> "_customWords<Guid,HashSet<Word>>" "Dictionary`2"
+FakeUserCustomDictionaryRepository --> "LastAddedCustomUserId" Guid
+FakeUserCustomDictionaryRepository --> "LastRemovedCustomUserId" Guid
+class FakeUserRepository {
+    + GetById(id:Guid) : User?
+    + GetByUsername(username:string) : User?
+    + Add(user:User) : void
+    + Seed(user:User) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserRepository <|-- FakeUserRepository
+FakeUserRepository o-> "_usersById<Guid,User>" "Dictionary`2"
+FakeUserRepository o-> "_usersByName<string,User>" "Dictionary`2"
+class FakeUserSettingsRepository {
+    + SetSettingsCallCount : int <<get>>
+    + LastSetUsername : string? <<get>>
+    + GetSettings(username:string) : UserSettings
+    + GetDefaultSettings() : UserSettings
+    + SetSettings(username:string, settings:UserSettings) : void
+    + GetUserSettingsFilePath(username:string?) : string
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserSettingsRepository <|-- FakeUserSettingsRepository
+FakeUserSettingsRepository o-> "_settings<string,UserSettings>" "Dictionary`2"
+FakeUserSettingsRepository --> "LastSetSettings" UserSettings
+class FakeUserWordStatsRepository {
+    + IncrementWordCallCount : int <<get>>
+    + LastIncrementWord : string? <<get>>
+    + FakeUserWordStatsRepository(alphabet:IAlphabet)
+    - Normalize(word:string) : string?
+    + IncrementWord(userId:Guid, word:string) : void
+    + GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+    + SeedStat(userId:Guid, word:string, count:int) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserWordStatsRepository <|-- FakeUserWordStatsRepository
+FakeUserWordStatsRepository --> "_alphabet" IAlphabet
+FakeUserWordStatsRepository o-> "_stats<Guid,Dictionary<string, WordStatistic>>" "Dictionary`2"
+FakeUserWordStatsRepository --> "LastIncrementUserId" Guid
+class ServerIntegrationTests {
+    + CheckIfServerIsResponding_ShouldReturn200() : void
+}
+class Resources {
+    <<internal>> Resources()
+}
+class AlphabetTests {
+    + CreateLatinAlphabet_ShouldSucceed() : void
+    + GetIndexOfCharHInLatinAlphabet_ShouldReturn7() : void
+    + CreateCustomAlphabet_ShouldSucceed() : void
+    + GetIndexOfCharHInCustomAlphabet_ShouldReturn7() : void
+    + GetIndexOfCharÜInCustomAlphabet_ShouldReturn28() : void
+    + CreateAlphabetWithDuplicateCharactersInArray_ShouldThrowError() : void
+    + SerializeAndDeserializeAlphabet_ShouldSucceed() : void
+}
+class HashServiceTests {
+    + Hash_ReturnsExpectedSHA256Hash() : void
+    + Hash_EmptyString_ReturnsCorrectHash() : void
+    + Hash_SameInput_ReturnsSameHash() : void
+    + Hash_DifferentInputs_ReturnDifferentHashes() : void
+}
+class DistanceAlgorithmTests {
+    + LevenshteinDistanceMatchingResizeWordTree_ShouldNotThrow() : void
+    + LevenshteinDistanceMatchingMatchSameWord_ShouldReturnZero() : void
+    + LevenshteinDistanceMatchingMatchTestAndText_ShouldReturnOne() : void
+    + LevenshteinDistanceMatchingMatchInterestingAndImplementation_ShouldReturnNine() : void
+}
+class ExecutableTests {
+    + GetExecutableSuggestionsOnCurrentPlatform_ShouldContainApplicationsInstalledOnSystem() : void
+}
+class PersistenceServiceTests {
+    + SetupTests() : void
+    + SerializeAndDeserializeWordTree_ShouldSucceed() : void
+    + CreateWordFilePathWithInvalidPath_ShouldThrowException() : void
+    + CreateWordFilePathInDirectory_ShouldThrowException() : void
+    + SaveToNonJsonFile_ShouldThrowException() : void
+    + DeserializeNonExistantFile_ShouldThrowException() : void
+    + DeserializeTreeFromNonJsonFile_ShouldThrowException() : void
+}
+PersistenceServiceTests o-> "tree" WordTree
+class SuggestionTests {
+    + SetupTests() : void
+    + GetTwentySuggestionsOfAllDistancesForTreeWithTenElements_ShouldReturnTenSuggestions() : void
+    + GetFiveSuggestionsInLargeTreeForContain_ShouldReturnFiveAndContainFirst() : void
+    + GetHundredSuggestionsInLargeTreeForContain_ShouldReturnAtMostTwenty() : void
+    + GetSuggestionsTwice_ShouldYieldSameResult() : void
+    + GetSuggestionsOfWordNotContainedInTreeWithMaxDistanceParameterZero_ShouldReturnZeroSuggestions() : void
+    + GetSuggestionForWordContainingDifferentAlphabet_ShouldReturnNoSuggestions() : void
+    + GetSuggestionsOfWordContainedInTreeWithMaxDistanceParameterZero_ShouldReturnOnlyExactMatch() : void
+}
+SuggestionTests o-> "tree" WordTree
+class WordTreeTests {
+    + CreateNewWordTree_ShouldInitialize() : void
+    + ParseValidWord_ShouldCreateWord() : void
+    + ParseInvalidWord_ShouldFail() : void
+    + ParseMultipleWords_ShouldSucceed() : void
+    + ParseMultipleWordsIncludingInvalidWords_ShouldOnlyReturnArrayOfValidWords() : void
+    + AddWordToTree_ShouldReturnSuccessCount() : void
+    + AddWordAlreadyContainedInTree_ShouldNotAddWord() : void
+    + SearchWordContainedInTree_ShouldReturnTrue() : void
+    + SearchWordNotContainedInTree_ShouldReturnFalse() : void
+    + RemoveWordContainedInTree_ShouldRemoveWordAndReturnSuccess() : void
+    + RemoveWordNotContainedInTree_ShouldReturnZero() : void
+    + RemoveShorterWord_ShouldKeepLongerWordAndOnlyRemoveShorterOne() : void
+    + RemoveLongerWord_ShouldKeepShorterWordAndOnlyRemoveLongerOne() : void
+    + ParseProductionSizedWordTreeFromStringArray_ShouldTakeLessThanTwoSecondsToComplete() : void
+}
+class DirectoryPathProvidedException <<sealed>> {
+    + DirectoryPathProvidedException(path:string)
+}
+Exception <|-- DirectoryPathProvidedException
+class InvalidFilePathException <<sealed>> {
+    + InvalidFilePathException(path:string)
+}
+Exception <|-- InvalidFilePathException
+interface IDistanceAlgorithm {
+    GetDistance(a:Word, b:Word) : int
+}
+class LevenshteinDistanceAlgorithm {
+    + LevenshteinDistanceAlgorithm()
+    + GetDistance(wordA:Word, wordB:Word) : int
+}
+IDistanceAlgorithm <|-- LevenshteinDistanceAlgorithm
+interface ISuggestionService {
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+class StatisticSuggestionService {
+    - lastNDays : int
+    + StatisticSuggestionService(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm, userService:UserService, guid:Guid, lastNDays:int)
+    # <<override>> Prewalk() : void
+    - GetNormalizedDistance(input:Word, otherWord:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+    - GetNormalizedLastUsedMetric(input:Word, lastNDays:int) : double
+    - GetNormalizedMostUsedMetric(input:Word, lastNDays:int) : double
+    # <<override>> ComputeNormalizedDistance(input:Word, otherWord:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+}
+class "IEnumerable`1"<T> {
+}
+SuggestionServiceBase <|-- StatisticSuggestionService
+StatisticSuggestionService --> "userService" UserService
+StatisticSuggestionService --> "currentStats<WordStatistic>" "IEnumerable`1"
+StatisticSuggestionService --> "guid" Guid
+class SuggestionService {
+    + SuggestionService(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm)
+    # <<override>> ComputeNormalizedDistance(input:Word, word:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+}
+SuggestionServiceBase <|-- SuggestionService
+abstract class SuggestionServiceBase {
+    + SuggestionServiceBase(tree:WordTree, distanceAlgorithm:IDistanceAlgorithm)
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+    # {abstract} ComputeNormalizedDistance(input:Word, current:Word, distanceAlgorithm:IDistanceAlgorithm, maxAllowedDistance:int) : double
+    # <<virtual>> Prewalk() : void
+    - SortMatches(results:MatchResult[], matchesCount:int) : void
+}
+class MatchResult {
+    - <<readonly>> distance : double
+    + MatchResult(matchWord:Word, distance:double)
+    + GetMatchedWord() : Word
+    + GetMatchDistance() : double
+    + <<override>> ToString() : string
+}
+ISuggestionService <|-- SuggestionServiceBase
+SuggestionServiceBase --> "distanceAlgorithm" IDistanceAlgorithm
+SuggestionServiceBase --> "traversal" LeftToRightWordTreeTraversal
+SuggestionServiceBase +-- MatchResult
+MatchResult --> "matchWord" Word
+class DefaultDictionaryNotFoundException <<sealed>> {
+    + DefaultDictionaryNotFoundException(path:string)
+}
+FileNotFoundException <|-- DefaultDictionaryNotFoundException
+abstract class PersistenceException {
+    # PersistenceException(message:string)
+    # PersistenceException(message:string, innerException:Exception)
+}
+Exception <|-- PersistenceException
+class TreeNotSpecifiedException <<sealed>> {
+    + TreeNotSpecifiedException()
+}
+PersistenceException <|-- TreeNotSpecifiedException
+class UnsupportedFileFormatException <<sealed>> {
+    + UnsupportedFileFormatException(path:string)
+}
+Exception <|-- UnsupportedFileFormatException
+class WordTreeDeserializationException <<sealed>> {
+    + WordTreeDeserializationException(path:string)
+}
+Exception <|-- WordTreeDeserializationException
+class CustomDictionaryStorageMapper {
+    + CustomDictionaryStorageMapper(alphabet:IAlphabet)
+    + ToDomain(storage:Dictionary<Guid, List<string>>) : Dictionary<Guid, HashSet<Word>>
+    + ToStorage(domain:Dictionary<Guid, HashSet<Word>>) : Dictionary<Guid, List<string>>
+}
+CustomDictionaryStorageMapper --> "_alphabet" IAlphabet
+class WordStatisticStorageMapper {
+    + WordStatisticStorageMapper(alphabet:IAlphabet)
+    + ToDomain(storage:Dictionary<Guid, Dictionary<string, WordStatisticStorage>>) : Dictionary<Guid, Dictionary<string, WordInfo>>
+    + ToStorage(domain:Dictionary<Guid, Dictionary<string, WordInfo>>) : Dictionary<Guid, Dictionary<string, WordStatisticStorage>>
+}
+WordStatisticStorageMapper --> "_alphabet" IAlphabet
+class FileUserCustomDictionaryRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserCustomDictionaryRepository(paths:UserStorePaths, alphabet:IAlphabet, userRepository:IUserRepository, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + AddWord(userId:Guid, word:string) : void
+    + RemoveWord(userId:Guid, word:string) : bool
+    + GetWords(userId:Guid) : IReadOnlyCollection<Word>
+    - Save() : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserCustomDictionaryRepository <|-- FileUserCustomDictionaryRepository
+FileUserCustomDictionaryRepository --> "_alphabet" IAlphabet
+FileUserCustomDictionaryRepository --> "_userRepository" IUserRepository
+FileUserCustomDictionaryRepository --> "_reader" UserStoreJsonReader
+FileUserCustomDictionaryRepository --> "_writer" UserStoreJsonWriter
+FileUserCustomDictionaryRepository --> "_mapper" CustomDictionaryStorageMapper
+FileUserCustomDictionaryRepository --> "_userCustomDictionary<Guid,HashSet<Word>>" "Dictionary`2"
+class FileUserRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserRepository(paths:UserStorePaths, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + GetById(id:Guid) : User?
+    + GetByUsername(username:string) : User?
+    + Add(user:User) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserRepository <|-- FileUserRepository
+FileUserRepository --> "_reader" UserStoreJsonReader
+FileUserRepository --> "_writer" UserStoreJsonWriter
+FileUserRepository --> "_users<Guid,User>" "Dictionary`2"
+class FileUserWordStatsRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserWordStatsRepository(paths:UserStorePaths, alphabet:IAlphabet, userRepository:IUserRepository, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + IncrementWord(userId:Guid, word:string) : void
+    + GetWordStats(userId:Guid) : IReadOnlyCollection<WordStatistic>
+    - Save() : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserWordStatsRepository <|-- FileUserWordStatsRepository
+FileUserWordStatsRepository --> "_alphabet" IAlphabet
+FileUserWordStatsRepository --> "_userRepository" IUserRepository
+FileUserWordStatsRepository --> "_reader" UserStoreJsonReader
+FileUserWordStatsRepository --> "_writer" UserStoreJsonWriter
+FileUserWordStatsRepository --> "_mapper" WordStatisticStorageMapper
+FileUserWordStatsRepository --> "_userWordStats<Guid,Dictionary<string, WordInfo>>" "Dictionary`2"
+class AuthController {
+    + AuthController(service:AuthService)
+    + Register(context:HttpListenerContext, username:string, password:string) : void
+    + Login(context:HttpListenerContext, username:string, password:string) : void
+}
+BaseController <|-- AuthController
+AuthController --> "_service" AuthService
+abstract class BaseController {
+    # WriteJson(context:HttpListenerContext, statusCode:int, payload:object) : void
+    # WriteError(context:HttpListenerContext, statusCode:int, message:string) : void
+}
+class HealthController {
+    + Healthcheck(context:HttpListenerContext) : void
+}
+BaseController <|-- HealthController
+class UserController {
+    + UserController(service:UserService)
+    + AddWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + DeleteWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + TrackWordUsage(context:HttpListenerContext, userId:Guid, word:string) : void
+    + GetWordsFile(context:HttpListenerContext, userId:Guid) : void
+    + GetStats(context:HttpListenerContext, userId:Guid) : void
+}
+BaseController <|-- UserController
+UserController --> "_service" UserService
+class Router {
+    + TryGetRoute(method:string, path:string) : Action<HttpListenerContext>?
+    + RegisterController(controller:BaseController) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+Router o-> "Routes<(string Method, string Path),Action<HttpListenerContext>>" "Dictionary`2"
+class Server {
+    - isRequestLoopRunning : bool
+    + IsStarted : bool <<get>>
+    + Server(controllers:BaseController[])
+    + Start(port:int) : void
+    + Stop() : void
+    + Use(middleware:Middleware) : void
+    - HandleRequests() : void
+}
+Server --> "listener" HttpListener
+Server --> "middlewares" MiddlewarePipeline
+Server --> "router" Router
+Server --> "requestThread" Thread
+class ServerFactory <<static>> {
+    + {static} Create(userService:UserService, authService:AuthService) : Server
+}
+class DefaultUserSettingsReadException <<sealed>> {
+    + DefaultUserSettingsReadException(innerException:Exception)
+}
+Exception <|-- DefaultUserSettingsReadException
+class UserSettingsReadException <<sealed>> {
+    + UserSettingsReadException(username:string, innerException:Exception)
+}
+Exception <|-- UserSettingsReadException
+class UserSettingsWriteException <<sealed>> {
+    + UserSettingsWriteException(username:string, innerException:Exception)
+}
+Exception <|-- UserSettingsWriteException
+class BackendConnectionException <<sealed>> {
+    + BackendConnectionException(message:string, innerException:Exception)
+}
+Exception <|-- BackendConnectionException
+class BackendResponseParseException <<sealed>> {
+    + BackendResponseParseException(operation:string, innerException:Exception)
+}
+Exception <|-- BackendResponseParseException
+class ClientExecutionException <<sealed>> {
+    + ClientExecutionException(message:string, innerException:Exception)
+}
+Exception <|-- ClientExecutionException
+struct IndexedWord {
+    + startIndex : int
+    + line : int
+    + whiteSpaceAtEnd : int
+    + offset : int
+    + IndexedWord(startIndex:int, line:int, word:Word)
+}
+IndexedWord --> "word" Word
+interface ISuggestionDisplay {
+    ShowSuggestions(model:SuggestionViewModel) : void
+    HideSuggestions() : void
+    CompleteCurrentlySelectedSuggestion() : Word
+    SelectPreviousSuggestion() : void
+    SelectNextSuggestion() : void
+    IsCurrentlyVisible() : bool
+    NextWord() : void
+    PreviousWord() : void
+    Initialize(shellPromptLength:int) : void
+}
+enum PopupWindowDisplayState {
+    SUCCESS= 0,
+    NOT_ENOUGH_VERTICAL_SPACE= 1,
+    NOT_ENOUGH_HORIZONTAL_SPACE= 2,
+}
+class PopupWindow {
+    - selectedLine : int
+    - isShown : bool
+    + PopupWindow(settings:UserSettings)
+    + GetPosition() : PopupWindowCoords
+    + SetPosition(position:PopupWindowCoords) : PopupWindowCoords
+    + GetSelectedItem() : Word
+    + GetSelectedLine() : int
+    + IsShown() : bool
+    - HasEnoughHorizontalSpaceAtNewPosition(newPosition:PopupWindowCoords) : PopupWindowDisplayState
+    - HasEnoughVerticalSpaceAtNewPosition(newPosition:PopupWindowCoords) : PopupWindowDisplayState
+    + Show(input:Word, suggestions:Word[]) : PopupWindowDisplayState
+    + Show(input:Word, suggestions:Word[], popupWindowCoords:PopupWindowCoords) : PopupWindowDisplayState
+    - WriteSuggestionLine(input:Word, suggestion:Word, suggestionPopupWindowWidth:int) : void
+    - AdjustSuggestionToRespectCapitalizationSetting(input:Word, suggestion:Word) : string
+    + Hide() : void
+    + SelectNext() : void
+    + SelectPrevious() : void
+    + SetSelectedLine(line:int) : int
+}
+PopupWindow --> "settings" UserSettings
+PopupWindow --> "position" PopupWindowCoords
+PopupWindow --> "oldBC" ConsoleColor
+PopupWindow --> "oldFC" ConsoleColor
+PopupWindow --> "currentInput" Word
+struct PopupWindowCoords {
+    + left : int
+    + top : int
+    + width : int
+    + height : int
+}
+class SuggestionDisplay {
+    - lastWordCompleted : bool
+    - shellPromptLine : int
+    - currentShellPromptLength : int
+    + SuggestionDisplay(settings:UserSettings)
+    + Initialize(shellPromptLength:int) : void
+    - InitDataStructures() : void
+    + ShowSuggestions(model:SuggestionViewModel) : void
+    + HideSuggestions() : void
+    + IsCurrentlyVisible() : bool
+    + SelectNextSuggestion() : void
+    + SelectPreviousSuggestion() : void
+    + CompleteCurrentlySelectedSuggestion() : Word
+    - ShowSuggestionsInternal(currentWord:Word, isCurrentWordInTree:bool, currentTypedWord:IndexedWord, suggestions:Word[]) : void
+    - EnsureEnoughVerticalSpaceInShell(requestedRows:int) : bool
+    - HandleLinebreak(currentTypedWord:IndexedWord) : void
+    - ReplaceWord(oldWord:IndexedWord, newWord:Word, foreColor:ConsoleColor, backColor:ConsoleColor) : void
+    + NextWord() : void
+    + PreviousWord() : void
+}
+class "List`1"<T> {
+}
+ISuggestionDisplay <|-- SuggestionDisplay
+SuggestionDisplay --> "allIndexedWords<IndexedWord>" "List`1"
+SuggestionDisplay --> "currentIndexedWord" IndexedWord
+SuggestionDisplay --> "settings" UserSettings
+SuggestionDisplay --> "popupWindow" PopupWindow
+SuggestionDisplay --> "consoleSizeChecker" ConsoleSizeChecker
+class AuthServiceTests {
+    + Setup() : void
+    + Register_ShouldCreateUserSuccessfully() : void
+    + Register_ShouldTrimUsernameBeforeSaving() : void
+    + Register_WithEmptyUsername_ShouldFail() : void
+    + Register_WithWhitespaceUsername_ShouldFail() : void
+    + Register_WithEmptyPassword_ShouldFail() : void
+    + Register_WithWhitespacePassword_ShouldFail() : void
+    + Register_WithDuplicateUsername_ShouldFail() : void
+    + Register_ShouldInitializeDefaultSettings() : void
+    + Login_WithCorrectCredentials_ShouldReturnUser() : void
+    + Login_WithWrongPassword_ShouldFail() : void
+    + Login_WithUnknownUsername_ShouldFail() : void
+}
+AuthServiceTests o-> "_userRepository" FakeUserRepository
+AuthServiceTests o-> "_settingsRepository" FakeUserSettingsRepository
+AuthServiceTests o-> "_service" AuthService
+class FileUserCustomDictionaryRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserCustomDictionaryRepository
+    + AddCustomWord_ShouldPersistWordAndLoadAgain() : void
+    + AddCustomWord_ShouldNormalizeToLowercase() : void
+    + AddSameCustomWordTwice_ShouldNotDuplicateWord() : void
+    + RemoveCustomWord_ShouldDeleteWord() : void
+    + RemoveCustomWord_ShouldPersistDeletionAcrossReload() : void
+    + RemoveMissingCustomWord_ShouldReturnFalse() : void
+    + DifferentUsers_ShouldHaveIsolatedCustomDictionaries() : void
+    + AddCustomWord_ForUnknownUser_ShouldThrowError() : void
+    + RemoveCustomWord_ForUnknownUser_ShouldThrowError() : void
+    + AddInvalidCustomWord_ShouldThrowError() : void
+    + CreatingNewUser_ShouldInitializeEmptyDictionary() : void
+}
+FileUserCustomDictionaryRepositoryTests o-> "_alphabet" IAlphabet
+FileUserCustomDictionaryRepositoryTests o-> "_paths" UserStorePaths
+FileUserCustomDictionaryRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserCustomDictionaryRepositoryTests o-> "_writer" UserStoreJsonWriter
+FileUserCustomDictionaryRepositoryTests o-> "_userRepository" FakeUserRepository
+class FileUserRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserRepository
+    + AddUser_ShouldPersistUserAndLoadAgain() : void
+    + GetByUsername_ShouldFindUserCaseInsensitive() : void
+    + AddDuplicateUserId_ShouldThrowError() : void
+    + AddDuplicateUsername_ShouldThrowError() : void
+}
+FileUserRepositoryTests o-> "_paths" UserStorePaths
+FileUserRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserRepositoryTests o-> "_writer" UserStoreJsonWriter
+class FileUserWordStatsRepositoryTests {
+    - _testDirectory : string
+    + Setup() : void
+    + Cleanup() : void
+    - CreateRepository() : IUserWordStatsRepository
+    + IncrementWord_ShouldCreateAndIncreaseUsageStats() : void
+    + IncrementWord_ShouldPersistStatsAcrossReload() : void
+    + IncrementWord_ShouldNormalizeToLowercase() : void
+    + DifferentUsers_ShouldHaveIsolatedStats() : void
+    + IncrementWord_ForUnknownUser_ShouldThrowError() : void
+    + IncrementInvalidWord_ShouldThrowError() : void
+    + CreatingNewUser_ShouldInitializeEmptyStats() : void
+}
+FileUserWordStatsRepositoryTests o-> "_alphabet" IAlphabet
+FileUserWordStatsRepositoryTests o-> "_paths" UserStorePaths
+FileUserWordStatsRepositoryTests o-> "_reader" UserStoreJsonReader
+FileUserWordStatsRepositoryTests o-> "_writer" UserStoreJsonWriter
+FileUserWordStatsRepositoryTests o-> "_userRepository" FakeUserRepository
+class UserServiceTests {
+    + Setup() : void
+    + AddWord_ShouldDelegateToCustomDictionaryRepository() : void
+    + AddWord_ForUnknownUser_ShouldFail() : void
+    + AddWord_WithEmptyWord_ShouldFail() : void
+    + RemoveWord_ShouldDelegateToCustomDictionaryRepository() : void
+    + RemoveWord_ForUnknownUser_ShouldFail() : void
+    + RemoveWord_WithEmptyWord_ShouldFail() : void
+    + RemoveWord_WhenWordDoesNotExist_ShouldFail() : void
+    + TrackWordUsage_ShouldDelegateToWordStatsRepository() : void
+    + TrackWordUsage_ForUnknownUser_ShouldFail() : void
+    + TrackWordUsage_WithEmptyWord_ShouldFail() : void
+    + GetCustomWords_ShouldReturnWordsFromCustomDictionaryRepository() : void
+    + GetCustomWords_ForUnknownUser_ShouldFail() : void
+    + GetStats_ShouldReturnStatsFromWordStatsRepository() : void
+    + GetStats_ForUnknownUser_ShouldFail() : void
+}
+UserServiceTests o-> "_userRepository" FakeUserRepository
+UserServiceTests o-> "_wordStatsRepository" FakeUserWordStatsRepository
+UserServiceTests o-> "_customDictionaryRepository" FakeUserCustomDictionaryRepository
+UserServiceTests o-> "_settingsRepository" FakeUserSettingsRepository
+UserServiceTests o-> "_service" UserService
+class ServerRequestLoopException <<sealed>> {
+    + ServerRequestLoopException(message:string, innerException:Exception)
+}
+Exception <|-- ServerRequestLoopException
+class ServerShutdownException <<sealed>> {
+    + ServerShutdownException(message:string, innerException:Exception)
+}
+Exception <|-- ServerShutdownException
+class FromBodyAttribute {
+}
+Attribute <|-- FromBodyAttribute
+abstract class HttpAttribute {
+    + Path : string <<get>>
+    + Method : string <<get>>
+    # HttpAttribute(method:string, path:string)
+}
+Attribute <|-- HttpAttribute
+class HttpDelete {
+    + HttpDelete(path:string)
+}
+HttpAttribute <|-- HttpDelete
+class HttpGet {
+    + HttpGet(path:string)
+}
+HttpAttribute <|-- HttpGet
+class HttpPost {
+    + HttpPost(path:string)
+}
+HttpAttribute <|-- HttpPost
+class HttpPut {
+    + HttpPut(path:string)
+}
+HttpAttribute <|-- HttpPut
+class MiddlewarePipeline {
+    + Use(middleware:Middleware) : void
+    + Execute(context:HttpListenerContext, endpoint:Action) : void
+}
+class "List`1"<T> {
+}
+MiddlewarePipeline o-> "Middlewares<Middleware>" "List`1"
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+class FileOpener {
+    + Open(filePath:string) : void
+}
+IFileOpener <|-- FileOpener
+@enduml

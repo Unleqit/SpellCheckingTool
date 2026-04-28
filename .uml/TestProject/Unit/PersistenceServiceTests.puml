@@ -1,0 +1,12 @@
+@startuml
+class PersistenceServiceTests {
+    + SetupTests() : void
+    + SerializeAndDeserializeWordTree_ShouldSucceed() : void
+    + CreateWordFilePathWithInvalidPath_ShouldThrowException() : void
+    + CreateWordFilePathInDirectory_ShouldThrowException() : void
+    + SaveToNonJsonFile_ShouldThrowException() : void
+    + DeserializeNonExistantFile_ShouldThrowException() : void
+    + DeserializeTreeFromNonJsonFile_ShouldThrowException() : void
+}
+PersistenceServiceTests o-> "tree" WordTree
+@enduml

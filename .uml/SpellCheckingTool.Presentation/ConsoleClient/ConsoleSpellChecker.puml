@@ -1,0 +1,23 @@
+@startuml
+class ConsoleSpellChecker {
+    - <<const>> WelcomeMessage : string = "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats"
+    + ConsoleSpellChecker(context:UserSpellcheckContext, suggestionUseCase:SuggestionUseCase, processManager:ShellProcessManager, suggestionWindow:ISuggestionDisplay, authService:ClientAuthService, spellcheckContextFactory:IUserSpellcheckContextFactory, token:CancellationToken, settings:UserSettings, fileOpener:IFileOpener)
+    - UpdateSuggestions(input:string) : void
+    + Run() : void
+    - RefreshSpellcheckState() : void
+    - {static} CreateSuggestionUseCase(spellcheckService:ISpellcheckService) : SuggestionUseCase
+    - TrackLastCompletedWordOnSpace(input:string) : void
+    - TrackFinalWordOnEnter(input:string) : void
+    - TrackSingleWord(token:string) : void
+}
+ConsoleSpellChecker --> "_processManager" ShellProcessManager
+ConsoleSpellChecker --> "_context" UserSpellcheckContext
+ConsoleSpellChecker --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleSpellChecker --> "_authService" ClientAuthService
+ConsoleSpellChecker --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleSpellChecker --> "_commandHandler" ConsoleUserCommandHandler
+ConsoleSpellChecker --> "_fileOpener" IFileOpener
+ConsoleSpellChecker --> "_token" CancellationToken
+ConsoleSpellChecker --> "_settings" UserSettings
+ConsoleSpellChecker --> "_suggestionUseCase" SuggestionUseCase
+@enduml

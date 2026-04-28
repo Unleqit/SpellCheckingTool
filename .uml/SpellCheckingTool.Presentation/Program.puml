@@ -1,0 +1,10 @@
+@startuml
+class Program {
+    {static} - Main(args:string[]) : void
+    - {static} PrintLicense() : void
+    - {static} ParsePortFromArgs(args:string[]) : int?
+    - {static} GetFreePort() : int
+    - {static} SetupShutdownHandling() : CancellationTokenSource
+    - {static} BuildApplication() : (UserService, AuthService, IUserSpellcheckContextFactory)
+}
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+class WordTreeDeserializationException <<sealed>> {
+    + WordTreeDeserializationException(path:string)
+}
+Exception <|-- WordTreeDeserializationException
+@enduml

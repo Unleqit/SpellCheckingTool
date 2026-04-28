@@ -1,0 +1,24 @@
+@startuml
+class WordTree {
+    +  <<event>> wordTreeWordBufferLengthChangedEventHandler : WordTreeWordBufferLengthChangedEventHandler? 
+    + WordTree(alphabet:IAlphabet)
+    + WordTree(alphabet:IAlphabet, persistenceService:IPersistenceService)
+    + WordTree(alphabet:IAlphabet, persistenceService:IPersistenceService, distanceAlgorithm:IDistanceAlgorithm)
+    - Initialize(alphabet:IAlphabet, persistenceService:IPersistenceService, algorithm:IDistanceAlgorithm?) : void
+    + Add(word:Word) : int
+    + Add(words:Word[]) : int
+    + Contains(word:string) : bool
+    + Contains(word:Word) : bool
+    + Remove(word:Word) : int
+    + Remove(words:Word[]) : int
+    + Serialize(filepath:FilePath) : bool
+    + Deserialize(filepath:FilePath) : WordTree
+    + GetSuggestions(input:string, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+WordTree --> "rootNode" WordTreeNode
+WordTree --> "alphabet" IAlphabet
+WordTree --> "metaData" WordTreeMetaInfo
+WordTree --> "persistenceService" IPersistenceService
+WordTree --> "DistanceAlgorithm" IDistanceAlgorithm
+WordTree --> "SuggestionService" ISuggestionService
+@enduml

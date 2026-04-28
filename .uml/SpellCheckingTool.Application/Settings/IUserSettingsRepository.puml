@@ -1,0 +1,8 @@
+@startuml
+interface IUserSettingsRepository {
+    GetSettings(username:string) : UserSettings
+    GetDefaultSettings() : UserSettings
+    SetSettings(username:string, settings:UserSettings) : void
+    GetUserSettingsFilePath(username:string?) : string
+}
+@enduml

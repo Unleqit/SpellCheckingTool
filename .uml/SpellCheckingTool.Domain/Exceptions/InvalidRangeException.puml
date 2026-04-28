@@ -1,0 +1,6 @@
+@startuml
+class InvalidWordRangeException <<sealed>> {
+    + InvalidWordRangeException(message:string)
+}
+SpellCheckingToolException <|-- InvalidWordRangeException
+@enduml

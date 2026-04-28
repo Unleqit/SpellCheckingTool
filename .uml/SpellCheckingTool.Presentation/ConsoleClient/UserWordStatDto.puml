@@ -1,0 +1,7 @@
+@startuml
+class UserWordStatDto {
+    + Word : string <<get>> <<set>>
+    + UsageCount : int <<get>> <<set>>
+}
+UserWordStatDto --> "LastUsedAt" DateTime
+@enduml

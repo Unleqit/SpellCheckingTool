@@ -1,0 +1,5 @@
+@startuml
+interface ISuggestionService {
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+class MiddlewarePipeline {
+    + Use(middleware:Middleware) : void
+    + Execute(context:HttpListenerContext, endpoint:Action) : void
+}
+class "List`1"<T> {
+}
+MiddlewarePipeline o-> "Middlewares<Middleware>" "List`1"
+@enduml

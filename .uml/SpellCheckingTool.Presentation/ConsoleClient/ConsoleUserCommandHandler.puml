@@ -1,0 +1,25 @@
+@startuml
+class ConsoleUserCommandHandler {
+    + ConsoleUserCommandHandler(context:UserSpellcheckContext, suggestionDisplay:ISuggestionDisplay, authService:ClientAuthService, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener)
+    + TryHandleCommand(input:string) : bool
+    - HandleWordsCommandWrapper(command:string, input:string) : void
+    - HandleStatsCommandWrapper(command:string, input:string) : void
+    - HandleSettingsCommandWrapper(command:string, input:string) : void
+    - HandleAddWordCommand(command:string, input:string) : void
+    - HandleDeleteWordCommand(command:string, input:string) : void
+    - HandleWordsCommand(input:string) : void
+    - HandleStatsCommand(input:string) : void
+    - RebuildActiveTreeAfterDictionaryChange() : void
+    - ResetInput(input:string) : void
+    - HandleSettingsCommand(input:string) : void
+    - {static} GetFirstToken(input:string) : string
+}
+class "Dictionary`2"<T1,T2> {
+}
+ConsoleUserCommandHandler --> "_context" UserSpellcheckContext
+ConsoleUserCommandHandler --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleUserCommandHandler --> "_authService" ClientAuthService
+ConsoleUserCommandHandler --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleUserCommandHandler --> "_fileOpener" IFileOpener
+ConsoleUserCommandHandler --> "_commandHandlers<string,CommandHandler>" "Dictionary`2"
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+class WordTreeMetadata {
+    - _wordCount : int
+    - _nodeCount : int
+    - _serializationLength : int
+    - _wordBufferLength : int
+    + WordTreeMetadata(wordCount:int, nodeCount:int, serializationLength:int, wordBufferLength:int)
+    + wordCount : int <<get>> <<set>>
+    + nodeCount : int <<get>> <<set>>
+    + serializationLength : int <<get>> <<set>>
+    + wordBufferLength : int <<get>> <<set>>
+}
+@enduml

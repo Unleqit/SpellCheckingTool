@@ -1,0 +1,7 @@
+@startuml
+interface ISpellcheckService {
+    IsCorrect(word:Word) : bool
+    GetSuggestions(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+ISpellcheckService --> "Alphabet" IAlphabet
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+class UTF16Alphabet {
+    + UTF16Alphabet()
+    + GetCharPositionInArray(c:char) : int
+    + GetChars() : char[]
+    + GetLength() : int
+}
+IAlphabet <|-- UTF16Alphabet
+UTF16Alphabet --> "internalAlphabet" CustomAlphabet
+@enduml

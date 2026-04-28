@@ -1,0 +1,7 @@
+@startuml
+abstract class SpellCheckingToolException {
+    # SpellCheckingToolException(message:string)
+    # SpellCheckingToolException(message:string, innerException:Exception)
+}
+Exception <|-- SpellCheckingToolException
+@enduml

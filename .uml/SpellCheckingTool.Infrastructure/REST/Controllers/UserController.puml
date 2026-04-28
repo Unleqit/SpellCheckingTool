@@ -1,0 +1,12 @@
+@startuml
+class UserController {
+    + UserController(service:UserService)
+    + AddWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + DeleteWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + TrackWordUsage(context:HttpListenerContext, userId:Guid, word:string) : void
+    + GetWordsFile(context:HttpListenerContext, userId:Guid) : void
+    + GetStats(context:HttpListenerContext, userId:Guid) : void
+}
+BaseController <|-- UserController
+UserController --> "_service" UserService
+@enduml

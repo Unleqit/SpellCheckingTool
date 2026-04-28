@@ -1,0 +1,7 @@
+@startuml
+class InvalidSerializedAlphabetException <<sealed>> {
+    + InvalidSerializedAlphabetException()
+    + InvalidSerializedAlphabetException(message:string)
+}
+SpellCheckingToolException <|-- InvalidSerializedAlphabetException
+@enduml

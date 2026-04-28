@@ -1,0 +1,5 @@
+@startuml
+class ServerFactory <<static>> {
+    + {static} Create(userService:UserService) : Server
+}
+@enduml

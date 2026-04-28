@@ -1,0 +1,5 @@
+@startuml
+class HealthController <<static>> {
+    + {static} Healthcheck(context:HttpListenerContext) : void
+}
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+class Word {
+    - word : string
+    + Word(alphabet:IAlphabet, word:string)
+    + Length : int <<get>>
+    + <<override>> ToString() : string
+    + {static} ParseWords(alphabet:IAlphabet, rawWords:string[]) : Word[]
+}
+@enduml

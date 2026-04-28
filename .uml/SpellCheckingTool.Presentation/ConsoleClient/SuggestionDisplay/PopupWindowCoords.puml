@@ -1,0 +1,8 @@
+@startuml
+struct PopupWindowCoords {
+    + left : int
+    + top : int
+    + width : int
+    + height : int
+}
+@enduml

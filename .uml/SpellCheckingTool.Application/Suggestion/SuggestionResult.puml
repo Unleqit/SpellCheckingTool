@@ -1,0 +1,10 @@
+@startuml
+class SuggestionResult {
+    - <<readonly>> suggestionCount : int
+    - <<readonly>> totalMatchCount : int
+    + SuggestionResult(results:Word[], suggestionCount:int, totalMatchCount:int)
+    + GetSuggestionCount() : int
+    + GetTotalMatchCount() : int
+    + GetSuggestionArray() : Word[]
+}
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+class LeftToRightWordTreeTraversal {
+    + LeftToRightWordTreeTraversal(tree:WordTree)
+    + WalkTree(onEachWord:Action<Word>) : void
+}
+LeftToRightWordTreeTraversal --> "tree" WordTree
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+class WordInfo {
+    + Key : string <<get>>
+    + WordInfo(key:string, statistic:WordStatistic)
+}
+WordInfo --> "Statistic" WordStatistic
+@enduml

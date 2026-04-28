@@ -1,0 +1,5 @@
+@startuml
+class UserStoreJsonReader {
+    + ReadOrDefault(path:string, defaultValue:T) : T
+}
+@enduml

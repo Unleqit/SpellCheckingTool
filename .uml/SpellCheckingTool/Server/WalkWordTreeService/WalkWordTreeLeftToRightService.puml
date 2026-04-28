@@ -1,0 +1,8 @@
+@startuml
+class WalkWordTreeLeftToRightService <<unsafe>> {
+    + WalkWordTreeLeftToRightService(tree:WordTree)
+    + <<unsafe>> <<override>> WalkTree(onEachWord:Action<long, int>) : void
+}
+WalkWordTreeService <|-- WalkWordTreeLeftToRightService
+IDisposable <|-- WalkWordTreeLeftToRightService
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+class ServerIntegrationTests {
+    + CheckIfServerIsResponding_ShouldReturn200() : void
+}
+@enduml

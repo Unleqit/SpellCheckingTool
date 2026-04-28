@@ -1,0 +1,108 @@
+@startuml
+
+scale max 4096 width
+scale max 4096 height
+scale 2
+
+skinparam backgroundColor transparent
+skinparam shadowing false
+
+skinparam defaultTextColor #ffffff
+skinparam class {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+    AttributeFontColor #ffffff
+    MethodFontColor #ffffff
+}
+skinparam package {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+}
+skinparam rectangle {
+    BackgroundColor transparent
+    BorderColor #ffffff
+    FontColor #ffffff
+}
+skinparam ArrowColor #ffffff
+skinparam ArrowFontColor #ffffff
+
+
+
+rectangle "Domain" {
+interface IDistanceAlgorithm {
+    GetDistance(a:Word, b:Word) : int
+}
+interface ISuggestionService {
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+}
+interface IWordStorage {
+    + Add(word:Word) : int
+    + Add(words:Word[]) : int
+    + Contains(word:Word) : bool
+    + Remove(word:Word) : int
+    + Remove(words:Word[]) : int
+    + GetWordCount() : int
+    + GetAlphabet() : IAlphabet
+    + Traverse(onEachWord:Action<Word>) : void
+}
+class LevenshteinDistanceAlgorithm {
+    + LevenshteinDistanceAlgorithm()
+    + GetDistance(wordA:Word, wordB:Word) : int
+}
+IDistanceAlgorithm <|-- LevenshteinDistanceAlgorithm
+}
+
+
+rectangle "Application" {
+abstract class SuggestionServiceBase {
+    # SuggestionServiceBase(wordStorage:IWordStorage)
+    + GetSuggestionResult(input:Word, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+    - SortMatches(results:MatchResult[], matchesCount:int) : void
+    # {abstract} OnPreWalk() : void
+    # {abstract} ComputeScore(inputWord:Word, otherWord:Word, maxAllowedDistance:int) : double
+}
+
+ISuggestionService <|-- SuggestionServiceBase
+SuggestionServiceBase --> "wordStorage" IWordStorage
+
+class SuggestionService {
+    + SuggestionService(wordStorage:IWordStorage, distanceAlgorithm:IDistanceAlgorithm)
+    # <<override>> ComputeScore(inputWord:Word, otherWord:Word, maxAllowedDistance:int) : double
+    # <<override>> OnPreWalk() : void
+}
+SuggestionServiceBase <|-- SuggestionService
+SuggestionService --> "distanceAlgorithm" IDistanceAlgorithm
+
+}
+
+ISuggestionService -[hidden]down-> IWordStorage
+IWordStorage -[hidden]down-> IDistanceAlgorithm
+
+
+SuggestionServiceBase ..> SuggestionService
+
+
+rectangle "Infrastructure" {
+class WordTree {
+    + WordTree(alphabet:IAlphabet?)
+    + Add(word:Word) : int
+    + Add(words:Word[]) : int
+    + Contains(word:Word) : bool
+    + Remove(word:Word) : int
+    + Remove(words:Word[]) : int
+    + GetWordCount() : int
+    + GetAlphabet() : IAlphabet
+    + Traverse(onEachWord:Action<Word>) : void
+}
+IWordStorage <|-- WordTree
+}
+
+ISuggestionService ..> SuggestionServiceBase
+SuggestionService .down.> WordTree
+SuggestionService .down.> LevenshteinDistanceAlgorithm
+
+
+
+@enduml

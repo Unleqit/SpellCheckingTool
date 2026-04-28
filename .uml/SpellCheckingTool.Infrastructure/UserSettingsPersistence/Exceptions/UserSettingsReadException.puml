@@ -1,0 +1,6 @@
+@startuml
+class UserSettingsReadException <<sealed>> {
+    + UserSettingsReadException(username:string, innerException:Exception)
+}
+Exception <|-- UserSettingsReadException
+@enduml

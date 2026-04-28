@@ -1,0 +1,5 @@
+@startuml
+class SuccessResponseDto {
+    + Success : bool <<get>> <<set>>
+}
+@enduml

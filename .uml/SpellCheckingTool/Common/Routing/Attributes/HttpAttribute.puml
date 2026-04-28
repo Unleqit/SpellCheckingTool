@@ -1,0 +1,8 @@
+@startuml
+abstract class HttpAttribute {
+    + Path : string <<get>>
+    + Method : string <<get>>
+    # HttpAttribute(method:string, path:string)
+}
+Attribute <|-- HttpAttribute
+@enduml

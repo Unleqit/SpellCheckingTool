@@ -1,0 +1,6 @@
+@startuml
+class UnsupportedFileFormatException <<sealed>> {
+    + UnsupportedFileFormatException(path:string)
+}
+Exception <|-- UnsupportedFileFormatException
+@enduml

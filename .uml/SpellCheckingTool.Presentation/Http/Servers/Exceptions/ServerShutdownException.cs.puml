@@ -1,0 +1,6 @@
+@startuml
+class ServerShutdownException <<sealed>> {
+    + ServerShutdownException(message:string, innerException:Exception)
+}
+Exception <|-- ServerShutdownException
+@enduml

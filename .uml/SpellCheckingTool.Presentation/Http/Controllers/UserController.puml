@@ -1,0 +1,16 @@
+@startuml
+class UserController <<static>> {
+    + {static} Configure(service:UserService) : void
+    - {static} EnsureConfigured() : void
+    - {static} WriteJson(context:HttpListenerContext, statusCode:int, payload:object) : void
+    - {static} WriteError(context:HttpListenerContext, statusCode:int, message:string) : void
+    + {static} Register(context:HttpListenerContext, username:string, hashedPassword:string) : void
+    + {static} Login(context:HttpListenerContext, username:string, hashedPassword:string) : void
+    + {static} AddWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + {static} DeleteWord(context:HttpListenerContext, userId:Guid, word:string) : void
+    + {static} TrackWordUsage(context:HttpListenerContext, userId:Guid, word:string) : void
+    + {static} GetWordsFile(context:HttpListenerContext, userId:Guid) : void
+    + {static} GetStats(context:HttpListenerContext, userId:Guid) : void
+}
+UserController o-> "_service" UserService
+@enduml

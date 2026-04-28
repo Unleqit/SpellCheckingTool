@@ -1,0 +1,16 @@
+@startuml
+class FileUserRepository {
+    - <<readonly>> _lock : object
+    - <<readonly>> _path : string
+    + FileUserRepository(paths:UserStorePaths, reader:UserStoreJsonReader, writer:UserStoreJsonWriter)
+    + GetById(id:Guid) : User?
+    + GetByUsername(username:string) : User?
+    + Add(user:User) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserRepository <|-- FileUserRepository
+FileUserRepository --> "_reader" UserStoreJsonReader
+FileUserRepository --> "_writer" UserStoreJsonWriter
+FileUserRepository --> "_users<Guid,User>" "Dictionary`2"
+@enduml

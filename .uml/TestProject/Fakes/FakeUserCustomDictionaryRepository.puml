@@ -1,0 +1,22 @@
+@startuml
+class FakeUserCustomDictionaryRepository {
+    + AddCustomWordCallCount : int <<get>>
+    + RemoveCustomWordCallCount : int <<get>>
+    + LastAddedCustomWord : string? <<get>>
+    + LastRemovedCustomWord : string? <<get>>
+    + FakeUserCustomDictionaryRepository(alphabet:IAlphabet)
+    - Normalize(word:string) : string?
+    - NormalizeAndValidateWord(word:string) : Word?
+    + AddWord(userId:Guid, word:string) : void
+    + RemoveWord(userId:Guid, word:string) : bool
+    + GetWords(userId:Guid) : IReadOnlyCollection<Word>
+    + SeedCustomWord(userId:Guid, word:string) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserCustomDictionaryRepository <|-- FakeUserCustomDictionaryRepository
+FakeUserCustomDictionaryRepository --> "_alphabet" IAlphabet
+FakeUserCustomDictionaryRepository o-> "_customWords<Guid,HashSet<Word>>" "Dictionary`2"
+FakeUserCustomDictionaryRepository --> "LastAddedCustomUserId" Guid
+FakeUserCustomDictionaryRepository --> "LastRemovedCustomUserId" Guid
+@enduml

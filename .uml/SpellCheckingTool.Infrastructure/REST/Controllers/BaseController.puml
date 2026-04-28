@@ -1,0 +1,6 @@
+@startuml
+abstract class BaseController {
+    # WriteJson(context:HttpListenerContext, statusCode:int, payload:object) : void
+    # WriteError(context:HttpListenerContext, statusCode:int, message:string) : void
+}
+@enduml

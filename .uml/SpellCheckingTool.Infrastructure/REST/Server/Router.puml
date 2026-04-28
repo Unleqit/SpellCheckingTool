@@ -1,0 +1,9 @@
+@startuml
+class Router {
+    + TryGetRoute(method:string, path:string) : Action<HttpListenerContext>?
+    + RegisterController(controller:BaseController) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+Router o-> "Routes<(string Method, string Path),Action<HttpListenerContext>>" "Dictionary`2"
+@enduml

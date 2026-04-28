@@ -1,19 +1,15 @@
 ﻿using SpellCheckingTool.Domain;
 using SpellCheckingTool.Domain.Suggestion;
 
-namespace SpellCheckingTool.Application.Suggestion;
+namespace SpellCheckingTool.Application.Suggestion.SuggestionService;
 
 public abstract class SuggestionServiceBase : ISuggestionService
 {
-    private readonly IDistanceAlgorithm distanceAlgorithm;
     private readonly IWordStorage wordStorage;
-    protected Action? onPreWalk;
-    protected Func<Word, Word, IDistanceAlgorithm, int, double>? computeNormalizedDistance;
-
-    protected SuggestionServiceBase(IWordStorage wordStorage, IDistanceAlgorithm distanceAlgorithm)
+    
+    protected SuggestionServiceBase(IWordStorage wordStorage)
     {
         this.wordStorage = wordStorage;
-        this.distanceAlgorithm = distanceAlgorithm;
     }
 
     /// <summary>
@@ -29,12 +25,11 @@ public abstract class SuggestionServiceBase : ISuggestionService
         double normalizedWorstDistanceValueInResults = 1;
         MatchResult[] matchResults = new MatchResult[maxSuggestions];
 
-        if (this.onPreWalk != null)
-            this.onPreWalk();
+        OnPreWalk();
 
         this.wordStorage.Traverse((word) =>
         {
-            normalizedDistance = this.computeNormalizedDistance(input, word, this.distanceAlgorithm, maxAllowedDistance);
+            normalizedDistance = ComputeScore(input, word, maxAllowedDistance);
 
             if (normalizedDistance >= 0 && normalizedDistance < normalizedWorstDistanceValueInResults)
             {
@@ -108,4 +103,14 @@ public abstract class SuggestionServiceBase : ISuggestionService
             return matchWord.ToString();
         }
     }
+
+    /// <summary>
+    /// An action to be executed before the suggestion retrieval operation begins
+    /// </summary>
+    protected abstract void OnPreWalk();
+
+    /// <summary>
+    /// An action to be executed before the suggestion retrieval operation begins
+    /// </summary>
+    protected abstract double ComputeScore(Word inputWord, Word otherWord, int maxAllowedDistance);
 }

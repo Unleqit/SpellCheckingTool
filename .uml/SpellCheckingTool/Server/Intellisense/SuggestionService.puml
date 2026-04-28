@@ -1,0 +1,12 @@
+@startuml
+class SuggestionService <<unsafe>> {
+    + SuggestionService(tree:WordTree, walkWordTreeService:WalkWordTreeService)
+    + GetSuggestionResult(input:string, maxAmountOfSuggestionsToBeReturned:int, maxAllowedDistance:int) : SuggestionResult
+    + Dispose() : void
+}
+ISuggestionService <|-- SuggestionService
+IDisposable <|-- SuggestionService
+SuggestionService --> "tree" WordTree
+SuggestionService --> "distanceAlgorithm" IDistanceAlgorithm
+SuggestionService --> "walkWordTreeService" WalkWordTreeService
+@enduml

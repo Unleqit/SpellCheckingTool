@@ -1,0 +1,7 @@
+@startuml
+class UserNotFoundDomainException <<sealed>> {
+    + UserNotFoundDomainException(userId:Guid)
+    + UserNotFoundDomainException(username:string)
+}
+SpellCheckingToolException <|-- UserNotFoundDomainException
+@enduml

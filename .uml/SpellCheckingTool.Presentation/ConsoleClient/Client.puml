@@ -1,0 +1,7 @@
+@startuml
+class Client {
+    + {static} StartClient(port:int, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, token:CancellationToken) : void
+    - {static} StartProcessManager() : ShellProcessManager
+    - {static} StartSpellChecker(context:UserSpellcheckContext, authService:ClientAuthService, processManager:ShellProcessManager, spellcheckContextFactory:IUserSpellcheckContextFactory, fileOpener:IFileOpener, token:CancellationToken) : void
+}
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+class FilePath {
+    + Path : string <<get>>
+    + FilePath(filepath:string)
+}
+@enduml

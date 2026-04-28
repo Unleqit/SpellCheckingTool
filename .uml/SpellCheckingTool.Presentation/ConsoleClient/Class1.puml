@@ -1,0 +1,30 @@
+@startuml
+class ConsoleSpellChecker1 {
+    - <<const>> WelcomeMessage : string = "Type text and press Enter. Commands: /addword <word>, /delword <word>, /words, /stats, /settings, /logout, /shutdown"
+    + ConsoleSpellChecker1(context:UserSpellcheckContext, processManager:ShellProcessManager, suggestionDisplay:ISuggestionDisplay, clientUserService:ClientUserService, spellcheckContextFactory:IUserSpellcheckContextFactory, token:CancellationTokenSource, fileOpener:IFileOpener)
+    - UpdateSuggestions(input:string) : void
+    - RefreshSuggestionUseCase() : void
+    + <<async>> Run() : Task
+    - handleChararacterInput(input:string, c:char) : string
+    - handleDeletion(input:string) : string
+    - handleSpace(input:string) : string
+    - <<async>> handleEnter(input:string) : Task<string>
+    - handleCompletion(input:string) : string
+    - handleSend(input:string) : string
+    - RefreshSpellcheckState() : void
+    - CreateSuggestionUseCase(defaultService:ISpellcheckService, executableService:ISpellcheckService) : SuggestionUseCase
+    - <<async>> TrackLastCompletedWordOnSpace(input:string) : Task
+    - <<async>> TrackFinalWordOnEnter(input:string) : Task
+    - <<async>> TrackSingleWord(token:string) : Task
+}
+ConsoleSpellChecker1 --> "_processManager" ShellProcessManager
+ConsoleSpellChecker1 --> "_context" UserSpellcheckContext
+ConsoleSpellChecker1 --> "_suggestionDisplay" ISuggestionDisplay
+ConsoleSpellChecker1 --> "_clientUserService" ClientUserService
+ConsoleSpellChecker1 --> "_spellcheckContextFactory" IUserSpellcheckContextFactory
+ConsoleSpellChecker1 --> "_commandHandler" ConsoleUserCommandHandler
+ConsoleSpellChecker1 --> "_fileOpener" IFileOpener
+ConsoleSpellChecker1 --> "_token" CancellationTokenSource
+ConsoleSpellChecker1 --> "_suggestionUseCase" SuggestionUseCase
+ConsoleSpellChecker1 --> "_settings" UserSettings
+@enduml

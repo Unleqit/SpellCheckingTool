@@ -1,0 +1,13 @@
+@startuml
+class FakeUserRepository {
+    + GetById(id:Guid) : User?
+    + GetByUsername(username:string) : User?
+    + Add(user:User) : void
+    + Seed(user:User) : void
+}
+class "Dictionary`2"<T1,T2> {
+}
+IUserRepository <|-- FakeUserRepository
+FakeUserRepository o-> "_usersById<Guid,User>" "Dictionary`2"
+FakeUserRepository o-> "_usersByName<string,User>" "Dictionary`2"
+@enduml

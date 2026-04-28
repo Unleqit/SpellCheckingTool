@@ -1,0 +1,8 @@
+@startuml
+class WordTreeNode {
+    + IsWord : bool <<get>> <<set>>
+    + reserved : int
+    + WordTreeNode(parent:WordTreeNode, length:int, isWord:bool)
+}
+WordTreeNode --> "parentNode" WordTreeNode
+@enduml

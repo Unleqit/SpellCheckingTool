@@ -1,0 +1,101 @@
+@startuml
+
+scale max 8192 width
+scale max 8192 height
+scale 2
+allowmixing
+
+rectangle "Domain" {
+
+interface IWordStorage {
+}
+class Word {
+}
+interface IAlphabet {
+}
+abstract class BaseAlphabet {
+}
+IAlphabet <|-- BaseAlphabet
+class LatinAlphabet {
+}
+BaseAlphabet <|-- LatinAlphabet
+interface IDistanceAlgorithm {
+}
+class LevenshteinDistanceAlgorithm {
+}
+IDistanceAlgorithm <|-- LevenshteinDistanceAlgorithm
+interface ISuggestionService {
+}
+abstract class SuggestionServiceBase {
+}
+ISuggestionService <|-- SuggestionServiceBase
+SuggestionServiceBase --> IDistanceAlgorithm
+SuggestionServiceBase --> IWordStorage
+class SuggestionService {
+}
+SuggestionServiceBase <|-- SuggestionService
+
+rectangle D_anchor <<anchor>>
+
+LatinAlphabet -[hidden]down->D_anchor
+}
+
+
+rectangle "Application" {
+interface IExecutableParser {
+}
+class StatisticSuggestionService {
+}
+
+StatisticSuggestionService --> UserService
+
+IExecutableParser -[hidden]down->StatisticSuggestionService
+
+rectangle A_anchor_bottom <<anchor>>
+rectangle A_anchor_top <<anchor>>
+
+UserService -[hidden]down->A_anchor_bottom
+A_anchor_top -[hidden]up->IExecutableParser
+A_anchor_top -[hidden]left->StatisticSuggestionService
+A_anchor_bottom -[hidden]left->UserService
+
+
+}
+
+
+rectangle "Infrastructure" {
+class WordTree {
+}
+abstract class ExecutableParser {
+}
+
+class LinuxExecutableParser {
+}
+ExecutableParser <|-- LinuxExecutableParser
+class WindowsExecutableParser {
+}
+ExecutableParser <|-- WindowsExecutableParser
+
+WordTree -[hidden]left-> ExecutableParser
+
+rectangle I_anchor <<anchor>>
+
+}
+
+rectangle "Presentation" {
+
+class Program
+class ConsoleSpellChecker
+interface ISuggestionDisplay
+class SuggestionDisplay
+
+ISuggestionDisplay -down-> SuggestionDisplay
+Program -[hidden]right-> ISuggestionDisplay
+Program -[hidden]down-> ConsoleSpellChecker
+
+rectangle P_anchor <<anchor>>
+
+}
+
+
+@enduml

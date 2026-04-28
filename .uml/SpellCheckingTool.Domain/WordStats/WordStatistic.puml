@@ -1,0 +1,11 @@
+@startuml
+class WordStatistic {
+    + UsageCount : int <<get>>
+    - WordStatistic()
+    + WordStatistic(word:Word)
+    + WordStatistic(word:Word, usageCount:int, lastUsedAt:DateTime)
+    + Increment() : void
+}
+WordStatistic --> "Word" Word
+WordStatistic --> "LastUsedAt" DateTime
+@enduml

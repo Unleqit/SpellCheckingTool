@@ -1,0 +1,6 @@
+@startuml
+class DirectoryPathProvidedException <<sealed>> {
+    + DirectoryPathProvidedException(path:string)
+}
+Exception <|-- DirectoryPathProvidedException
+@enduml

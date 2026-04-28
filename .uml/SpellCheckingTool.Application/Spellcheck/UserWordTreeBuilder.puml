@@ -1,0 +1,9 @@
+@startuml
+class UserWordTreeBuilder {
+    + UserWordTreeBuilder(defaultDictionaryProvider:IDefaultDictionaryProvider, userService:UserService)
+    + BuildAnonymousTree() : WordTree
+    + BuildUserTree(userId:Guid) : WordTree
+}
+UserWordTreeBuilder --> "_defaultDictionaryProvider" IDefaultDictionaryProvider
+UserWordTreeBuilder --> "_userService" UserService
+@enduml

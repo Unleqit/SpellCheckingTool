@@ -1,0 +1,10 @@
+@startuml
+class Router {
+    + Router(asm:Assembly)
+    - RegisterRoutes(asm:Assembly) : void
+    + TryGetRoute(method:string, path:string) : Action<HttpListenerContext>?
+}
+class "Dictionary`2"<T1,T2> {
+}
+Router o-> "Routes<(string Method, string Path),Action<HttpListenerContext>>" "Dictionary`2"
+@enduml

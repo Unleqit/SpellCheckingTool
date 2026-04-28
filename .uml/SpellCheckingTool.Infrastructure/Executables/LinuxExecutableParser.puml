@@ -1,0 +1,6 @@
+@startuml
+class LinuxExecutableParser {
+    + <<override>> GetAllShellExecutables() : WordTree
+}
+ExecutableParser <|-- LinuxExecutableParser
+@enduml

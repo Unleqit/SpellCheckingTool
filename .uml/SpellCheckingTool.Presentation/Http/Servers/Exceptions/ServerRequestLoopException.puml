@@ -1,0 +1,6 @@
+@startuml
+class ServerRequestLoopException <<sealed>> {
+    + ServerRequestLoopException(message:string, innerException:Exception)
+}
+Exception <|-- ServerRequestLoopException
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+class SuggestionViewModel {
+    + IsCorrect : bool <<get>>
+    + SuggestionViewModel(currentWord:Word, isCorrect:bool, suggestions:IReadOnlyList<Word>, startIndex:int)
+}
+class "IReadOnlyList`1"<T> {
+}
+SuggestionViewModel --> "CurrentWord" Word
+SuggestionViewModel --> "Suggestions<Word>" "IReadOnlyList`1"
+@enduml

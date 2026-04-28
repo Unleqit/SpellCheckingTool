@@ -1,0 +1,6 @@
+@startuml
+class PersonalDictionaryWordNotFoundException <<sealed>> {
+    + PersonalDictionaryWordNotFoundException(word:string)
+}
+SpellCheckingToolException <|-- PersonalDictionaryWordNotFoundException
+@enduml

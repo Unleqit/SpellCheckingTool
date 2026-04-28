@@ -1,0 +1,6 @@
+@startuml
+interface IUserSpellcheckContextFactory {
+    CreateAnonymous() : UserSpellcheckContext
+    CreateForUser(userId:Guid, username:string) : UserSpellcheckContext
+}
+@enduml

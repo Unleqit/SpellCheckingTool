@@ -1,0 +1,9 @@
+@startuml
+class AuthService {
+    + AuthService(userRepository:IUserRepository, settingsRepository:IUserSettingsRepository)
+    + Register(username:string, password:string) : OperationResult<User>
+    + Login(username:string, password:string) : OperationResult<User>
+}
+AuthService --> "_userRepository" IUserRepository
+AuthService --> "_settingsRepository" IUserSettingsRepository
+@enduml
