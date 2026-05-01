@@ -1,29 +1,43 @@
-﻿namespace SpellCheckingTool.Domain.Alphabet;
-public class CustomAlphabet : BaseAlphabet
+﻿using SpellCheckingTool.Domain.Exceptions;
+
+namespace SpellCheckingTool.Domain.Alphabet;
+
+public class CustomAlphabet : IAlphabet
 {
-    int[] mapping;
+    private const int CHAR_COUNT = 65536;
+    protected char[] chars;
+    protected int length;
+    private int[] mapping;
 
-    //call the base constructor of the BaseAlphabet class to bundle common logic
-    public CustomAlphabet(char[] chars) : base(chars)
+    public CustomAlphabet(char[] chars)
     {
-        this.mapping = new int[65536];
+        //check for duplicates
+        if (chars.Distinct().Count() != chars.Length)
+            throw new DuplicateAlphabetCharacterException();
 
-        //init with -1
-        for (int i = 0; i < 65536; ++i)
+        this.length = chars.Length;
+        this.chars = chars;
+
+        this.mapping = new int[CHAR_COUNT];
+        for (int i = 0; i < CHAR_COUNT; ++i)
             mapping[i] = -1;
 
-        //map chars to lookup array for quicker access
+        //map chars to lookup array
         for (int i = 0; i < chars.Length; ++i)
             mapping[chars[i]] = i;
     }
 
-    //Note: non-ASCII characters ('ä', è, î, ...) are scattered all over the place in the unicode table, and searching for the location of each of them in the alphabets
-    //character array is far too expensive (O(n)), therefore this mapping technique is used.
-    //Example: Suppose the character 'ä' is supplied as the 27. letter of the german alphabet.
-    //At the position of 'ä' in the unicode table, 228, which is obtainable via `(int)'ä'`, the 27 gets saved (e.g.: `this.mapping[228] = 27;`).
-    //This way, when searching for 'ä' in the custom alphabets' character table (used when walking the WordTree while performing add/search/delete operations for words), we can simply look
-    //at the position 228 of its mapping table, which stores the position 27, thus creating a feasible O(1) solution.
-    public override int GetCharPositionInArray(char c)
+    public virtual char[] GetChars()
+    {
+        return chars;
+    }
+
+    public virtual int GetLength()
+    {
+        return length;
+    }
+
+    public int GetCharPositionInArray(char c)
     {
         return this.mapping[c];
     }

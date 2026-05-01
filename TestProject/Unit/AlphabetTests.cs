@@ -65,22 +65,4 @@ public class AlphabetTests
         Assert.ThrowsException<DuplicateAlphabetCharacterException>(() =>
             new CustomAlphabet(new[] { 'a', 'b', 'c', 'c' }));
     }
-
-    [TestMethod]
-    public void SerializeAndDeserializeAlphabet_ShouldSucceed()
-    {
-        char[] germanChars = new[] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'ä', 'ö', 'ü', 'ß' };
-        IAlphabet alphabet = new CustomAlphabet(germanChars);
-
-        byte[] serialized = CustomAlphabet.Serialize(alphabet);
-        Assert.IsNotNull(serialized);
-
-        Assert.AreEqual(sizeof(int) + germanChars.Length * sizeof(char), serialized.Length);
-
-        CustomAlphabet deserialized = CustomAlphabet.Deserialize(serialized);
-        Assert.IsNotNull(deserialized);
-
-        Assert.IsTrue(deserialized.GetChars().SequenceEqual(alphabet.GetChars()));
-        Assert.AreEqual(alphabet.GetLength(), deserialized.GetLength());
-    }
 }
