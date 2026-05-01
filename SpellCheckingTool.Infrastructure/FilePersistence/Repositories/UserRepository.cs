@@ -8,7 +8,6 @@ using SpellCheckingTool.Domain.Users;
 
 public class UserRepository : IUserRepository
 {
-    private readonly object _lock = new();
     private readonly string _path;
     private readonly IUserStoreJsonSerializer _serializer;
     private Dictionary<Guid, User> _users;
@@ -24,37 +23,28 @@ public class UserRepository : IUserRepository
 
     public User? GetById(Guid id)
     {
-        lock (_lock)
-        {
-            _users.TryGetValue(id, out var user);
-            return user;
-        }
+        _users.TryGetValue(id, out var user);
+        return user;
     }
 
     public User? GetByUsername(string username)
     {
-        lock (_lock)
-        {
-            return _users.Values.FirstOrDefault(
-                u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
-        }
+        return _users.Values.FirstOrDefault(
+            u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
     }
 
     public void Add(User user)
     {
-        lock (_lock)
+        if (_users.ContainsKey(user.Id))
+            throw new DuplicateUserException(user.Id);
+
+        if (_users.Values.Any(u =>
+            u.Username.Equals(user.Username, StringComparison.OrdinalIgnoreCase)))
         {
-            if (_users.ContainsKey(user.Id))
-                throw new DuplicateUserException(user.Id);
-
-            if (_users.Values.Any(u =>
-                u.Username.Equals(user.Username, StringComparison.OrdinalIgnoreCase)))
-            {
-                throw new DuplicateUserException(user.Username);
-            }
-
-            _users[user.Id] = user;
-            _serializer.Write(_path, _users);
+            throw new DuplicateUserException(user.Username);
         }
+
+        _users[user.Id] = user;
+        _serializer.Write(_path, _users);
     }
 }

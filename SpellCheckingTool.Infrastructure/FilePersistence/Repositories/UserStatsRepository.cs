@@ -10,7 +10,6 @@ namespace SpellCheckingTool.Infrastructure.FilePersistence.Repositories;
 
 public class UserWordStatsRepository : IUserWordStatsRepository
 {
-    private readonly object _lock = new();
     private readonly string _path;
     private readonly IAlphabet _alphabet;
     private readonly IUserRepository _userRepository;
@@ -35,53 +34,47 @@ public class UserWordStatsRepository : IUserWordStatsRepository
 
     public void IncrementWord(Guid userId, string word)
     {
-        lock (_lock)
+        if (_userRepository.GetById(userId) == null)
+            throw new UserNotFoundDomainException(userId);
+
+        if (!_userWordStats.Data.TryGetValue(userId, out var words))
         {
-            if (_userRepository.GetById(userId) == null)
-                throw new UserNotFoundDomainException(userId);
-
-            if (!_userWordStats.Data.TryGetValue(userId, out var words))
-            {
-                words = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
-                _userWordStats.Data[userId] = words;
-            }
-
-            var normalized = word.Trim().ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(normalized))
-                return;
-
-            if (!words.TryGetValue(normalized, out var info))
-            {
-                var wordObj = new Word(_alphabet, normalized);
-                var statistic = new WordStatistic(wordObj);
-                statistic.Increment();
-                words[normalized] = new WordInfo(normalized, statistic);
-            }
-            else
-            {
-                info.Statistic.Increment();
-            }
-
-            Save();
+            words = new Dictionary<string, WordInfo>(StringComparer.OrdinalIgnoreCase);
+            _userWordStats.Data[userId] = words;
         }
+
+        var normalized = word.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return;
+
+        if (!words.TryGetValue(normalized, out var info))
+        {
+            var wordObj = new Word(_alphabet, normalized);
+            var statistic = new WordStatistic(wordObj);
+            statistic.Increment();
+            words[normalized] = new WordInfo(normalized, statistic);
+        }
+        else
+        {
+            info.Statistic.Increment();
+        }
+
+        Save();
     }
 
     public IReadOnlyCollection<WordStatistic> GetWordStats(Guid userId)
     {
-        lock (_lock)
-        {
-            if (_userRepository.GetById(userId) == null)
-                throw new UserNotFoundDomainException(userId);
+        if (_userRepository.GetById(userId) == null)
+            throw new UserNotFoundDomainException(userId);
 
-            if (!_userWordStats.Data.TryGetValue(userId, out var words))
-                return Array.Empty<WordStatistic>();
+        if (!_userWordStats.Data.TryGetValue(userId, out var words))
+            return Array.Empty<WordStatistic>();
 
-            return words.Values
-                .Select(x => x.Statistic)
-                .OrderByDescending(x => x.UsageCount)
-                .ThenByDescending(x => x.LastUsedAt)
-                .ToList();
-        }
+        return words.Values
+            .Select(x => x.Statistic)
+            .OrderByDescending(x => x.UsageCount)
+            .ThenByDescending(x => x.LastUsedAt)
+            .ToList();
     }
 
     private void Save()

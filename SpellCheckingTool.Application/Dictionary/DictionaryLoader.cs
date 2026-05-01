@@ -3,7 +3,17 @@ using SpellCheckingTool.Domain;
 
 namespace SpellCheckingTool.Application.Dictionary;
 
-public interface IDictionaryLoader
+public class DictionaryLoader : IDictionaryLoader
 {
-    IWordStorage Load(FilePath filepath);
+    private readonly IPersistenceService persistenceService;
+
+    public DictionaryLoader(IPersistenceService persistenceService)
+    {
+        this.persistenceService = persistenceService;
+    }
+
+    public IWordStorage Load(FilePath filepath)
+    {
+        return persistenceService.Load(filepath);
+    }
 }
