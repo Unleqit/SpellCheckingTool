@@ -27,12 +27,12 @@ public class CustomAlphabet : IAlphabet
             mapping[chars[i]] = i;
     }
 
-    public virtual char[] GetChars()
+    public char[] GetChars()
     {
         return chars;
     }
 
-    public virtual int GetLength()
+    public int GetLength()
     {
         return length;
     }
