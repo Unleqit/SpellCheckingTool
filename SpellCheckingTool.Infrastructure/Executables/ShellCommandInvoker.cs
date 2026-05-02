@@ -4,11 +4,9 @@ using SpellCheckingTool.Application.Executables;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
 
-public abstract class ExecutableParser : IExecutableParser
+public class ShellCommandInvoker
 {
-    public abstract IWordStorage GetAllShellExecutables();
-
-    protected List<string> InvokeShellCommand(string shellName, string arguments, string workingDir = "")
+    public List<string> Execute(string shellName, string arguments, string workingDir = "")
     {
         List<string> executables = new List<string>();
 

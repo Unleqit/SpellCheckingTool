@@ -136,14 +136,16 @@ public class Program
         );
 
 
-        IExecutableParser executableParser = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new WindowsExecutableParser() : new LinuxExecutableParser();
+        IExecutableParser parser = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new WindowsExecutableParser() : new LinuxExecutableParser();
+        ExecutableService executableService = new ExecutableService(parser);
+
+
         var spellcheckFactory = new UserSpellcheckContextFactory(
             userTreeBuilder,
             userService,
             userSettingsRepository,
             inputAlphabet,
-            executableParser
-
+            executableService
         );
 
         return (userService, authService, spellcheckFactory);

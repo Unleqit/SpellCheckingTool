@@ -14,26 +14,26 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     private readonly UserService _userService;
     private readonly IAlphabet _inputAlphabet;
     private readonly IUserSettingsRepository _settingsRepository;
-    private readonly IExecutableParser _executableParser;
+    private readonly ExecutableService _executableService;
 
     public UserSpellcheckContextFactory(
         UserWordTreeBuilder treeBuilder,
         UserService userService,
         IUserSettingsRepository settingsRepository,
         IAlphabet inputAlphabet,
-        IExecutableParser executableParser)
+        ExecutableService executableService)
     {
         _treeBuilder = treeBuilder;
         _userService = userService;
         _settingsRepository = settingsRepository;
         _inputAlphabet = inputAlphabet;
-        _executableParser = executableParser;
+        _executableService = executableService;
     }
 
     public UserSpellcheckContext CreateAnonymous()
     {
         var tree = _treeBuilder.BuildAnonymousTree();
-        var executableTree = _executableParser.GetAllShellExecutables();
+        var executableTree = _executableService.LoadExecutables();
         var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, null);
         var executableService = BuildSpellcheckService(executableTree, _inputAlphabet, _userService, null);
         var settings = _settingsRepository.GetDefaultSettings();
@@ -51,7 +51,7 @@ public class UserSpellcheckContextFactory : IUserSpellcheckContextFactory
     public UserSpellcheckContext CreateForUser(Guid userId, string username)
     {
         var tree = _treeBuilder.BuildUserTree(userId);
-        var executableTree = _executableParser.GetAllShellExecutables();
+        var executableTree = _executableService.LoadExecutables();
         IAlphabet executableAlphabet = _inputAlphabet is UTF16Alphabet ? _inputAlphabet : new UTF16Alphabet();
         var spellcheckService = BuildSpellcheckService(tree, _inputAlphabet, _userService, userId);
         var executableService = BuildSpellcheckService(executableTree, executableAlphabet, _userService, userId);
