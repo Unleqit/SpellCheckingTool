@@ -1,30 +1,12 @@
-﻿namespace SpellCheckingTool.Domain.Alphabet
+﻿namespace SpellCheckingTool.Domain.Alphabet;
+
+public class UTF16Alphabet : CustomAlphabet
 {
-    public class UTF16Alphabet : IAlphabet
+    private static char[] utf16chars = new char[65536].Select((a, i) => (char)i).ToArray();
+
+    public UTF16Alphabet() : base(utf16chars)
     {
-        CustomAlphabet internalAlphabet;
 
-        public UTF16Alphabet()
-        {
-            char[] utf16chars = new char[65536];
-            for (int i = 0; i < 65536; ++i)
-                utf16chars[i] = (char)i;
-            internalAlphabet = new CustomAlphabet(utf16chars);
-        }
-
-        public int GetCharPositionInArray(char c)
-        {
-            return internalAlphabet.GetCharPositionInArray(c);
-        }
-
-        public char[] GetChars()
-        {
-            return internalAlphabet.GetChars();
-        }
-
-        public int GetLength()
-        {
-            return internalAlphabet.GetLength();
-        }
     }
 }
+
