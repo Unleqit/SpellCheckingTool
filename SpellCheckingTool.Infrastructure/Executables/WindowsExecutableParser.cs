@@ -1,14 +1,22 @@
 ﻿using SpellCheckingTool.Application.WordParser;
 using SpellCheckingTool.Domain.Alphabet;
 using SpellCheckingTool.Domain;
+using SpellCheckingTool.Application.Executables;
 
 namespace SpellCheckingTool.Infrastructure.Executables;
 
-public class WindowsExecutableParser : ExecutableParser
+public class WindowsExecutableParser : IExecutableParser
 {
-    public override WordTree GetAllShellExecutables()
+    private readonly ShellCommandInvoker executor;
+
+    public WindowsExecutableParser()
     {
-        List<string> executablePaths = base.InvokeShellCommand("cmd", "/c \"where *.exe *.com *.bat *.cmd\"");
+        executor = new ShellCommandInvoker();
+    }
+
+    public IWordStorage GetAllShellExecutables()
+    {
+        List<string> executablePaths = executor.Execute("cmd", "/c \"where *.exe *.com *.bat *.cmd\"");
         IAlphabet alphabet = new ExecutableNameAlphabet();
         string[] executableNames = new string[executablePaths.Count];
 
